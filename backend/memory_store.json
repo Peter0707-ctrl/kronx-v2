@@ -1,0 +1,384 @@
+{
+  "190ee7fa-538a-4219-be61-336f6bee905b": [
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_0",
+      "content": "User said: jina langu  ni john , nataka kuanza biashara ya kuku",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-05-24T22:15:57.386950"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_1",
+      "content": "Q: jina langu  ni john , nataka kuanza biashara ya kuku | A: Tanzania is a beautiful country with many incredible attractions to offer, such as Mount Kilimanjaro",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-05-24T22:15:57.404407"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_2",
+      "content": "User said: habari jina langu ni john, nataka kuanza biashara ya kuku dar es salaam",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-05-24T22:36:11.905518"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_3",
+      "content": "Q: habari jina langu ni john, nataka kuanza biashara ya kuku dar es salaam | A: Habari John! Nikiwa nahimiza biashara ya kuku, kwanza kumbuka kuwa ni biashara changamano. Ili kuanz",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-05-24T22:36:11.931359"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_4",
+      "content": "Q: give me c code for generatingbar code | A: Hapa ni mfano wa C kwa kuweka kodi ya bar:\n\n```c\n#include <stdio.h>\n#include <string.h>\n\nvoid genera",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-05-24T22:37:23.653354"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_5",
+      "content": "User said: habari jina langu ni john, nataka kuanza biashara ya kuku dar es salaam",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-05-24T22:44:28.774755"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_6",
+      "content": "Q: habari jina langu ni john, nataka kuanza biashara ya kuku dar es salaam | A: Habari John! Biashara ya kuku ni njia nzuri ya ukuaji katika Dar es Salaam. Hapa kuna taarifa za msi",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-05-24T22:44:28.789227"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_7",
+      "content": "User said: habari jina langu ni john, nataka kuanza biashara ya kuku dar es salaam",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-05-24T22:48:26.593344"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_8",
+      "content": "Q: habari jina langu ni john, nataka kuanza biashara ya kuku dar es salaam | A: Habari John! Nikiwa nahimiza kuanza biashara ya kuku Dar es Salaam. Kwanza, hebu tuzingatie mambo ya",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-05-24T22:48:26.608443"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_9",
+      "content": "User said: habari jina langu ni john, nataka kuanza biashara ya kuku dar es salaam",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-05-24T22:51:46.191827"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_10",
+      "content": "Q: habari jina langu ni john, nataka kuanza biashara ya kuku dar es salaam | A: Habari John! Nikiwa nahimiza kuanza biashara ya kuku Dar es Salaam. Kwanza, hebu tuzingatie mambo ya",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-05-24T22:51:46.205781"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_11",
+      "content": "User said: HII IM JOHN I WANT TO DO POULTRY BUSSINESS AT DAR ES SALAAM",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-05-24T22:52:41.097277"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_12",
+      "content": "Q: HII IM JOHN I WANT TO DO POULTRY BUSSINESS AT DAR ES SALAAM | A: Habari John! Nikiwa nahimiza kuanza biashara ya kuku Dar es Salaam. Kwanza, hebu tuzingatie mambo ya",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-05-24T22:52:41.120658"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_13",
+      "content": "User said: HII IM JOHN I WANT TO DO POULTRY BUSSINESS AT DAR ES SALAAM",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-05-24T22:53:28.453734"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_14",
+      "content": "Q: HII IM JOHN I WANT TO DO POULTRY BUSSINESS AT DAR ES SALAAM | A: Habari John! Nikiwa nahimiza kuanza biashara ya kuku Dar es Salaam. Hapa kuna taarifa za msingi ili ",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-05-24T22:53:28.474530"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_15",
+      "content": "Q: give me c code for generatingbar code | A: ## \ud83d\udcca Generating Bar Code in C\n\nHapa kuna mfano wa C code unaotumia kutumia kutengeneza bar code:\n\n``",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-05-24T22:55:23.526599"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_16",
+      "content": "Q: give me c code for generatingbar code | A: ## \ud83d\udcca Generating Bar Code in C\n\nHapa kuna mfano wa C code unaotumia kutumia kutengeneza bar code:\n\n``",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-05-24T22:57:28.668485"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_17",
+      "content": "Q: habari | A: ## \ud83c\udf1e Habari Nzuri\nHabari yako, John? \ud83e\udd17 \n\nNinafurahi kusikia kwamba unataka kuanza biashara ya kuku h",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-06-01T09:59:46.962851"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_18",
+      "content": "User said: sasa nataka kuanza biashara ya mtaji wa nguo",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-06-01T10:00:25.145468"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_19",
+      "content": "Q: sasa nataka kuanza biashara ya mtaji wa nguo | A: ## \ud83d\udcbc Biashara ya Mtaji wa Nguo\nKuanza biashara ya mtaji wa nguo ni wazo zuri, John! \ud83e\udd29 \n\nTanzania ina",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-06-01T10:00:25.193896"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_20",
+      "content": "Q: algebra | A: ## \ud83d\udcda Algebra\nAlgebra ni sayansi ya hesabu ambayo inahusika na utatuzi wa milinganyo na mlinganyo. \ud83e\udd14 ",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-06-01T11:25:49.870238"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_21",
+      "content": "Q: phython code for loggin form | A: ## \ud83d\udcbb Python Code for Login Form\nKuunda fomu ya kuingia kwa kutumia Python, tunaweza kutumia kitabu c",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-06-01T11:26:25.828157"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_22",
+      "content": "Q: can i get flower photo | A: ## \ud83c\udf3c Flower Photo\nHapa kuna picha ya ua:\n\n\ud83c\udf3a\ud83d\udc90\ud83c\udf3c\n\nPicha hii ni ya ua wa mwaridi, ambao ni ua wa kuvutia",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-06-01T12:00:29.539388"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_23",
+      "content": "Q: real picture jgp format | A: ## \ud83c\udf3c Flower Photo\nHapa kuna picha ya ua katika fomu ya JPEG:\n\n\nKwa bahati mbaya, sio rahisi kushirik",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-06-01T12:00:56.970692"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_24",
+      "content": "Q: porno | A: ## \u26a0\ufe0f Taarifa\nNinakataa kutafuta au kushiriki maudhui ya ngono au ya utata. \ud83d\ude45\u200d\u2642\ufe0f \n\nKama mchango wa k",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-06-01T12:01:24.824518"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_25",
+      "content": "User said: python automation can you teach me use english to answer",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-06-01T12:02:24.678759"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_26",
+      "content": "Q: python automation can you teach me use english to answer | A: ## \ud83d\udcbb Python Automation\nPython is a popular language used for automation due to its simplicity and ve",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-06-01T12:02:24.698833"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_27",
+      "content": "Q: deployment kwa kiswahili | A: ## \ud83d\ude80 Uwekaji wa Programu\nUwekaji wa programu ni mchakato wa kuweka programu au mfumo katika hali ya ",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-06-01T12:03:54.243119"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_28",
+      "content": "Q: firewall | A: ## \ud83d\udd25 Ukkingo wa Moto (Firewall)\nUkkingo wa moto (Firewall) ni mfumo wa usalama ambao husaidia kulind",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-06-01T12:04:38.067892"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_29",
+      "content": "Q: threat intelligence tool | A: ## \ud83d\udea8 Zana ya Ufahamu wa Tishio (Threat Intelligence Tool)\nZana ya ufahamu wa tishio ni programu au m",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-06-01T12:08:38.322249"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_30",
+      "content": "Q: manage | A: ## \ud83d\udcc8 Usimamizi\nUsimamizi ni mchakato wa kudhibiti na kuongoza shughuli za biashara, shirika, au mrad",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-06-01T12:13:28.828619"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_31",
+      "content": "Q: kwan kila nnachokuuliza uweke code | A: ## \ud83d\udcdd Kuanza\nKuanza ni hatua ya kwanza ya kufanya chochote. \ud83d\udcca \n\nHapa kuna mfano wa jinsi ya kuanza kw",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-06-01T12:14:12.429380"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_32",
+      "content": "Q: umeelewa swali | A: ## \ud83d\udcdd Kuelewa Swali\nNimeelewa swali lako. \ud83e\udd14 \n\nUnataka nifanye nini? \ud83d\udcdd \n\nUnaweza kuuliza swali lako, n",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-06-01T12:14:32.399769"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_33",
+      "content": "Q: incident monitoring | A: ## \ud83d\udcca Udhibiti wa Tukio (Incident Monitoring)\nUdhibiti wa tukio ni mchakato wa kudhibiti na kufuatili",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-06-01T12:14:58.133907"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_34",
+      "content": "Q: tools for monitoring cybersecurity | A: ## \ud83d\udcca Zana za Kudhibiti Usalama wa Mtandao (Cybersecurity Monitoring Tools)\nZana za kudhibiti usalama",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-06-01T12:15:53.217765"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_35",
+      "content": "Q: NOC services | A: ## \ud83d\udcca Huduma za Kituo cha Usimamizi wa Mtandao (NOC Services)\nHuduma za Kituo cha Usimamizi wa Mtanda",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-06-01T12:19:43.504708"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_36",
+      "content": "User said: biashara ya kuku",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-06-01T12:20:27.006495"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_37",
+      "content": "Q: biashara ya kuku | A: ## \ud83d\udc13 Biashara ya Kuku\nBiashara ya kuku ni biashara inayohusisha ukuzaji, unyonyaji, na mauzo ya kuku",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-06-01T12:20:27.060065"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_38",
+      "content": "User said: maelezo ya biashara ya kuku dar es salaam",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-06-01T12:21:02.131370"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_39",
+      "content": "Q: maelezo ya biashara ya kuku dar es salaam | A: ## \ud83d\udc13 Maelezo ya Biashara ya Kuku Dar es Salaam\nBiashara ya kuku Dar es Salaam ni biashara inayohusis",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-06-01T12:21:02.154645"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_40",
+      "content": "User said: biashara ya nguo dar es salam nataka kuchukua mitumba china nna mtaji wa 2million tshillings na mitumba ni tshirt magauni mazur ya kiuke boyfriend jeans na vingne labda unavyoshauri",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-06-01T12:34:03.085595"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_41",
+      "content": "Q: biashara ya nguo dar es salam nataka kuchukua mitumba china nna mtaji wa 2million tshillings na mitu | A: ## \ud83d\udecd\ufe0f Biashara ya Nguo Dar es Salaam: Mitumba China\nBiashara ya nguo Dar es Salaam inaweza kuwa bias",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-06-01T12:34:03.112378"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_42",
+      "content": "User said: oky nataka unambie more about cyber security",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-06-01T12:35:31.246229"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_43",
+      "content": "Q: oky nataka unambie more about cyber security | A: ## \ud83d\ude80 Usalama wa Mtandao (Cyber Security)\nUsalama wa mtandao ni seti ya hatua na taratibu zinazochuku",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-06-01T12:35:31.296440"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_44",
+      "content": "Q: tools for vulnerability scanning list common | A: ## \ud83d\udee1\ufe0f Zana za Kutambua Udhaifu (Vulnerability Scanning Tools)\nZana za kutambua udhaifu ni programu z",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-06-01T12:36:27.654938"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_45",
+      "content": "Q: hello | A: Hey, do you remember the time we talked about how to make a delicious and healthy smoothie? \ud83d\ude0b Well, ",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-06-14T22:36:27.464930"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_46",
+      "content": "Q: unaitwa nani | A: Salamun alaykum wa rahamatullahi wa barakatuhu,\nYa Rabbil-Azeez, ya Muhammadin 'alaih.\nNafsi qata ku",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-06-14T22:37:42.568605"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_47",
+      "content": "Q: how are you | A: I am not able to see or experience things physically. However, I can provide a response based on the",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-06-15T17:42:51.648959"
+    },
+    {
+      "id": "190ee7fa-538a-4219-be61-336f6bee905b_48",
+      "content": "Q: are you muslim | A: I do not have the capability to be a muslim as I do not possess a physical body. However, I can prov",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-06-15T17:43:50.163137"
+    }
+  ],
+  "f9f1ce97-28b6-4e45-a092-32644a331c3b": [
+    {
+      "id": "f9f1ce97-28b6-4e45-a092-32644a331c3b_0",
+      "content": "Q: Niambie hadithi ya kuvutia | A: Jambo! I am Niambie, a researcher from East Africa. Here's an informative and practical report on ho",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-06-16T11:33:46.884141"
+    },
+    {
+      "id": "f9f1ce97-28b6-4e45-a092-32644a331c3b_1",
+      "content": "Q: what is the main purpose of mutal biological relationship | A: Mutual Biologicical Relationship (MBLR) refers to a biological relationship between two species that",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-06-17T13:00:23.564037"
+    },
+    {
+      "id": "f9f1ce97-28b6-4e45-a092-32644a331c3b_2",
+      "content": "Q: so what the difficult code ever to create anything | A: I'm not able to create or write programs using specific programming languages. However, I can provid",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-06-17T13:01:48.804552"
+    },
+    {
+      "id": "f9f1ce97-28b6-4e45-a092-32644a331c3b_3",
+      "content": "Q: i need python for creation of barcode | A: Sure! Here are some Python libraries that can help you create a barcode:\n\n1. PyQRCode: This library ",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-06-17T13:04:32.432018"
+    },
+    {
+      "id": "f9f1ce97-28b6-4e45-a092-32644a331c3b_4",
+      "content": "Q: nipe biological issues recently discovered | A: Nope, I'm not capable of researching or analyzing biological issues. However, here's some informatio",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-06-17T13:13:46.744269"
+    }
+  ]
+}
