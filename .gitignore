@@ -28,3 +28,6 @@ dist/
 Thumbs.db
 .vscode/
 .idea/
+replacements.txt
+.env
+**/.env
