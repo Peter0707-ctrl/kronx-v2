@@ -1,99 +1,94 @@
 'use client'
 
 import { useKronxStore } from '@/store/useKronxStore'
-import { MODES } from '@/lib/constants'
-import { KronxMode } from '@/types'
 
 export default function Sidebar() {
   const {
-    mode, setMode,
-    conversations, activeConversationId,
-    selectConversation, newConversation,
+    sidebarOpen,
+    conversations,
+    activeConversationId,
+    selectConversation,
+    newConversation,
+    deleteConversation,
+    clearAllConversations,
+    setSettingsModalOpen
   } = useKronxStore()
 
+  if (!sidebarOpen) return null
+
   return (
-    <aside className="sidebar">
-      {/* Logo */}
-      <div className="logo">
-        <div className="logo-row">
-          <div className="logo-gem">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={2}>
-              <path d="M12 2L2 7l10 5 10-5-10-5z" />
-              <path d="M2 17l10 5 10-5" />
-              <path d="M2 12l10 5 10-5" />
-            </svg>
-          </div>
-          <div>
-            <div className="logo-name">Kronx</div>
-            <div className="logo-sub">AI Companion</div>
-          </div>
-        </div>
+    <aside style={{ width: '240px', background: '#f8fafc', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', flexShrink: 0, zIndex: 10, height: '100vh', fontFamily: "Calibri, 'Calibri Light', sans-serif" }}>
+      {/* Top New Chat Action */}
+      <div style={{ padding: '16px 16px 8px 16px' }}>
+        <button
+          onClick={newConversation}
+          style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', background: '#ffffff', border: '1px solid #cbd5e1', color: '#0f172a', fontWeight: '700', fontSize: '13.5px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }}
+        >
+          <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          New Chat
+        </button>
       </div>
 
-      {/* New chat */}
-      <button className="new-chat-btn" onClick={newConversation}>
-        <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-          <path d="M12 5v14M5 12h14" />
-        </svg>
-        Mazungumzo mapya · New chat
-      </button>
+      {/* History List */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+          <span style={{ fontSize: '11px', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+            Chat History
+          </span>
+          {conversations.length > 0 && (
+            <button
+              onClick={() => {
+                if (confirm('Clear all chat history?')) clearAllConversations()
+              }}
+              style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '11px', fontWeight: '600', cursor: 'pointer' }}
+            >
+              Clear
+            </button>
+          )}
+        </div>
 
-      {/* Mode selector */}
-      <nav className="modes">
-        <div className="section-label">Hali · Mode</div>
-        {MODES.map(m => (
-          <button
-            key={m.key}
-            className={`mode-btn ${mode === m.key ? 'active' : ''}`}
-            onClick={() => setMode(m.key as KronxMode)}
-          >
-            <span className="mode-pip" style={{ background: m.pip }} />
-            <span>{m.labelSw}</span>
-            <span className="mode-en">{m.labelEn}</span>
-          </button>
-        ))}
-      </nav>
-
-      {/* Conversation history */}
-      <div className="history">
-        <div className="section-label">Historia · Recent</div>
-        {conversations.length === 0 && (
-          <p className="hist-empty">
-            Hakuna mazungumzo bado.<br />No conversations yet.
+        {conversations.filter(c => c.id !== activeConversationId && c.messages.length > 0).length === 0 && (
+          <p style={{ fontSize: '12.5px', color: '#94a3b8', fontStyle: 'italic', margin: '8px 0 0 0' }}>
+            No closed chat history.
           </p>
         )}
-        {conversations.map(conv => (
-          <button
+
+        {conversations.filter(c => c.id !== activeConversationId && c.messages.length > 0).map(conv => (
+          <div
             key={conv.id}
-            className={`hist-item ${conv.id === activeConversationId ? 'hist-active' : ''}`}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', borderRadius: '8px', background: conv.id === activeConversationId ? '#e2e8f0' : 'transparent', marginBottom: '4px', cursor: 'pointer' }}
             onClick={() => selectConversation(conv.id)}
           >
-            <div className="hist-title">{conv.title}</div>
-            <div className="hist-meta">{formatTime(conv.updatedAt)}</div>
-          </button>
+            <span style={{ fontSize: '13px', fontWeight: '600', color: conv.id === activeConversationId ? '#0f172a' : '#475569', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>
+              {conv.title}
+            </span>
+            <button
+              onClick={e => {
+                e.stopPropagation()
+                deleteConversation(conv.id)
+              }}
+              style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '12px', cursor: 'pointer', padding: '2px 4px' }}
+            >
+              ✕
+            </button>
+          </div>
         ))}
       </div>
 
-      {/* User footer */}
-      <div className="sidebar-footer">
-        <div className="user-pill">
-          <div className="avatar">JM</div>
-          <div>
-            <div className="user-name">John Mwangi</div>
-            <div className="user-plan">Foundation · Msingi</div>
+      {/* Bottom Profile Account & Settings */}
+      <div style={{ padding: '16px', borderTop: '1px solid #e2e8f0' }}>
+        <button
+          onClick={() => setSettingsModalOpen(true)}
+          style={{ width: '100%', padding: '10px 12px', borderRadius: '12px', background: '#ffffff', border: '1px solid #cbd5e1', color: '#0f172a', fontWeight: '700', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
+        >
+          <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: '#0284c7', color: '#fff', fontWeight: '800', fontSize: '11px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            PE
           </div>
-        </div>
+          <span>Settings & Account</span>
+        </button>
       </div>
     </aside>
   )
-}
-
-function formatTime(date: Date): string {
-  const d = new Date(date)
-  const now = new Date()
-  const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400000)
-  if (diffDays === 0) return `Leo ${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`
-  if (diffDays === 1) return 'Jana · Yesterday'
-  if (diffDays === 2) return 'Juzi · 2 days ago'
-  return d.toLocaleDateString('sw-TZ', { day: 'numeric', month: 'short' })
 }

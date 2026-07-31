@@ -18,26 +18,12 @@ class ChatRequest(BaseModel):
     history: List[Message] = []
 
 def fix_response(text: str) -> str:
-    # Fix code blocks — add newlines after opening ```
-    text = re.sub(r'```(\w+)', r'\n```\1\n', text)
-    # Fix closing code blocks
-    text = re.sub(r'```\s*', r'\n```\n', text)
-    # Fix headers
-    text = re.sub(r'##\s+', r'\n## ', text)
-    text = re.sub(r'###\s+', r'\n### ', text)
-    # Fix bullet points
-    text = re.sub(r'•\s+', r'\n• ', text)
-    text = re.sub(r'\*\s+(?!\*)', r'\n* ', text)
-    # Fix numbered lists
-    text = re.sub(r'(\d+\.)\s+', r'\n\1 ', text)
-    # Fix sentences running together
-    text = re.sub(r'\.\s+([A-Z])', r'.\n\1', text)
-    # Remove triple+ newlines
-    text = re.sub(r'\n{3,}', r'\n\n', text)
-    # Fix code content — semicolons followed by keywords
-    text = re.sub(r';\s*(int|char|void|printf|return|for|if|while|#)', r';\n    \1', text)
-    text = re.sub(r'\{\s*(int|char|void|printf|return|for|if|while|#)', r'{\n    \1', text)
-    text = re.sub(r'\}\s*(int|char|void|printf|return|for|if|while|#)', r'}\n\1', text)
+    if not text:
+        return ""
+    # Normalize excessive vertical spacing (max 2 consecutive newlines)
+    text = re.sub(r'\n{3,}', '\n\n', text)
+    # Ensure code blocks have clean newline boundaries
+    text = re.sub(r'```(\w+)\s*', r'\n```\1\n', text)
     return text.strip()
 
 @router.post("/chat")
@@ -63,7 +49,6 @@ async def chat_stream(request: ChatRequest):
         orchestrator = KronxOrchestrator()
 
         async def generate():
-            full = ""
             try:
                 async for chunk in orchestrator.stream(
                     message=request.message,
@@ -72,11 +57,14 @@ async def chat_stream(request: ChatRequest):
                     conversation_id=request.conversation_id,
                     history=request.history
                 ):
-                    full += chunk
-                    yield f"data: {chunk}\n\n"
+                    if chunk:
+                        # Escape newlines for SSE payload encoding if necessary, or stream raw chunk json
+                        payload = chunk.replace("\n", "\\n")
+                        yield f"data: {payload}\n\n"
                 yield "data: [DONE]\n\n"
             except Exception as e:
-                yield f"data: Error: {str(e)}\n\n"
+                err_msg = str(e).replace("\n", " ")
+                yield f"data: Error: {err_msg}\n\n"
                 yield "data: [DONE]\n\n"
 
         return StreamingResponse(
@@ -84,9 +72,10 @@ async def chat_stream(request: ChatRequest):
             media_type="text/event-stream",
             headers={
                 "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
                 "X-Accel-Buffering": "no",
-                "Access-Control-Allow-Origin": "http://localhost:3000",
+                "Access-Control-Allow-Origin": "*",
             }
         )
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": str(e)}

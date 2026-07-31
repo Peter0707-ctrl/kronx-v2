@@ -39,37 +39,38 @@ def clean_message(text: str) -> str:
 def get_mode_context(mode: str) -> dict:
     """
     Return context information for each Kronx mode.
+    Lightweight, fast, low-CPU configuration.
     """
     modes = {
         "Friend": {
             "sw": "Rafiki",
             "en": "Friend",
-            "max_tokens": 512,
-            "temperature": 0.8,
+            "max_tokens": 200,
+            "temperature": 0.6,
         },
         "Teacher": {
             "sw": "Mwalimu",
             "en": "Teacher",
-            "max_tokens": 1024,
+            "max_tokens": 200,
             "temperature": 0.5,
         },
         "Business": {
             "sw": "Biashara",
             "en": "Business",
-            "max_tokens": 1024,
+            "max_tokens": 200,
             "temperature": 0.4,
         },
         "Research": {
             "sw": "Utafiti",
             "en": "Research",
-            "max_tokens": 2048,
+            "max_tokens": 200,
             "temperature": 0.3,
         },
         "Quick": {
             "sw": "Haraka",
             "en": "Quick",
-            "max_tokens": 256,
-            "temperature": 0.7,
+            "max_tokens": 120,
+            "temperature": 0.5,
         },
     }
     return modes.get(mode, modes["Friend"])

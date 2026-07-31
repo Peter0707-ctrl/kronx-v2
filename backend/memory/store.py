@@ -3,25 +3,42 @@ import os
 from datetime import datetime
 from typing import List, Optional
 
-MEMORY_FILE = "memory_store.json"
+MEMORY_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "memory_store.json")
 
 class MemoryStore:
     def __init__(self):
         self.path = MEMORY_FILE
+        self._cache: Optional[dict] = None
         self._ensure_file()
 
     def _ensure_file(self):
         if not os.path.exists(self.path):
-            with open(self.path, "w") as f:
+            with open(self.path, "w", encoding="utf-8") as f:
                 json.dump({}, f)
 
     def _load(self) -> dict:
-        with open(self.path, "r") as f:
-            return json.load(f)
+        if self._cache is not None:
+            return self._cache
+
+        if not os.path.exists(self.path):
+            self._cache = {}
+            return self._cache
+
+        try:
+            with open(self.path, "r", encoding="utf-8") as f:
+                self._cache = json.load(f)
+        except Exception:
+            self._cache = {}
+
+        return self._cache
 
     def _save(self, data: dict):
-        with open(self.path, "w") as f:
-            json.dump(data, f, indent=2, default=str)
+        self._cache = data
+        try:
+            with open(self.path, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2, default=str)
+        except Exception as e:
+            print(f"[MemoryStore save error]: {e}")
 
     def save_memory(
         self,
@@ -44,6 +61,13 @@ class MemoryStore:
         }
 
         data[conversation_id].append(memory)
+
+        # Prune conversation memories if count exceeds 40 to preserve low RAM & disk usage
+        if len(data[conversation_id]) > 40:
+            # Keep highest importance and most recent memories
+            sorted_memories = sorted(data[conversation_id], key=lambda x: (x.get("importance", 1.0), x.get("created_at", "")), reverse=True)
+            data[conversation_id] = sorted_memories[:30]
+
         self._save(data)
         return memory
 
@@ -54,8 +78,7 @@ class MemoryStore:
     ) -> List[dict]:
         data = self._load()
         memories = data.get(conversation_id, [])
-        # Sort by importance then by date
-        memories.sort(key=lambda x: x["importance"], reverse=True)
+        memories.sort(key=lambda x: x.get("importance", 1.0), reverse=True)
         return memories[:limit]
 
     def get_all_memories(self, conversation_id: str) -> List[dict]:
@@ -67,7 +90,7 @@ class MemoryStore:
         if conversation_id in data:
             data[conversation_id] = [
                 m for m in data[conversation_id]
-                if m["id"] != memory_id
+                if m.get("id") != memory_id
             ]
             self._save(data)
 
@@ -88,4 +111,4 @@ class MemoryStore:
 
     def get_user_facts(self, user_id: str) -> List[dict]:
         """Get all known facts about a user."""
-        return self.get_all_memories(f"user_{user_id}")
+        return self.get_all_memories(f"user_{user_id}")

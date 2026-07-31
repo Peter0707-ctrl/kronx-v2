@@ -44,10 +44,10 @@ export const SUGGESTION_CARDS: SuggestionCard[] = [
 ]
 
 export const QUICK_CHIPS = [
-  { sw: '💼 Biashara', en: 'Business', prompt: 'Nisaidie na biashara yangu' },
-  { sw: '📚 Kujifunza', en: 'Learn', prompt: 'Nifundishe kitu kipya leo' },
-  { sw: '📖 Hadithi', en: 'Story', prompt: 'Niambie hadithi ya kuvutia' },
-  { sw: '🔍 Utafiti', en: 'Research', prompt: 'Nifanyie utafiti kuhusu' },
+  { sw: 'Biashara', en: 'Business', prompt: 'Nisaidie na biashara yangu' },
+  { sw: 'Kujifunza', en: 'Learn', prompt: 'Nifundishe kitu kipya leo' },
+  { sw: 'Hadithi', en: 'Story', prompt: 'Niambie hadithi ya kuvutia' },
+  { sw: 'Utafiti', en: 'Research', prompt: 'Nifanyie utafiti kuhusu' },
 ]
 
 export const PLACEHOLDER: Record<string, string> = {
@@ -55,4 +55,4 @@ export const PLACEHOLDER: Record<string, string> = {
   en: 'Type your message... · Andika ujumbe wako...',
 }
 
-export const MODE_CHIP_LABEL = (sw: string, en: string) => `${sw} · ${en}`
+export const MODE_CHIP_LABEL = (sw: string, en: string) => `${sw} · ${en}`

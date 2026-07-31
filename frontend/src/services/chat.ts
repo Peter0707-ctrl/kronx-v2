@@ -29,17 +29,61 @@ export async function sendMessage(payload: ChatRequest): Promise<string> {
 export async function* streamMessage(
   payload: ChatRequest
 ): AsyncGenerator<string> {
-  // Use regular endpoint for clean formatted responses
-  const response = await sendMessage(payload)
-  // Yield the whole response at once
-  yield response
+  try {
+    const response = await fetch(`${API_BASE}/api/chat/stream`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+
+    if (!response.ok || !response.body) {
+      // Fallback to standard endpoint if streaming is not supported
+      const fallbackText = await sendMessage(payload)
+      yield fallbackText
+      return
+    }
+
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder('utf-8')
+    let buffer = ''
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n')
+      buffer = lines.pop() ?? ''
+
+      for (const line of lines) {
+        const trimmed = line.trim()
+        if (!trimmed || !trimmed.startsWith('data: ')) continue
+
+        const dataStr = trimmed.slice(6)
+        if (dataStr === '[DONE]') {
+          return
+        }
+
+        // Unescape escaped newlines sent by SSE
+        const token = dataStr.replace(/\\n/g, '\n')
+        if (token) {
+          yield token
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('[Kronx Stream Fallback]', err)
+    // Fallback to non-streaming response on stream connection error
+    const fallbackText = await sendMessage(payload)
+    yield fallbackText
+  }
 }
 
 export function buildHistory(
   messages: Message[],
-  limit = 12
+  limit = 8
 ): { role: 'user' | 'ai'; content: string }[] {
   return messages
     .slice(-limit)
     .map(m => ({ role: m.role, content: m.content }))
-}
+}

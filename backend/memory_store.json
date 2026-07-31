@@ -380,5 +380,1052 @@
       "importance": 1.0,
       "created_at": "2026-06-17T13:13:46.744269"
     }
+  ],
+  "test_conv_123": [
+    {
+      "id": "test_conv_123_0",
+      "content": "Q: Habari yako! Niambie kwa ufupi Kronx ni nini? | A: Ni mbina, zvinakana. Nimo kuhusu unahitaji. Neno hii aiki na ukusaidia katika mtandaika zaozi wa zai",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T13:12:59.058455"
+    },
+    {
+      "id": "test_conv_123_1",
+      "content": "Q: Habari yako! Niambie kwa ufupi Kronx ni nini? | A: Ninapenda ny 60.400000 MW na kwetesho mpya 1212 Kilometre (Km) kwatataifa maitochiria kutumika zai A",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T13:16:42.813123"
+    }
+  ],
+  "test_friend": [
+    {
+      "id": "test_friend_0",
+      "content": "Q: Habari! Hapa ni hali ya Friend. | A: Kikileka ne mimi wa? Mwanawaxia 100% online yake, kwa fahim karibu aiki kwa jinsi na dhambi ba?",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T13:20:55.337861"
+    }
+  ],
+  "test_teacher": [
+    {
+      "id": "test_teacher_0",
+      "content": "Q: Habari! Hapa ni hali ya Teacher. | A: Kikubidi na nyika kanaa ni \"Teacher\" na kwa kwesha na \"kronx\". Ni kuwa na maelezo katika kisakati, k",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T13:21:01.811871"
+    }
+  ],
+  "test_business": [
+    {
+      "id": "test_business_0",
+      "content": "User said: Habari! Hapa ni hali ya Business.",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-07-31T13:21:12.150202"
+    },
+    {
+      "id": "test_business_1",
+      "content": "Q: Habari! Hapa ni hali ya Business. | A: Ny viondikana kusha na Mungu? Ny viondikana zaidi 500 TZS na afya za kupata shiswa karibu aiki, mwen",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T13:21:12.152627"
+    }
+  ],
+  "conv_friend": [
+    {
+      "id": "conv_friend_0",
+      "content": "User said: Habari, mimi ni mwanafunzi. Niambie kuhusu hali yako ya Friend.",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-07-31T13:22:23.044945"
+    },
+    {
+      "id": "conv_friend_2",
+      "content": "User said: Habari, mimi ni mwanafunzi. Niambie kuhusu hali yako ya Friend.",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-07-31T13:38:13.452456"
+    },
+    {
+      "id": "conv_friend_4",
+      "content": "User said: Habari, mimi ni mwanafunzi. Niambie kuhusu hali yako ya Friend.",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-07-31T13:38:51.662724"
+    },
+    {
+      "id": "conv_friend_1",
+      "content": "Q: Habari, mimi ni mwanafunzi. Niambie kuhusu hali yako ya Friend. | A: Tesho soko chicheringi makanika kuwechapiwa zaidiaji za katika shule na mita nekani? Zao hakuri wa m",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T13:22:23.045453"
+    },
+    {
+      "id": "conv_friend_3",
+      "content": "Q: Habari, mimi ni mwanafunzi. Niambie kuhusu hali yako ya Friend. | A: I'm sorry to hear that! How can I help you today?",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T13:38:13.454053"
+    },
+    {
+      "id": "conv_friend_5",
+      "content": "Q: Habari, mimi ni mwanafunzi. Niambie kuhusu hali yako ya Friend. | A: (Your message is a bit unclear.)",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T13:38:51.666205"
+    },
+    {
+      "id": "conv_friend_6",
+      "content": "User said: Habari, mimi ni mwanafunzi. Niambie kuhusu hali yako ya Friend.",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-07-31T13:39:19.264553"
+    },
+    {
+      "id": "conv_friend_7",
+      "content": "Q: Habari, mimi ni mwanafunzi. Niambie kuhusu hali yako ya Friend. | A: How can we assist you today?",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T13:39:19.267446"
+    }
+  ],
+  "conv_teacher": [
+    {
+      "id": "conv_teacher_0",
+      "content": "User said: Habari, mimi ni mwanafunzi. Niambie kuhusu hali yako ya Teacher.",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-07-31T13:22:26.102587"
+    },
+    {
+      "id": "conv_teacher_2",
+      "content": "User said: Habari, mimi ni mwanafunzi. Niambie kuhusu hali yako ya Teacher.",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-07-31T13:38:16.844684"
+    },
+    {
+      "id": "conv_teacher_4",
+      "content": "User said: Habari, mimi ni mwanafunzi. Niambie kuhusu hali yako ya Teacher.",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-07-31T13:38:53.679992"
+    },
+    {
+      "id": "conv_teacher_1",
+      "content": "Q: Habari, mimi ni mwanafunzi. Niambie kuhusu hali yako ya Teacher. | A: Na mapenzi na nyumba na Mwenyeiwa! Hakanikiajia zao? Ka kuma muhimu aiki inaani \"Teacher\". Mwanamva ",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T13:22:26.105343"
+    },
+    {
+      "id": "conv_teacher_3",
+      "content": "Q: Habari, mimi ni mwanafunzi. Niambie kuhusu hali yako ya Teacher. | A: That was a great memory! It's always nice to remember good times like that. How can I help you today",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T13:38:16.847976"
+    },
+    {
+      "id": "conv_teacher_5",
+      "content": "Q: Habari, mimi ni mwanafunzi. Niambie kuhusu hali yako ya Teacher. | A: (Kiswahili kanisi wa kunyongeza baadhiwa katika Mungu)",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T13:38:53.683530"
+    },
+    {
+      "id": "conv_teacher_6",
+      "content": "User said: Habari, mimi ni mwanafunzi. Niambie kuhusu hali yako ya Teacher.",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-07-31T13:39:21.635646"
+    },
+    {
+      "id": "conv_teacher_7",
+      "content": "Q: Habari, mimi ni mwanafunzi. Niambie kuhusu hali yako ya Teacher. | A: Translation to English:\n\"I want you to know that I am a teacher.\"",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T13:39:21.638133"
+    }
+  ],
+  "conv_business": [
+    {
+      "id": "conv_business_0",
+      "content": "User said: Habari, mimi ni mwanafunzi. Niambie kuhusu hali yako ya Business.",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-07-31T13:22:29.631652"
+    },
+    {
+      "id": "conv_business_2",
+      "content": "User said: Habari, mimi ni mwanafunzi. Niambie kuhusu hali yako ya Business.",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-07-31T13:38:20.190318"
+    },
+    {
+      "id": "conv_business_4",
+      "content": "User said: Habari, mimi ni mwanafunzi. Niambie kuhusu hali yako ya Business.",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-07-31T13:38:57.089981"
+    },
+    {
+      "id": "conv_business_1",
+      "content": "Q: Habari, mimi ni mwanafunzi. Niambie kuhusu hali yako ya Business. | A: Mwenyele wa mpyandikosha kwa kuti aiki na \"Business\". Mungu cha miongonzo chicheringa inatafanyika z",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T13:22:29.634364"
+    },
+    {
+      "id": "conv_business_3",
+      "content": "Q: Habari, mimi ni mwanafunzi. Niambie kuhusu hali yako ya Business. | A: So what is your business?",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T13:38:20.193855"
+    },
+    {
+      "id": "conv_business_5",
+      "content": "Q: Habari, mimi ni mwanafunzi. Niambie kuhusu hali yako ya Business. | A: (KiShilizani wa Kitanzania (TZS))\nMungu na kuta haumai na ukusaidia za shirika katikana inahitaji za",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T13:38:57.093203"
+    },
+    {
+      "id": "conv_business_6",
+      "content": "User said: Habari, mimi ni mwanafunzi. Niambie kuhusu hali yako ya Business.",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-07-31T13:39:24.547408"
+    },
+    {
+      "id": "conv_business_7",
+      "content": "Q: Habari, mimi ni mwanafunzi. Niambie kuhusu hali yako ya Business. | A: Habari, mimi ni mwanafunzi. Niambie kuhusu hali yako ya Business.",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T13:39:24.550710"
+    }
+  ],
+  "conv_research": [
+    {
+      "id": "conv_research_0",
+      "content": "User said: Habari, mimi ni mwanafunzi. Niambie kuhusu hali yako ya Research.",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-07-31T13:22:34.645157"
+    },
+    {
+      "id": "conv_research_2",
+      "content": "User said: Habari, mimi ni mwanafunzi. Niambie kuhusu hali yako ya Research.",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-07-31T13:38:24.441321"
+    },
+    {
+      "id": "conv_research_4",
+      "content": "User said: Habari, mimi ni mwanafunzi. Niambie kuhusu hali yako ya Research.",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-07-31T13:38:59.220447"
+    },
+    {
+      "id": "conv_research_1",
+      "content": "Q: Habari, mimi ni mwanafunzi. Niambie kuhusu hali yako ya Research. | A: Mwenyeleza, mimi na kwa siku zaidi binafsa mukusikia kutumia na uwezo kubadzirika na kuna kama nekup",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T13:22:34.647923"
+    },
+    {
+      "id": "conv_research_3",
+      "content": "Q: Habari, mimi ni mwanafunzi. Niambie kuhusu hali yako ya Research. | A: Mwaka kwamba na kuwa kuti zao ni mukhibitaji wa kitazishwa (Research) wakati 100% Kisa Wachili PEKEE",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T13:38:24.443469"
+    },
+    {
+      "id": "conv_research_5",
+      "content": "Q: Habari, mimi ni mwanafunzi. Niambie kuhusu hali yako ya Research. | A: (Translation: \"I'm proud of my research.\" or \"I am very proud of my research.\")",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T13:38:59.222542"
+    },
+    {
+      "id": "conv_research_6",
+      "content": "User said: Habari, mimi ni mwanafunzi. Niambie kuhusu hali yako ya Research.",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-07-31T13:39:28.480983"
+    },
+    {
+      "id": "conv_research_7",
+      "content": "Q: Habari, mimi ni mwanafunzi. Niambie kuhusu hali yako ya Research. | A: Kiswahili na la nechoteza kuweka maelekezo wa 1960s, watakuwa kama soro aiki?",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T13:39:28.486545"
+    }
+  ],
+  "conv_quick": [
+    {
+      "id": "conv_quick_0",
+      "content": "User said: Habari, mimi ni mwanafunzi. Niambie kuhusu hali yako ya Quick.",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-07-31T13:22:39.270319"
+    },
+    {
+      "id": "conv_quick_2",
+      "content": "User said: Habari, mimi ni mwanafunzi. Niambie kuhusu hali yako ya Quick.",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-07-31T13:38:34.036191"
+    },
+    {
+      "id": "conv_quick_4",
+      "content": "User said: Habari, mimi ni mwanafunzi. Niambie kuhusu hali yako ya Quick.",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-07-31T13:39:01.773745"
+    },
+    {
+      "id": "conv_quick_1",
+      "content": "Q: Habari, mimi ni mwanafunzi. Niambie kuhusu hali yako ya Quick. | A: 1-2 sentence answer: The user asked for the prices and quantities of a specific product or service i",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T13:22:39.273049"
+    },
+    {
+      "id": "conv_quick_3",
+      "content": "Q: Habari, mimi ni mwanafunzi. Niambie kuhusu hali yako ya Quick. | A: Maana kuwechapi 30% wa kutumia ba? Kwa shida, nimbira wengine na ukwu cha jinsiyaar, ambayo kuti zai",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T13:38:34.038887"
+    },
+    {
+      "id": "conv_quick_5",
+      "content": "Q: Habari, mimi ni mwanafunzi. Niambie kuhusu hali yako ya Quick. | A: Tashaba:\n\nI want to start with a topic that is not related to the conversation we're currently havin",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T13:39:01.778164"
+    },
+    {
+      "id": "conv_quick_6",
+      "content": "User said: Habari, mimi ni mwanafunzi. Niambie kuhusu hali yako ya Quick.",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-07-31T13:39:31.707932"
+    },
+    {
+      "id": "conv_quick_7",
+      "content": "Q: Habari, mimi ni mwanafunzi. Niambie kuhusu hali yako ya Quick. | A: \"Kiswahili\" shughuti, \"Quick\".",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T13:39:31.712232"
+    }
+  ],
+  "3e99a21e-43f3-45ba-ba24-84fa3f299ff2": [
+    {
+      "id": "3e99a21e-43f3-45ba-ba24-84fa3f299ff2_0",
+      "content": "User said: Nisaidie na biashara yangu",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-07-31T13:36:04.300997"
+    },
+    {
+      "id": "3e99a21e-43f3-45ba-ba24-84fa3f299ff2_1",
+      "content": "Q: Nisaidie na biashara yangu | A: The question is not clear to me. Please provide more details so I can assist you better.",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T13:36:04.305183"
+    },
+    {
+      "id": "3e99a21e-43f3-45ba-ba24-84fa3f299ff2_2",
+      "content": "User said: Nataka kujua kusu biashara ya kilimo mbeya",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-07-31T13:36:33.127797"
+    },
+    {
+      "id": "3e99a21e-43f3-45ba-ba24-84fa3f299ff2_3",
+      "content": "Q: Nataka kujua kusu biashara ya kilimo mbeya | A: I'm sorry, but your question is not clear to me. Please provide more details so I can assist you bet",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T13:36:33.130960"
+    }
+  ],
+  "65d9b3c7-a855-4881-a475-bb417e7e940a": [
+    {
+      "id": "65d9b3c7-a855-4881-a475-bb417e7e940a_0",
+      "content": "User said: Best way to save TZS 500,000 this month in Tanzania",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-07-31T13:37:31.572148"
+    },
+    {
+      "id": "65d9b3c7-a855-4881-a475-bb417e7e940a_1",
+      "content": "Q: Best way to save TZS 500,000 this month in Tanzania | A: To calculate the exact amount you can save on your monthly budget using a simple formula:\n\n1. Calcul",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T13:37:31.573828"
+    }
+  ],
+  "real_sw_friend": [
+    {
+      "id": "real_sw_friend_0",
+      "content": "Q: Habari gani rafiki? Unaendeleaje siku ya leo? | A: Haru uwezo \"habari\" ni wa habarisali za aikosha na njira miondai yote, inatakeza wa mbargatiza katik",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T13:39:52.425363"
+    }
+  ],
+  "real_sw_teacher": [
+    {
+      "id": "real_sw_teacher_0",
+      "content": "User said: Nifundishe hatua za msingi za kuanza kujifunza kompyuta.",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-07-31T13:39:55.762496"
+    },
+    {
+      "id": "real_sw_teacher_1",
+      "content": "Q: Nifundishe hatua za msingi za kuanza kujifunza kompyuta. | A: Kwesi nyingi, haka na uwezo aiki ni muhimu 21-23 juvendi ya mwisho kwenye ukusaidia mafanikini ili k",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T13:39:55.767544"
+    }
+  ],
+  "real_sw_business": [
+    {
+      "id": "real_sw_business_0",
+      "content": "Q: Nahitaji ushauri wa kuanzisha duka la M-Pesa Dar es Salaam. | A: Na kutafiti, ba aikiwekana mimi na uyelekezi katika shiri ya shiriku?",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T13:39:58.558626"
+    }
+  ],
+  "real_sw_research": [
+    {
+      "id": "real_sw_research_0",
+      "content": "User said: Nieleze kwa kina kuhusu kilimo cha biashara nchini Tanzania.",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-07-31T13:40:02.527196"
+    },
+    {
+      "id": "real_sw_research_1",
+      "content": "Q: Nieleze kwa kina kuhusu kilimo cha biashara nchini Tanzania. | A: Leku, na uwezo hii ni 1963 msaada wa mwiridzi ili kuti kama kwamba chicheringa inahitaji ya Kiswahil",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T13:40:02.532306"
+    }
+  ],
+  "real_sw_quick": [
+    {
+      "id": "real_sw_quick_0",
+      "content": "Q: Mji mkuu wa Tanzania ni gani? | A: Mji mkuu wa Tanzania ni gani, shirika kuwecheraa ya 1 au 2 kwanzaa.",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T13:40:04.849128"
+    }
+  ],
+  "4df42aa9-2a7d-46ac-938a-191e37e9bb50": [
+    {
+      "id": "4df42aa9-2a7d-46ac-938a-191e37e9bb50_0",
+      "content": "User said: Nifundishe Python kutoka mwanzo kabisa",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-07-31T14:11:32.732562"
+    },
+    {
+      "id": "4df42aa9-2a7d-46ac-938a-191e37e9bb50_1",
+      "content": "Q: Nifundishe Python kutoka mwanzo kabisa | A: Python is a high-level programming language designed to be easy to learn and use, it's one of the mo",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T14:11:32.737366"
+    }
+  ],
+  "new": [
+    {
+      "id": "new_0",
+      "content": "User said: Best way to save TZS 500,000 this month in Tanzania",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-07-31T14:24:59.858620"
+    },
+    {
+      "id": "new_2",
+      "content": "User said: Nisaidie kuanza biashara ya kuku Dar es Salaam \u2014 mtaji, hatua, na mapato",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-07-31T19:36:43.288166"
+    },
+    {
+      "id": "new_1",
+      "content": "Q: Best way to save TZS 500,000 this month in Tanzania | A: Saving $500,000 for a month in Tanzania can be achieved by implementing several effective strategies",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T14:24:59.861900"
+    },
+    {
+      "id": "new_3",
+      "content": "Q: Nisaidie kuanza biashara ya kuku Dar es Salaam \u2014 mtaji, hatua, na mapato | A: Biashara za kukusanyika ni njia nzuri ili kupata faida katikati. Hapa tunaangalia mchakato wa kuanzi",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T19:36:43.346642"
+    },
+    {
+      "id": "new_4",
+      "content": "Q: Create a high quality image | A: ![Generated Image](https://pollinations.ai/p/A%20hyper-realistic%20cinematic%20masterpiece%2C%20ultr",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-01T01:31:21.480092"
+    },
+    {
+      "id": "new_5",
+      "content": "Q: Create a high quality image | A: ![Generated Image](https://pollinations.ai/p/A%20hyper-realistic%20cinematic%20shot%20of%20a%20moder",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-01T01:33:37.314722"
+    }
+  ],
+  "db94d797-6211-4b9d-822f-9e3939677879": [
+    {
+      "id": "db94d797-6211-4b9d-822f-9e3939677879_6",
+      "content": "User said: Niambie hadithi ya biashara yenye mafunzo",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-07-31T17:19:58.752710"
+    },
+    {
+      "id": "db94d797-6211-4b9d-822f-9e3939677879_12",
+      "content": "User said: Nisaidie kuanza biashara ya kuku Dar es Salaam \u2014 mtaji, hatua, na mapato",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-07-31T18:29:26.714553"
+    },
+    {
+      "id": "db94d797-6211-4b9d-822f-9e3939677879_14",
+      "content": "User said: Nisaidie kuanza biashara ya kuku Dar es Salaam \u2014 mtaji, hatua, na mapato",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-07-31T18:37:54.043054"
+    },
+    {
+      "id": "db94d797-6211-4b9d-822f-9e3939677879_16",
+      "content": "User said: Nisaidie kuanza biashara ya kuku Dar es Salaam \u2014 mtaji, hatua, na mapato",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-07-31T18:41:59.680475"
+    },
+    {
+      "id": "db94d797-6211-4b9d-822f-9e3939677879_18",
+      "content": "User said: Nifundishe Python kutoka mwanzo kabisa",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-07-31T18:49:35.908884"
+    },
+    {
+      "id": "db94d797-6211-4b9d-822f-9e3939677879_0",
+      "content": "Q: can you write the step by step to know  python | A: Sure! Here are the detailed steps for saving $500,000 in a month using Python:\n\n### Step 1: Set Fina",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T14:27:08.020529"
+    },
+    {
+      "id": "db94d797-6211-4b9d-822f-9e3939677879_1",
+      "content": "Q: i need any python code | A: Sure! Here's a basic Python script that demonstrates how to save $500,000 in Tanzania using your fin",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T14:29:12.432470"
+    },
+    {
+      "id": "db94d797-6211-4b9d-822f-9e3939677879_2",
+      "content": "Q: \ud83d\udca1 Give me a real-world example | A: Sorry, I wasn't able to generate a proper response this time. Please try rephrasing your question.",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T16:42:13.406383"
+    },
+    {
+      "id": "db94d797-6211-4b9d-822f-9e3939677879_3",
+      "content": "Q: \ud83d\udca1 Give me a real-world example | A: Sure! Here's an actual world scenario:\n\nImagine you are working in the field of medicine and have be",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T16:44:27.301917"
+    },
+    {
+      "id": "db94d797-6211-4b9d-822f-9e3939677879_4",
+      "content": "Q: \ud83d\udd0d Eleza zaidi kuhusu hili | A: Eleka za kuishi wa 10 na jumbe, mimi baana wengine aiki? Mwenyezi-Mungu. \n\n\"Zaiheshira \"elezama taon",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T16:44:49.893062"
+    },
+    {
+      "id": "db94d797-6211-4b9d-822f-9e3939677879_5",
+      "content": "Q: HII | A: Mwirikishaji wa30 mwingineza kuishi, aiki ya uyezi? Mwenyete muhimu. \n\n\"Kuthandizana \"kukurusha zaid",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T16:45:49.374063"
+    },
+    {
+      "id": "db94d797-6211-4b9d-822f-9e3939677879_7",
+      "content": "Q: Niambie hadithi ya biashara yenye mafunzo | A: Njia nzuri kuanza uwanja wa biashara! Hebu tufikirie, ni dhana gani inaweza kuwa muhimu katika kuend",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T17:19:58.760706"
+    },
+    {
+      "id": "db94d797-6211-4b9d-822f-9e3939677879_8",
+      "content": "Q: \ud83d\udcca Eleza zaidi kuhusu hatua za kuanza | A: Nafasi nzuri ya kuwasilisha! Hatua hizo ni: Tathmini uwezekano wa shughuli zako, na tuelekeze katika",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T17:21:47.311301"
+    },
+    {
+      "id": "db94d797-6211-4b9d-822f-9e3939677879_9",
+      "content": "Q: Fanya muhtasari mfupi | A: [Hitilafu: ]",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T18:16:48.154053"
+    },
+    {
+      "id": "db94d797-6211-4b9d-822f-9e3939677879_10",
+      "content": "Q: Nipe mfano halisi | A: [Hitilafu: ]",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T18:20:31.033587"
+    },
+    {
+      "id": "db94d797-6211-4b9d-822f-9e3939677879_11",
+      "content": "Q: Give me a real-world example | A: \n[Hitilafu: ]",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T18:26:43.361607"
+    },
+    {
+      "id": "db94d797-6211-4b9d-822f-9e3939677879_13",
+      "content": "Q: Nisaidie kuanza biashara ya kuku Dar es Salaam \u2014 mtaji, hatua, na mapato | A: \n[Hitilafu: ]",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T18:29:27.810347"
+    },
+    {
+      "id": "db94d797-6211-4b9d-822f-9e3939677879_15",
+      "content": "Q: Nisaidie kuanza biashara ya kuku Dar es Salaam \u2014 mtaji, hatua, na mapato | A: Kwanini ukianza ni kununulia 10-20 nguo za kukucha kutoka katika mazingira rahisi. Uwekezeshwaje: $1",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T18:37:54.078456"
+    },
+    {
+      "id": "db94d797-6211-4b9d-822f-9e3939677879_17",
+      "content": "Q: Nisaidie kuanza biashara ya kuku Dar es Salaam \u2014 mtaji, hatua, na mapato | A: Unahitajika shida za mlo 10-15 kunywa kukusanyisha dawa. Usafirishaji wa nyama unaweza kuja nje kupa",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T18:41:59.714183"
+    },
+    {
+      "id": "db94d797-6211-4b9d-822f-9e3939677879_19",
+      "content": "Q: Nifundishe Python kutoka mwanzo kabisa | A: Ni rahisi sana kujiandika tena. Hapa ni kikoa cha alama za HTML kinachohusisha nafasi ya mwanamke:\n`",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T18:49:35.987654"
+    },
+    {
+      "id": "db94d797-6211-4b9d-822f-9e3939677879_20",
+      "content": "Q: WHAT ARE STEPS TO SOLVE PROBLEM | A: My friend, solving a problem is like navigating through unfamiliar streets in Dar es Salaam - it req",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T18:55:20.510418"
+    },
+    {
+      "id": "db94d797-6211-4b9d-822f-9e3939677879_21",
+      "content": "Q: Break down the financial projections | A: \n[Hitilafu: ]",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T19:02:59.416211"
+    }
+  ],
+  "test_bench": [
+    {
+      "id": "test_bench_0",
+      "content": "Q: Hello | A: [Hitilafu: ]",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T18:18:57.395612"
+    },
+    {
+      "id": "test_bench_1",
+      "content": "Q: Hello | A: Habari! Nimefurahi kukutana nawe. Mimi ni Kronx, hapa kutoa taarifa, usaidizi, na mwongozo wakati wo",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T18:21:45.938968"
+    },
+    {
+      "id": "test_bench_2",
+      "content": "Q: Hello | A: Nimefurahi kukutana nawe. Niko hapa kutoa msaada, kujibu maswali, na kutoa mwongozo juu ya mada mbal",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T18:22:21.364068"
+    },
+    {
+      "id": "test_bench_3",
+      "content": "Q: Hello | A: Hujambo! Nimefurahi kukutana nawe. Mimi ni Kronx, rafiki yako wa kirafiki wa AI. Je, kuna kitu akili",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T18:22:48.217377"
+    }
+  ],
+  "e45a870b-c9b6-46d1-8a7c-4c988f7509a6": [
+    {
+      "id": "e45a870b-c9b6-46d1-8a7c-4c988f7509a6_0",
+      "content": "User said: Best way to save TZS 500,000 this month in Tanzania",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-07-31T19:12:40.421853"
+    },
+    {
+      "id": "e45a870b-c9b6-46d1-8a7c-4c988f7509a6_3",
+      "content": "User said: Nisaidie kuanza biashara ya kuku Dar es Salaam \u2014 mtaji, hatua, na mapato",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-07-31T19:22:08.352885"
+    },
+    {
+      "id": "e45a870b-c9b6-46d1-8a7c-4c988f7509a6_1",
+      "content": "Q: Best way to save TZS 500,000 this month in Tanzania | A: \n[Hitilafu: ]",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T19:12:40.667069"
+    },
+    {
+      "id": "e45a870b-c9b6-46d1-8a7c-4c988f7509a6_2",
+      "content": "Q: TELL ME ABOUT  PROBLEM SOLVING | A: \n[Hitilafu: ]",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T19:17:29.087622"
+    },
+    {
+      "id": "e45a870b-c9b6-46d1-8a7c-4c988f7509a6_4",
+      "content": "Q: Nisaidie kuanza biashara ya kuku Dar es Salaam \u2014 mtaji, hatua, na mapato | A: \n[Hitilafu: ]",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T19:22:08.487735"
+    },
+    {
+      "id": "e45a870b-c9b6-46d1-8a7c-4c988f7509a6_5",
+      "content": "Q: Give me a real-world example | A: Let's say you want to start raising chickens in Dar Es Salam. Here is an outline of how we can break",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T19:27:03.940204"
+    }
+  ],
+  "conv-1": [
+    {
+      "id": "conv-1_0",
+      "content": "Q: What is 2 + 2? | A: What a delightful problem!\n\nThe answer to this question can be translated into English mentally. How",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T19:20:08.092985"
+    },
+    {
+      "id": "conv-1_1",
+      "content": "Q: What is 2 + 2? | A: **Basic Arithmetic Operation**\n\nTo calculate the result of 2 + 2, we follow a straightforward mathem",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T19:20:46.152029"
+    },
+    {
+      "id": "conv-1_2",
+      "content": "Q: What is 2 + 2? | A: The answer to your query is 4.\n100% English.",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T19:28:32.080339"
+    },
+    {
+      "id": "conv-1_3",
+      "content": "Q: What is 2 + 2? | A: 2 plus 2 equals 4.",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T19:37:27.183562"
+    },
+    {
+      "id": "conv-1_4",
+      "content": "Q: What is 2 + 2? | A: The answer to your question in English is: 4.",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T19:40:28.005081"
+    },
+    {
+      "id": "conv-1_5",
+      "content": "Q: What is 2 + 2? | A: ",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T23:53:17.398858"
+    },
+    {
+      "id": "conv-1_6",
+      "content": "Q: What is 2 + 2? | A: 4\n\nIn standard arithmetic:\n$$2 + 2 = 4$$\n\n```python\ndef add(a: int, b: int) -> int:\n    return a + b",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-01T00:06:19.474365"
+    },
+    {
+      "id": "conv-1_7",
+      "content": "Q: What is 2 + 2? | A: 2 + 2 = 4",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-01T00:57:22.591542"
+    }
+  ],
+  "b5135e76-d7e3-4ad9-b2e7-d059b2fe9ffa": [
+    {
+      "id": "b5135e76-d7e3-4ad9-b2e7-d059b2fe9ffa_0",
+      "content": "User said: Nisaidie kuanza biashara ya kuku Dar es Salaam \u2014 mtaji, hatua, na mapato",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-07-31T19:30:33.168673"
+    },
+    {
+      "id": "b5135e76-d7e3-4ad9-b2e7-d059b2fe9ffa_1",
+      "content": "Q: Nisaidie kuanza biashara ya kuku Dar es Salaam \u2014 mtaji, hatua, na mapato | A: \n[Hitilafu: ]",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T19:30:33.641279"
+    }
+  ],
+  "2e56ee2a-332c-45db-8029-15df59138a5d": [
+    {
+      "id": "2e56ee2a-332c-45db-8029-15df59138a5d_0",
+      "content": "Q: HOW CAN I GET DEGREE IN TANZANIA | A: \n[Hitilafu: ]",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-07-31T19:39:26.904870"
+    }
+  ],
+  "0deaea56-85f9-4eb5-9178-8211d203af8d": [
+    {
+      "id": "0deaea56-85f9-4eb5-9178-8211d203af8d_1",
+      "content": "User said: Best way to save TZS 500,000 this month in Tanzania",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-08-01T00:06:50.057819"
+    },
+    {
+      "id": "0deaea56-85f9-4eb5-9178-8211d203af8d_3",
+      "content": "User said: Nisaidie kuanza biashara ya kuku Dar es Salaam \u2014 mtaji, hatua, na mapato",
+      "type": "conversation",
+      "importance": 1.5,
+      "created_at": "2026-08-01T00:08:12.872080"
+    },
+    {
+      "id": "0deaea56-85f9-4eb5-9178-8211d203af8d_0",
+      "content": "Q: CAN I GET TO KNOW PYTHON FROM FIRST POINT TILL I BECOME PRO | A: ",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-01T00:02:56.616677"
+    },
+    {
+      "id": "0deaea56-85f9-4eb5-9178-8211d203af8d_2",
+      "content": "Q: Best way to save TZS 500,000 this month in Tanzania | A: ",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-01T00:06:50.067627"
+    },
+    {
+      "id": "0deaea56-85f9-4eb5-9178-8211d203af8d_4",
+      "content": "Q: Nisaidie kuanza biashara ya kuku Dar es Salaam \u2014 mtaji, hatua, na mapato | A: ",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-01T00:08:12.874657"
+    },
+    {
+      "id": "0deaea56-85f9-4eb5-9178-8211d203af8d_5",
+      "content": "Q: HELLO | A: Biashara ya kuku Dar es Salaam ina fursa kubwa kutokana na mahitaji ya juu ya nyama na mayai katika ",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-01T00:31:50.453033"
+    },
+    {
+      "id": "0deaea56-85f9-4eb5-9178-8211d203af8d_6",
+      "content": "Q: HELLO | A: Endelea na mchanganuo wa mapato kutoka pale ulipokatikia:\n\n---\n\n### 3. Mchanganuo wa Mapato na Faida",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-01T00:32:14.167316"
+    },
+    {
+      "id": "0deaea56-85f9-4eb5-9178-8211d203af8d_7",
+      "content": "Q: HII | A: Tayari nimeshakukamilishia mchanganuo wote wa biashara ya kuku kwa mtaji wa TZS 500,000. \n\nUnahitaji",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-01T00:54:58.475184"
+    },
+    {
+      "id": "0deaea56-85f9-4eb5-9178-8211d203af8d_8",
+      "content": "Q: Create a high quality image | A: As a text-based assistant, I cannot directly render binary image files (such as JPEG or PNG) into th",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-01T01:06:51.881961"
+    }
+  ],
+  "c1": [
+    {
+      "id": "c1_0",
+      "content": "Q: Hello | A: Error generating response: Client error '404 Not Found' for url 'https://generativelanguage.googleap",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-01T00:09:14.188719"
+    },
+    {
+      "id": "c1_1",
+      "content": "Q: Hello | A: Error generating response: Client error '404 Not Found' for url 'https://generativelanguage.googleap",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-01T00:09:32.385767"
+    },
+    {
+      "id": "c1_2",
+      "content": "Q: Hello! | A: Ready. State your task, codebase challenge, or architecture query.",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-01T00:11:25.832545"
+    },
+    {
+      "id": "c1_3",
+      "content": "Q: Hello | A: Hello. I am Kronx, ready to assist with your code, architecture, or technical queries. What are we b",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-01T01:12:53.000173"
+    }
+  ],
+  "test-conv": [
+    {
+      "id": "test-conv_0",
+      "content": "Q: Who are you? | A: I am Kronx, an advanced AI pair programmer and technical assistant developed based on Google DeepMin",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-01T00:11:58.969855"
+    },
+    {
+      "id": "test-conv_1",
+      "content": "Q: Who are you? | A: I am **Kronx**, an advanced AI pair programmer and direct solution assistant built upon Google DeepM",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-01T00:58:00.657837"
+    }
+  ],
+  "2c35cff3-d954-4e25-81c1-bdd87bf07416": [
+    {
+      "id": "2c35cff3-d954-4e25-81c1-bdd87bf07416_0",
+      "content": "Q: Create a high quality image | A: ![Generated Image](https://pollinations.ai/p/A%20hyper-detailed%2C%20cinematic%20masterpiece%20of%20",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-01T01:25:24.619676"
+    }
+  ],
+  "2146e314-4031-40aa-81a5-5b14405ad640": [
+    {
+      "id": "2146e314-4031-40aa-81a5-5b14405ad640_0",
+      "content": "Q: Create a high quality image (Note: Provide an alternative, enhanced response) | A: Here is a high-quality, enhanced visual concept rendering a futuristic quantum processing node.\n\n![G",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-01T01:35:09.435005"
+    },
+    {
+      "id": "2146e314-4031-40aa-81a5-5b14405ad640_1",
+      "content": "Q: Create a high quality image (Note: Provide an alternative, enhanced response) | A: Here is the rendered high-quality image:\n\n![Generated Image](https://pollinations.ai/p/futuristic%20",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-01T01:37:20.042061"
+    }
+  ],
+  "1708864c-26fd-4b2c-bd88-1b2fb3e7d688": [
+    {
+      "id": "1708864c-26fd-4b2c-bd88-1b2fb3e7d688_0",
+      "content": "Q: I SAID GOAT | A: ![Generated Image](https://pollinations.ai/p/A%20majestic%20mountain%20goat%20standing%20proudly%20o",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-01T01:46:19.904896"
+    },
+    {
+      "id": "1708864c-26fd-4b2c-bd88-1b2fb3e7d688_1",
+      "content": "Q: GENERATE VIDEO | A: \n[Error: Unable to connect to Gemini API model. Please check quota or API key.]",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-01T01:50:14.118768"
+    },
+    {
+      "id": "1708864c-26fd-4b2c-bd88-1b2fb3e7d688_2",
+      "content": "Q: CAN I GET TO KNOW ABOUT JAVA | A: Java is a high-level, class-based, object-oriented programming language designed around the principl",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-01T01:55:26.692221"
+    },
+    {
+      "id": "1708864c-26fd-4b2c-bd88-1b2fb3e7d688_3",
+      "content": "Q: GIVE ME PYTHON CODE | A: A temporary system issue occurred. Please repeat your query.",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-01T01:58:01.638520"
+    },
+    {
+      "id": "1708864c-26fd-4b2c-bd88-1b2fb3e7d688_4",
+      "content": "Q: JAVA SCRIPT LANGUAGE | A: A temporary system issue occurred. Please repeat your query.",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-01T01:59:36.311541"
+    },
+    {
+      "id": "1708864c-26fd-4b2c-bd88-1b2fb3e7d688_5",
+      "content": "Q: JAVA SCRIPT LANGUAGE | A: A temporary system issue occurred. Please repeat your query.",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-01T02:03:03.427433"
+    },
+    {
+      "id": "1708864c-26fd-4b2c-bd88-1b2fb3e7d688_6",
+      "content": "Q: JAVA SCRIPT LANGUAGE | A: I understand! Regarding 'JAVA SCRIPT LANGUAGE': Kronx AI is ready to assist you. Would you like a de",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-01T02:07:33.717154"
+    },
+    {
+      "id": "1708864c-26fd-4b2c-bd88-1b2fb3e7d688_7",
+      "content": "Q: YES | A: I understand! Regarding 'YES': Kronx AI is ready to assist you. Would you like a detailed breakdown ",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-01T02:07:57.353234"
+    },
+    {
+      "id": "1708864c-26fd-4b2c-bd88-1b2fb3e7d688_8",
+      "content": "Q: JAVA SCRIPT LANGUAGE | A: JavaScript (JS) is a high-level, interpreted programming language conforming to the ECMAScript speci",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-01T02:13:44.101364"
+    },
+    {
+      "id": "1708864c-26fd-4b2c-bd88-1b2fb3e7d688_9",
+      "content": "Q: JAVA SCRIPT LANGUAGE | A: JavaScript is a dynamic, interpreted programming language core to modern web development. It powers ",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-01T02:19:08.758113"
+    },
+    {
+      "id": "1708864c-26fd-4b2c-bd88-1b2fb3e7d688_10",
+      "content": "Q: UNAWEZA NIAMBIA STEP BY STEP OF SOLVING A PROBLEM | A: Hizi ni hatua 5 za msingi za kutatua tatizo lolote la kiufundi (programming/computer science):\n\n1. *",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-01T02:19:36.907089"
+    },
+    {
+      "id": "1708864c-26fd-4b2c-bd88-1b2fb3e7d688_11",
+      "content": "Q: CAN I KNOW ABOUT STACK TREE | A: In computer science, \"Stack\" and \"Tree\" are two distinct, fundamental data structures. Here is a dir",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-01T02:23:49.583328"
+    },
+    {
+      "id": "1708864c-26fd-4b2c-bd88-1b2fb3e7d688_12",
+      "content": "Q: CAN I KNOW ABOUT STACK TREE | A: A **Stack** and a **Tree** are two fundamentally different data structures used in computer science.",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-01T02:25:08.537993"
+    }
   ]
 }
