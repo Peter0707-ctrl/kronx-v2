@@ -44,6 +44,39 @@ def root():
 def google_file():
     return "google-site-verification: googlef5f0aa224a2f0db3.html"
 
+from fastapi.responses import Response
+
+@app.get("/sitemap.xml")
+def sitemap_xml():
+    content = """<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://profound-rejoicing-production-1ce5.up.railway.app/</loc>
+    <lastmod>2026-08-01</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://profound-rejoicing-production-1ce5.up.railway.app/chat</loc>
+    <lastmod>2026-08-01</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://profound-rejoicing-production-1ce5.up.railway.app/landing</loc>
+    <lastmod>2026-08-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://profound-rejoicing-production-1ce5.up.railway.app/admin</loc>
+    <lastmod>2026-08-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+</urlset>"""
+    return Response(content=content, media_type="application/xml")
+
 @app.get("/health")
 def health():
     return {"status": "healthy"}
