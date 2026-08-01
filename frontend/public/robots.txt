@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Allow: /chat
+Allow: /landing
+Allow: /admin
+
+# Sitemap directive for Googlebot and Bingbot
+Sitemap: https://profound-rejoicing-production-1ce5.up.railway.app/sitemap.xml

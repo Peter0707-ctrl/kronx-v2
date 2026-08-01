@@ -77,6 +77,17 @@ def sitemap_xml():
 </urlset>"""
     return Response(content=content, media_type="application/xml")
 
+@app.get("/robots.txt", response_class=Response)
+def robots_txt():
+    content = """User-agent: *
+Allow: /
+Allow: /chat
+Allow: /landing
+Allow: /admin
+
+Sitemap: https://profound-rejoicing-production-1ce5.up.railway.app/sitemap.xml"""
+    return Response(content=content, media_type="text/plain")
+
 @app.get("/health")
 def health():
     return {"status": "healthy"}
