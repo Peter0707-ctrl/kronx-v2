@@ -3,7 +3,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'Kronx AI by PJ COPETRANOVA — Akili Bandia ya Tanzania | KronxAI Plus',
-  description: 'Kronx AI (KronxAI) by PJ COPETRANOVA - Mshauri wako mkuu wa masomo, tafiti na akili bandia nchini Tanzania. Direct WhatsApp 0673190931 support & Lipa Namba 45342017.',
+  description: 'Kronx AI (KronxAI) by PJ COPETRANOVA - Mshauri wako mkuu wa masomo, tafiti na akili bandia nchini Tanzania.',
   keywords: [
     'kronxai',
     'kronx ai',
