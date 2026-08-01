@@ -24,13 +24,25 @@ from api.memory import router as memory_router
 app.include_router(chat_router, prefix="/api")
 app.include_router(memory_router, prefix="/api")
 
-@app.get("/")
+from fastapi.responses import HTMLResponse
+
+@app.get("/", response_class=HTMLResponse)
 def root():
-    return {
-        "name": "Kronx API",
-        "version": "0.3.0",
-        "status": "running"
-    }
+    return """<!DOCTYPE html>
+<html>
+<head>
+    <meta name="google-site-verification" content="4jBwESfIU4dUQ8-AJiw6Otam1M-JDsIGmQJ2WJnZZ8U" />
+    <title>Kronx API</title>
+</head>
+<body style="font-family: sans-serif; text-align: center; padding: 50px;">
+    <h1>Kronx AI Backend API</h1>
+    <p>Status: Running &amp; Operational</p>
+</body>
+</html>"""
+
+@app.get("/googlef5f0aa224a2f0db3.html", response_class=HTMLResponse)
+def google_file():
+    return "google-site-verification: googlef5f0aa224a2f0db3.html"
 
 @app.get("/health")
 def health():
