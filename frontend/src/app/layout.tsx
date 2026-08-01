@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   title: 'Kronx — AI Companion',
   description: 'Mshauri wako wa akili bandia · Your intelligent AI companion',
   verification: {
-    google: 'googlef5f0aa224a2f0db3',
+    google: '4jBwESfIU4dUQ8-AJiw6Otam1M-JDsIGmQJ2WJnZZ8U',
   },
 }
 
