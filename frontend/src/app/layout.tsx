@@ -2,17 +2,17 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Nexora AI (Kronx) by PJ COPETRANOVA — Akili Bandia ya Tanzania | Nexora Plus',
-  description: 'Nexora AI (KronxAI) by PJ COPETRANOVA - Mshauri wako mkuu wa masomo, tafiti na akili bandia nchini Tanzania.',
+  title: 'PJKRONX AI — Akili Bandia ya Tanzania & Academic Companion | PJKRONX Plus',
+  description: 'PJKRONX AI by PJ COPETRANOVA - Mshauri wako mkuu wa masomo, tafiti na akili bandia nchini Tanzania.',
   keywords: [
-    'nexora ai',
-    'nexora',
-    'nexorai',
-    'kronxai',
-    'kronx ai',
+    'pjkronx',
+    'pjkronx ai',
+    'pjkronxai',
     'pj copetranova',
-    'nexora ai tanzania',
-    'akili bandia tanzania'
+    'pjkronx plus',
+    'pjkronx tanzania',
+    'akili bandia tanzania',
+    'mwalimu ai tanzania'
   ],
   verification: {
     google: '4jBwESfIU4dUQ8-AJiw6Otam1M-JDsIGmQJ2WJnZZ8U',
