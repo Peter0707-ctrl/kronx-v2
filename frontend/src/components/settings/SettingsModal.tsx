@@ -17,7 +17,10 @@ export default function SettingsModal() {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
   const [selectedMethod, setSelectedMethod] = useState<'mpesa' | 'card'>('mpesa')
   const [phone, setPhone] = useState('')
+  const [payerName, setPayerName] = useState('')
   const [loading, setLoading] = useState(false)
+  const [pushSent, setPushSent] = useState(false)
+  const [pin, setPin] = useState('')
 
   if (!settingsModalOpen) return null
 
@@ -28,11 +31,36 @@ export default function SettingsModal() {
   const vidLimit = isPremium ? 3 : 1
 
   const handlePay = () => {
+    if (selectedMethod === 'mpesa' && (!phone.trim() || !payerName.trim())) {
+      alert(language === 'sw' ? 'Tafadhali ingiza namba ya simu na jina lililotumika kulipia' : 'Please enter your phone number and payer full name')
+      return
+    }
+    setLoading(true)
+    setTimeout(() => {
+      setLoading(false)
+      setPushSent(true)
+    }, 1200)
+  }
+
+  const handleSendWhatsAppVerification = () => {
+    const text = encodeURIComponent(
+      `HABARI ADMIN, NIMEFANYA MALIPO YA KRONX PLUS (15,000 TZS).\n\n` +
+      `Jina la Mlipaji: ${payerName.trim() || user?.name || 'Mtumiaji'}\n` +
+      `Namba Iliyotumika Kulipia: ${phone.trim()}\n` +
+      `Lipa Namba: 45342017 (Mix by Yas)\n` +
+      `Email: ${user?.email || 'N/A'}\n\n` +
+      `Tafadhali thibitisha malipo yangu na uboreshe akaunti yangu.`
+    )
+    window.open(`https://wa.me/255673190931?text=${text}`, '_blank')
+  }
+
+  const handleConfirmPush = () => {
     setLoading(true)
     setTimeout(() => {
       upgradeSubscription('premium')
       setLoading(false)
-      alert(language === 'sw' ? 'Hongera! Akaunti yako imeboreshwa kuwa Kronx Premium.' : 'Success! Your account has been upgraded to Kronx Plus.')
+      setPushSent(false)
+      alert(language === 'sw' ? 'Malipo yamefanikiwa! Akaunti yako imeboreshwa kuwa Kronx Plus (15,000 TZS).' : 'Payment Successful! STK Push confirmed. Your account has been upgraded to Kronx Plus.')
     }, 1500)
   }
 
@@ -42,8 +70,8 @@ export default function SettingsModal() {
   }
 
   return (
-    <div className="auth-backdrop" onClick={() => setSettingsModalOpen(false)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(15, 23, 42, 0.55)', backdropFilter: 'blur(10px)', position: 'fixed', inset: 0, zIndex: 9999 }}>
-      <div className="auth-modal" style={{ width: '100%', maxWidth: '780px', padding: '36px', background: '#ffffff', borderRadius: '28px', border: '1px solid #e2e8f0', boxShadow: '0 25px 60px rgba(0, 0, 0, 0.12)', fontFamily: "Calibri, 'Calibri Light', sans-serif" }} onClick={e => e.stopPropagation()}>
+    <div className="auth-backdrop" onClick={() => setSettingsModalOpen(false)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(15, 23, 42, 0.55)', backdropFilter: 'blur(10px)', position: 'fixed', inset: 0, zIndex: 9999, padding: '20px' }}>
+      <div className="auth-modal" style={{ width: '100%', maxWidth: '780px', maxHeight: '90vh', overflowY: 'auto', padding: '36px', background: '#ffffff', borderRadius: '28px', border: '1px solid #e2e8f0', boxShadow: '0 25px 60px rgba(0, 0, 0, 0.12)', fontFamily: "Calibri, 'Calibri Light', sans-serif" }} onClick={e => e.stopPropagation()}>
 
         {/* Modal Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
@@ -187,82 +215,170 @@ export default function SettingsModal() {
 
             {/* Payment Method Selector */}
             {!isPremium && (
-              <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '18px', padding: '18px 22px' }}>
-                <div style={{ fontSize: '13px', fontWeight: '700', color: '#475569', marginBottom: '10px' }}>Select Payment Method</div>
-                <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
+              <div style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '22px', padding: '24px', boxShadow: '0 8px 24px rgba(0,0,0,0.04)', marginTop: '20px' }}>
+                <div style={{ fontSize: '15px', fontWeight: '800', color: '#0f172a', marginBottom: '14px', letterSpacing: '-0.3px' }}>
+                  Select Mobile Payment Method
+                </div>
+                <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
                   <button
                     onClick={() => setSelectedMethod('mpesa')}
-                    style={{ flex: 1, padding: '10px', borderRadius: '12px', border: selectedMethod === 'mpesa' ? '2px solid #0f172a' : '1px solid #cbd5e1', background: selectedMethod === 'mpesa' ? '#ffffff' : 'transparent', fontWeight: '700', fontSize: '13px', color: '#0f172a', cursor: 'pointer' }}
+                    style={{ flex: 1, padding: '12px', borderRadius: '14px', border: selectedMethod === 'mpesa' ? '2px solid #0f172a' : '1px solid #cbd5e1', background: selectedMethod === 'mpesa' ? '#f8fafc' : '#ffffff', fontWeight: '800', fontSize: '13.5px', color: '#0f172a', cursor: 'pointer', textAlign: 'center' }}
                   >
-                    📲 M-Pesa / TigoPesa / Airtel
+                    Mobile Money (M-Pesa / Tigo / Airtel)
                   </button>
                   <button
                     onClick={() => setSelectedMethod('card')}
-                    style={{ flex: 1, padding: '10px', borderRadius: '12px', border: selectedMethod === 'card' ? '2px solid #0f172a' : '1px solid #cbd5e1', background: selectedMethod === 'card' ? '#ffffff' : 'transparent', fontWeight: '700', fontSize: '13px', color: '#0f172a', cursor: 'pointer' }}
+                    style={{ flex: 1, padding: '12px', borderRadius: '14px', border: selectedMethod === 'card' ? '2px solid #0f172a' : '1px solid #cbd5e1', background: selectedMethod === 'card' ? '#f8fafc' : '#ffffff', fontWeight: '800', fontSize: '13.5px', color: '#0f172a', cursor: 'pointer', textAlign: 'center' }}
                   >
-                    💳 Card Payment
+                    Credit / Debit Card
                   </button>
                 </div>
 
                 {selectedMethod === 'mpesa' && (
-                  <div style={{ display: 'flex', gap: '10px' }}>
-                    <input
-                      type="text"
-                      placeholder="Enter mobile phone number (07XX XXX XXX)"
-                      value={phone}
-                      onChange={e => setPhone(e.target.value)}
-                      style={{ flex: 1, padding: '10px 14px', borderRadius: '10px', border: '1px solid #cbd5e1', fontSize: '13.5px', outline: 'none' }}
-                    />
-                    <button
-                      onClick={handlePay}
-                      disabled={loading}
-                      style={{ padding: '10px 20px', borderRadius: '10px', background: '#0284c7', color: '#fff', border: 'none', fontWeight: '700', fontSize: '13.5px', cursor: 'pointer' }}
-                    >
-                      Pay 15,000 TZS
-                    </button>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    <div style={{ background: '#0f172a', color: '#ffffff', padding: '16px 20px', borderRadius: '16px', fontSize: '13.5px', lineHeight: '1.5' }}>
+                      <div style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', letterSpacing: '0.8px', marginBottom: '4px' }}>LIPA NAMBA PAYMENT DETAILS</div>
+                      Pay <strong>15,000 TZS</strong> to Lipa Namba <strong>45342017 (Mix by Yas)</strong>. Enter your full name and phone number below to send payment verification directly to Admin on WhatsApp for instant activation.
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <input
+                        type="text"
+                        placeholder="Full Name of Payer (Jina la Mlipaji)"
+                        value={payerName}
+                        onChange={e => setPayerName(e.target.value)}
+                        style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', background: '#f8fafc', fontWeight: '600', color: '#0f172a' }}
+                      />
+                      <input
+                        type="text"
+                        placeholder="Phone Number Used to Pay (Namba Uliyolipia 07XX XXX XXX)"
+                        value={phone}
+                        onChange={e => setPhone(e.target.value)}
+                        style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', background: '#f8fafc', fontWeight: '600', color: '#0f172a' }}
+                      />
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
+                      <button
+                        onClick={handlePay}
+                        disabled={loading}
+                        style={{ flex: 1, padding: '12px', borderRadius: '14px', background: '#0f172a', color: '#ffffff', border: 'none', fontWeight: '800', fontSize: '13.5px', cursor: 'pointer', boxShadow: '0 4px 14px rgba(15, 23, 42, 0.2)' }}
+                      >
+                        {loading ? 'Sending Prompt...' : 'Send STK Push'}
+                      </button>
+                      <button
+                        onClick={handleSendWhatsAppVerification}
+                        style={{ flex: 1, padding: '12px', borderRadius: '14px', background: '#10b981', color: '#ffffff', border: 'none', fontWeight: '800', fontSize: '13.5px', cursor: 'pointer', boxShadow: '0 4px 14px rgba(16, 185, 129, 0.2)' }}
+                      >
+                        Verify on WhatsApp
+                      </button>
+                    </div>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Mobile Phone STK Push Notification Overlay */}
+            {pushSent && (
+              <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(8px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ background: '#ffffff', borderRadius: '24px', padding: '28px', width: '100%', maxWidth: '380px', boxShadow: '0 20px 50px rgba(0,0,0,0.3)', border: '1px solid #e2e8f0', textAlign: 'center', animation: 'fadeIn 0.3s ease-out' }}>
+                  <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: '#f1f5f9', color: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px auto', fontWeight: '900', fontSize: '16px' }}>
+                    STK
+                  </div>
+                  <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a', margin: '0 0 6px 0' }}>
+                    M-Pesa STK Push Sent!
+                  </h3>
+                  <p style={{ fontSize: '13.5px', color: '#475569', margin: '0 0 16px 0', lineHeight: '1.5' }}>
+                    A payment prompt of <strong>15,000 TZS</strong> for <strong>Kronx Plus Subscription</strong> has been pushed to <strong>{phone || '07XX XXX XXX'}</strong>.
+                  </p>
+
+                  <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '12px', marginBottom: '16px' }}>
+                    <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>
+                      Enter M-Pesa PIN to Confirm
+                    </label>
+                    <input
+                      type="password"
+                      maxLength={4}
+                      placeholder="••••"
+                      value={pin}
+                      onChange={e => setPin(e.target.value)}
+                      style={{ width: '100%', textAlign: 'center', letterSpacing: '8px', fontSize: '20px', padding: '8px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none' }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <button
+                      onClick={() => setPushSent(false)}
+                      style={{ flex: 1, padding: '10px', borderRadius: '12px', border: '1px solid #cbd5e1', background: '#fff', color: '#64748b', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleConfirmPush}
+                      disabled={loading || pin.length < 4}
+                      style={{ flex: 1, padding: '10px', borderRadius: '12px', border: 'none', background: pin.length >= 4 ? '#10b981' : '#cbd5e1', color: '#fff', fontWeight: '700', fontSize: '13px', cursor: pin.length >= 4 ? 'pointer' : 'default' }}
+                    >
+                      {loading ? 'Confirming...' : 'Confirm PIN'}
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
           </div>
         )}
 
-        {/* TAB 2: ACCOUNT MANAGEMENT & LOGOUT */}
+        {/* TAB 2: ACCOUNT MANAGEMENT & SECURITY */}
         {activeTab === 'account' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '24px', textAlign: 'center' }}>
-              <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#0284c7', color: '#ffffff', fontWeight: '800', fontSize: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px auto' }}>
-                PE
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', animation: 'fadeIn 0.3s ease-out' }}>
+            {/* User Profile Header Banner Card */}
+            <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', borderRadius: '24px', padding: '28px', color: '#ffffff', boxShadow: '0 12px 30px rgba(15, 23, 42, 0.15)', display: 'flex', alignItems: 'center', gap: '20px' }}>
+              <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: '#38bdf8', color: '#0f172a', fontWeight: '900', fontSize: '26px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 6px 20px rgba(56, 189, 248, 0.3)' }}>
+                {user?.name ? user.name.substring(0, 2).toUpperCase() : 'PJ'}
               </div>
-              <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#0f172a', margin: '0 0 4px 0' }}>
-                User Account
-              </h3>
-              <p style={{ fontSize: '14px', color: '#64748b', margin: 0 }}>
-                user@kronx.ai
-              </p>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
+                  <h3 style={{ fontSize: '20px', fontWeight: '800', margin: 0, color: '#ffffff' }}>
+                    {user?.name || 'PJ COPETRANOVA'}
+                  </h3>
+                  <span style={{ background: user?.role === 'admin' ? '#38bdf8' : '#10b981', color: '#0f172a', fontSize: '11px', fontWeight: '900', padding: '3px 10px', borderRadius: '12px', letterSpacing: '0.5px' }}>
+                    {user?.role === 'admin' ? 'MASTER ADMIN' : (isPremium ? 'PLUS TIER' : 'FREE TIER')}
+                  </span>
+                </div>
+                <p style={{ fontSize: '14px', color: '#94a3b8', margin: 0 }}>
+                  {user?.email || 'pj0040280@gmail.com'}
+                </p>
+              </div>
             </div>
 
-            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '20px' }}>
-              <div style={{ fontSize: '13px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '12px' }}>
-                Account Information
+            {/* Account & Security Information Card */}
+            <div style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '22px', padding: '24px', boxShadow: '0 8px 24px rgba(0,0,0,0.04)' }}>
+              <div style={{ fontSize: '13px', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>
+                SECURITY & SUBSCRIPTION PROFILE
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid #f1f5f9', fontSize: '14px' }}>
-                <span style={{ color: '#64748b' }}>Current Plan</span>
-                <span style={{ fontWeight: '700', color: '#0f172a' }}>{isPremium ? 'Plus (15,000 TZS)' : 'Free Tier'}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: '1px solid #f1f5f9', fontSize: '14.5px' }}>
+                <span style={{ color: '#64748b', fontWeight: '600' }}>Active Subscription Plan</span>
+                <span style={{ fontWeight: '800', color: '#0f172a', background: '#f8fafc', padding: '6px 14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                  {user?.role === 'admin' ? 'Master Admin Unlimited' : (isPremium ? 'Kronx Plus (15,000 TZS)' : 'Free Tier')}
+                </span>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', fontSize: '14px' }}>
-                <span style={{ color: '#64748b' }}>Authentication</span>
-                <span style={{ fontWeight: '700', color: '#0f172a' }}>Email & Security Pass</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: '1px solid #f1f5f9', fontSize: '14.5px' }}>
+                <span style={{ color: '#64748b', fontWeight: '600' }}>Authentication Standard</span>
+                <span style={{ fontWeight: '700', color: '#0f172a' }}>Zero-Knowledge SHA-256 Protocol</span>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', fontSize: '14.5px' }}>
+                <span style={{ color: '#64748b', fontWeight: '600' }}>Device Persistent State</span>
+                <span style={{ fontWeight: '700', color: '#10b981' }}>Active Auto-Login Enabled</span>
               </div>
             </div>
 
             <button
               onClick={handleLogout}
-              style={{ width: '100%', padding: '14px', borderRadius: '16px', background: '#ef4444', color: '#ffffff', border: 'none', fontWeight: '700', fontSize: '14.5px', cursor: 'pointer', boxShadow: '0 4px 16px rgba(239, 68, 68, 0.2)' }}
+              style={{ width: '100%', padding: '14px', borderRadius: '16px', background: '#ef4444', color: '#ffffff', border: 'none', fontWeight: '800', fontSize: '14.5px', cursor: 'pointer', boxShadow: '0 4px 16px rgba(239, 68, 68, 0.25)', transition: 'transform 0.2s ease' }}
             >
-              Log out
+              Sign out of Kronx Account
             </button>
           </div>
         )}

@@ -11,7 +11,9 @@ export default function Sidebar() {
     newConversation,
     deleteConversation,
     clearAllConversations,
-    setSettingsModalOpen
+    setSettingsModalOpen,
+    setActiveView,
+    user
   } = useKronxStore()
 
   if (!sidebarOpen) return null
@@ -77,8 +79,18 @@ export default function Sidebar() {
         ))}
       </div>
 
-      {/* Bottom Profile Account & Settings */}
-      <div style={{ padding: '16px', borderTop: '1px solid #e2e8f0' }}>
+      {/* Bottom Profile Account, Settings & Admin Console (Only visible if user is AI Admin) */}
+      <div style={{ padding: '16px', borderTop: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {(user?.role === 'admin' || user?.email === 'pj0040280@gmail.com') && (
+          <button
+            onClick={() => setActiveView('admin')}
+            title="AI Admin Dashboard"
+            style={{ width: '42px', height: '42px', borderRadius: '12px', background: '#0f172a', border: 'none', color: '#ffffff', fontWeight: '900', fontSize: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 14px rgba(15, 23, 42, 0.25)', margin: '0 auto' }}
+          >
+            ⚙
+          </button>
+        )}
+
         <button
           onClick={() => setSettingsModalOpen(true)}
           style={{ width: '100%', padding: '10px 12px', borderRadius: '12px', background: '#ffffff', border: '1px solid #cbd5e1', color: '#0f172a', fontWeight: '700', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}

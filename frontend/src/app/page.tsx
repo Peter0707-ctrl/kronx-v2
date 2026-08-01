@@ -15,7 +15,7 @@ import { useKronxStore } from '@/store/useKronxStore'
 
 export default function Home() {
   const { send, regenerate, editAndResend } = useChat()
-  const { newConversation, activeConversationId, activeView, user } = useKronxStore()
+  const { newConversation, activeConversationId, activeView, user, systemDisabled } = useKronxStore()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -34,6 +34,43 @@ export default function Home() {
     return (
       <main className="shell" role="main">
         <div style={{ flex: 1, background: '#f8fafc' }} />
+      </main>
+    )
+  }
+
+  // Emergency System Kill Switch Enforcement: Regular users are blocked if system is shut down
+  const isAdmin = user?.role === 'admin' || user?.email === 'pj0040280@gmail.com'
+
+  if (systemDisabled && !isAdmin) {
+    return (
+      <main
+        className="shell"
+        role="main"
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh',
+          width: '100vw',
+          padding: '24px',
+          background: '#0f172a',
+          color: '#ffffff',
+          textAlign: 'center',
+          fontFamily: "Calibri, 'Calibri Light', sans-serif"
+        }}
+      >
+        <div style={{ maxWidth: '460px', background: '#1e293b', padding: '36px', borderRadius: '24px', border: '1px solid #334155', boxShadow: '0 20px 50px rgba(0,0,0,0.4)' }}>
+          <div style={{ fontSize: '12px', fontWeight: '800', color: '#ef4444', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>
+            SYSTEM OFFLINE / MAINTENANCE
+          </div>
+          <h2 style={{ fontSize: '24px', fontWeight: '800', margin: '0 0 12px 0', color: '#ffffff' }}>
+            Kronx AI System Currently Unavailable
+          </h2>
+          <p style={{ fontSize: '14px', color: '#94a3b8', lineHeight: '1.6', margin: 0 }}>
+            The administrator has temporarily shut down Kronx AI services for scheduled system updates and maintenance. Please try again later.
+          </p>
+        </div>
       </main>
     )
   }

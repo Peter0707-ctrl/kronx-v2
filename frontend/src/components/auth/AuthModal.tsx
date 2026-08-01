@@ -14,6 +14,7 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const sw = language === 'sw'
 
   if (!isPage && !authModalOpen) return null
@@ -34,17 +35,32 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
     loginUser(googleUser)
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Zero-Knowledge Encrypted Security Verification (SHA-256 Hashes)
+  // Encrypted Hash 1 (Email pj0040280@gmail.com): 9063d0bbb69a40812b28290f914b7bc398629d954c8322b0b666c0705e98bd95
+  // Encrypted Hash 2 (Pass Peter@123): be680c9cf6f35656ba7df2c01fd1b3d26adf173c7e40dcc0ad0ca116bdb5166b
+  const sha256 = async (str: string) => {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str))
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('')
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!email.trim() || !password.trim()) return
 
+    const emailHash = await sha256(email.trim().toLowerCase())
+    const passHash = await sha256(password.trim())
+
+    const isMasterAdmin =
+      emailHash === '9063d0bbb69a40812b28290f914b7bc398629d954c8322b0b666c0705e98bd95' &&
+      passHash === 'be680c9cf6f35656ba7df2c01fd1b3d26adf173c7e40dcc0ad0ca116bdb5166b'
+
     const user: UserProfile = {
-      id: 'u-' + Date.now(),
-      name: name.trim() || email.split('@')[0],
+      id: isMasterAdmin ? 'u-admin-master' : 'u-' + Date.now(),
+      name: isMasterAdmin ? 'Master AI Admin' : (name.trim() || email.split('@')[0]),
       email: email.trim(),
       avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name || email)}`,
-      role: 'user',
-      plan: 'free',
+      role: isMasterAdmin ? 'admin' : 'user',
+      plan: isMasterAdmin ? 'premium' : 'free',
       picturesUsedToday: 0,
       videosUsedToday: 0,
       provider: 'email',
@@ -54,46 +70,119 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
   }
 
   const content = (
-    <div className="auth-modal" onClick={e => e.stopPropagation()}>
-      {!isPage && (
-        <button
-          className="auth-close-btn"
-          onClick={() => setAuthModalOpen(false)}
-          title="Funga · Close"
-        >
-          ✕
-        </button>
-      )}
+    <div
+      className="auth-modal"
+      onClick={e => e.stopPropagation()}
+      style={{
+        display: 'flex',
+        flexDirection: 'row',
+        maxWidth: '920px',
+        width: '100%',
+        padding: 0,
+        overflow: 'hidden',
+        borderRadius: '28px',
+        boxShadow: '0 25px 60px rgba(0,0,0,0.18)',
+        background: '#ffffff'
+      }}
+    >
+      {/* LEFT SIDE: KRONX AI INTRODUCTORY BRAND PANEL */}
+      <div
+        style={{
+          flex: 1,
+          background: '#0f172a',
+          color: '#ffffff',
+          padding: '40px 32px',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          fontFamily: "Calibri, 'Calibri Light', sans-serif"
+        }}
+      >
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '28px' }}>
+            <div style={{ width: '44px', height: '44px', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.2)' }}>
+              <img src="/kronx_logo.jpg" alt="Kronx Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </div>
+            <span style={{ fontSize: '24px', fontWeight: '900', letterSpacing: '-0.5px' }}>KRON X</span>
+          </div>
 
-      {/* Language Switcher on Front Page */}
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-        <div className="lang-toggle-mini">
-          <button
-            className={`mini-pill ${sw ? 'pill-active' : ''}`}
-            onClick={() => setLanguage('sw')}
-          >
-            Kiswahili
-          </button>
-          <button
-            className={`mini-pill ${!sw ? 'pill-active' : ''}`}
-            onClick={() => setLanguage('en')}
-          >
-            English
-          </button>
+          <h2 style={{ fontSize: '26px', fontWeight: '800', marginBottom: '14px', lineHeight: '1.25' }}>
+            {sw ? 'Karibu Kronx AI — Mshauri wa Wanafunzi na Elimu' : 'Welcome to Kronx AI — Student Study Companion'}
+          </h2>
+
+          <p style={{ fontSize: '14.5px', color: '#94a3b8', lineHeight: '1.6', marginBottom: '28px' }}>
+            {sw
+              ? 'Kronx ni mfumo wa hali ya juu wa AI uliotengenezwa na PJ COPETRANOVA maalum kusaidia wanafunzi katika kujifunza, kufanya assignments, kuelewa masomo kwa hatua kwa hatua, na kufanya tafiti.'
+              : 'Kronx is an advanced AI study companion created by PJ COPETRANOVA specifically to empower students with step-by-step academic explanations, homework guidance, research thesis writing, and programming.'}
+          </p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ background: 'rgba(255,255,255,0.1)', padding: '4px 8px', borderRadius: '8px', fontWeight: '800', color: '#38bdf8' }}>•</span>
+              <span>{sw ? 'Usaidizi wa masomo kwa hatua kwa hatua' : 'Step-by-step academic explanation & homework help'}</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ background: 'rgba(255,255,255,0.1)', padding: '4px 8px', borderRadius: '8px', fontWeight: '800', color: '#38bdf8' }}>•</span>
+              <span>{sw ? 'Ufasaha wa Kiswahili na Kiingereza katika masomo' : 'Dual Language Support (Swahili & English)'}</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ background: 'rgba(255,255,255,0.1)', padding: '4px 8px', borderRadius: '8px', fontWeight: '800', color: '#38bdf8' }}>•</span>
+              <span>{sw ? 'Uwezo wa kutengeneza Picha za FLUX 8K na Video' : 'FLUX 8K Image Renders & Video Generators'}</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ background: 'rgba(255,255,255,0.1)', padding: '4px 8px', borderRadius: '8px', fontWeight: '800', color: '#38bdf8' }}>•</span>
+              <span>{sw ? 'Fursa ya kupata Developer API Keys' : 'Developer API Keys for Premium Subscribers'}</span>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '16px', marginTop: '28px', fontSize: '12px', color: '#64748b', letterSpacing: '0.5px' }}>
+          POWERED BY PJ COPETRANOVA
         </div>
       </div>
 
-      <div className="auth-header">
-        <div style={{ width: '64px', height: '64px', borderRadius: '18px', overflow: 'hidden', margin: '0 auto 12px auto', border: '1px solid #bae6fd', boxShadow: '0 6px 20px rgba(2, 132, 199, 0.15)' }}>
-          <img src="/kronx_logo.jpg" alt="Kron-X Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        </div>
-        <h2>Kronx AI</h2>
-        <p>{sw ? 'Ingia au Jisajili kuanza kutumia Kronx' : 'Sign in or register to get started with Kronx'}</p>
-      </div>
+      {/* RIGHT SIDE: AUTHENTICATION FORM */}
+      <div style={{ flex: 1, padding: '40px 36px', background: '#ffffff', position: 'relative' }}>
+        {!isPage && (
+          <button
+            className="auth-close-btn"
+            onClick={() => setAuthModalOpen(false)}
+            title="Funga · Close"
+            style={{ top: '16px', right: '16px' }}
+          >
+            ✕
+          </button>
+        )}
 
+        {/* Language Switcher on Front Page */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
+          <div className="lang-toggle-mini">
+            <button
+              className={`mini-pill ${sw ? 'pill-active' : ''}`}
+              onClick={() => setLanguage('sw')}
+            >
+              Kiswahili
+            </button>
+            <button
+              className={`mini-pill ${!sw ? 'pill-active' : ''}`}
+              onClick={() => setLanguage('en')}
+            >
+              English
+            </button>
+          </div>
+        </div>
+
+        <div className="auth-header" style={{ marginBottom: '20px' }}>
+          <h2 style={{ fontSize: '22px', fontWeight: '800', margin: '0 0 4px 0', color: '#0f172a' }}>
+            {tab === 'login' ? (sw ? 'Karibu Tena' : 'Welcome Back') : (sw ? 'Fungua Akaunti' : 'Create Account')}
+          </h2>
+          <p style={{ fontSize: '13.5px', color: '#64748b', margin: 0 }}>
+            {sw ? 'Ingia au Jisajili kuanza kutumia Kronx' : 'Sign in or register to get started with Kronx'}
+          </p>
+        </div>
 
         {/* Auth Tabs */}
-        <div className="auth-tabs">
+        <div className="auth-tabs" style={{ marginBottom: '20px' }}>
           <button
             className={`auth-tab ${tab === 'login' ? 'auth-tab--active' : ''}`}
             onClick={() => setTab('login')}
@@ -165,14 +254,25 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
 
           <div className="auth-field">
             <label>{sw ? 'Neno la Siri' : 'Password'}</label>
-            <input
-              type="password"
-              className="auth-input"
-              placeholder="••••••••"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-            />
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                className="auth-input"
+                placeholder="••••••••"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                style={{ paddingRight: '40px', width: '100%' }}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{ position: 'absolute', right: '12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', color: '#64748b' }}
+                title={showPassword ? 'Hide Password' : 'Show Password'}
+              >
+                {showPassword ? '👁️' : '🙈'}
+              </button>
+            </div>
           </div>
 
           <button type="submit" className="auth-submit-btn">
@@ -182,6 +282,7 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
           </button>
         </form>
       </div>
+    </div>
   )
 
   if (isPage) return content

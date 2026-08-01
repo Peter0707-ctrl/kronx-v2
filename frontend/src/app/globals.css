@@ -41,20 +41,25 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* UNIVERSAL FLOATING & ANIMATED BUTTON SYSTEM */
+/* UNIVERSAL HIGH-GRADE ANIMATED BUTTON SYSTEM */
 button {
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  transform: translateY(0);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transform: translateY(0) scale(1);
+  will-change: transform, box-shadow, background-color;
+  position: relative;
+  overflow: hidden;
 }
 
 button:hover {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.16);
+  transform: translateY(-2px) scale(1.03) !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.16) !important;
+  filter: brightness(1.04);
 }
 
 button:active {
-  transform: translateY(0) scale(0.97);
+  transform: translateY(1px) scale(0.96) !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12) !important;
 }
 
 
@@ -1521,6 +1526,39 @@ button:active {
   .hero-secondary-btn {
     width: 100%;
     justify-content: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-panel {
+    max-width: 100vw !important;
+    border-left: none !important;
+  }
+
+  .auth-modal {
+    flex-direction: column !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+  }
+
+  .auth-modal > div {
+    padding: 24px 20px !important;
+  }
+
+  .admin-span-2 {
+    grid-column: span 1 !important;
+  }
+
+  .table-wrapper {
+    overflow-x: auto !important;
+  }
+
+  .table-wrapper table {
+    min-width: 600px;
+  }
+
+  .topbar {
+    padding: 10px 14px !important;
   }
 }
 

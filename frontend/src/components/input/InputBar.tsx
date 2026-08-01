@@ -97,8 +97,20 @@ export default function InputBar({ onSend }: Props) {
           gap: '12px'
         }}
       >
-        {/* Plus '+' icon button on left */}
+        {/* Plus '+' icon button on left -> File Upload */}
+        <input
+          id="file-upload-input"
+          type="file"
+          style={{ display: 'none' }}
+          onChange={e => {
+            const file = e.target.files?.[0]
+            if (file) {
+              setValue(prev => (prev ? prev + ` [Attached file: ${file.name}]` : `Analyze file: ${file.name}`))
+            }
+          }}
+        />
         <button
+          onClick={() => document.getElementById('file-upload-input')?.click()}
           style={{
             background: 'none',
             border: 'none',
@@ -109,7 +121,7 @@ export default function InputBar({ onSend }: Props) {
             alignItems: 'center',
             justifyContent: 'center'
           }}
-          title="Add attachment or action"
+          title="Upload document or file"
         >
           <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
             <line x1="12" y1="5" x2="12" y2="19" />
@@ -122,11 +134,10 @@ export default function InputBar({ onSend }: Props) {
           ref={taRef}
           value={value}
           rows={1}
-          placeholder="Ask anything"
+          placeholder={isStreaming ? "Kronx is generating response..." : "Ask anything"}
           onChange={e => setValue(e.target.value)}
           onInput={handleInput}
           onKeyDown={handleKey}
-          disabled={isStreaming}
           style={{
             flex: 1,
             border: 'none',

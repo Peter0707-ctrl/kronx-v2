@@ -15,6 +15,7 @@ export interface UserProfile {
   avatar: string
   role: UserRole
   plan: SubscriptionPlan
+  apiKey?: string
   picturesUsedToday: number
   videosUsedToday: number
   provider: 'google' | 'email'

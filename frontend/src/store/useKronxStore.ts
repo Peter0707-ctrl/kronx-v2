@@ -32,10 +32,13 @@ interface KronxStore {
   logoutUser: () => void
   updateUserRole: (role: UserRole) => void
   upgradeSubscription: (plan: 'free' | 'premium') => void
+  generateApiKey: () => string
   canGeneratePicture: () => boolean
   canGenerateVideo: () => boolean
   incrementPictureUsage: () => void
   incrementVideoUsage: () => void
+  systemDisabled: boolean
+  toggleSystemKillSwitch: (disabled: boolean) => void
 
 
   addMessage: (content: string, role: 'user' | 'ai') => Message
@@ -140,9 +143,20 @@ export const useKronxStore = create<KronxStore>()(
           user: s.user ? { ...s.user, role } : null,
         })),
       upgradeSubscription: (plan) =>
+        set(s => {
+          if (!s.user) return { user: null }
+          const apiKey = plan === 'premium' ? (s.user.apiKey || 'kx-live-' + Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10)) : undefined
+          return { user: { ...s.user, plan, apiKey } }
+        }),
+      generateApiKey: () => {
+        const key = 'kx-live-' + Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10)
         set(s => ({
-          user: s.user ? { ...s.user, plan } : null,
-        })),
+          user: s.user ? { ...s.user, apiKey: key } : null
+        }))
+        return key
+      },
+      systemDisabled: false,
+      toggleSystemKillSwitch: (disabled) => set({ systemDisabled: disabled }),
       canGeneratePicture: () => {
         const u = get().user
         if (!u) return false
@@ -309,6 +323,7 @@ export const useKronxStore = create<KronxStore>()(
         goals: s.goals,
         activeView: s.activeView,
         user: s.user,
+        systemDisabled: s.systemDisabled,
       }),
     }
   )
