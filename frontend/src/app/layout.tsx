@@ -2,9 +2,18 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Kronx AI — Akili Bandia & Academic Companion | KronxAI',
-  description: 'Kronx AI (KronxAI) - Mshauri wako mkuu wa masomo na akili bandia. Advanced AI companion for students and professionals.',
-  keywords: ['kronxai', 'kronx ai', 'kronx', 'kronx plus', 'akili bandia', 'tanzania ai'],
+  title: 'Kronx AI — Akili Bandia ya Tanzania & Academic Companion | KronxAI Plus',
+  description: 'Kronx AI (KronxAI) by Kopetra Nova - Mshauri wako mkuu wa masomo, tafiti na akili bandia nchini Tanzania. Direct WhatsApp 0673190931 support & Lipa Namba 45342017.',
+  keywords: [
+    'kronxai',
+    'kronx ai',
+    'kronx',
+    'kronx plus',
+    'kronx tanzania',
+    'kronx ai copetranova',
+    'akili bandia tanzania',
+    'mwalimu ai tanzania'
+  ],
   verification: {
     google: '4jBwESfIU4dUQ8-AJiw6Otam1M-JDsIGmQJ2WJnZZ8U',
   },
