@@ -3,7 +3,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'PJKRONX AI — Akili Bandia ya Tanzania & Academic Companion | PJKRONX Plus',
-  description: 'PJKRONX AI by PJ COPETRANOVA - Mshauri wako mkuu wa masomo, tafiti na akili bandia nchini Tanzania.',
+  description: 'PJKRONX AI na PJ COPETRANOVA ni Mfumo Mkuu wa Akili Bandia nchini Tanzania unaomsaidia mwanafunzi kutatua assignments, hesabu, kutengeneza picha 8K za FLUX, na tafiti za kitaaluma kwa haraka na ufasaha wa hali ya juu.',
   keywords: [
     'pjkronx',
     'pjkronx ai',
