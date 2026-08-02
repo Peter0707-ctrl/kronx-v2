@@ -290,7 +290,7 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
           </a>
 
           <a
-            href="mailto:pb0040280@gmail.com?subject=Inquiry%20from%20PJKRONX%20AI%20Platform"
+            href="https://mail.google.com/mail/?view=cm&fs=1&to=pb0040280@gmail.com&su=Inquiry%20from%20PJKRONX%20AI%20Platform"
             target="_blank"
             rel="noopener noreferrer"
             title="Email Founder"
