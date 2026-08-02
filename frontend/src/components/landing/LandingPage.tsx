@@ -21,7 +21,7 @@ export default function LandingPage({ onStart }: Props) {
               <path d="M2 12l10 5 10-5" />
             </svg>
           </div>
-          <span className="landing-logo-title">PJKRONX AI</span>
+          <span className="landing-logo-title">Kronex AI</span>
         </div>
 
         <div className="landing-nav-right" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
@@ -59,7 +59,7 @@ export default function LandingPage({ onStart }: Props) {
         </h1>
 
         <p className="hero-sub">
-          PJKRONX AI empowers your education, daily assignments, research thesis, and creative image rendering with real-time intelligence — engineered by PJ COPETRANOVA.
+          Kronex AI empowers your education, daily assignments, research thesis, and creative image rendering with real-time intelligence — engineered by Kronex Systems.
         </p>
 
         {/* Hero Image Showcase */}
@@ -91,7 +91,7 @@ export default function LandingPage({ onStart }: Props) {
               transition: 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
             }}
           >
-            <span>Launch PJKRONX AI Now</span>
+            <span>Launch Kronex AI Now</span>
             <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
               <path d="M5 12h14M12 5l7 7-7 7" />
             </svg>
@@ -130,7 +130,7 @@ export default function LandingPage({ onStart }: Props) {
       {/* Feature Showcase Grid */}
       <section className="landing-features">
         <h2 className="section-heading">
-          Why Choose PJKRONX AI?
+          Why Choose Kronex AI?
         </h2>
 
         <div className="features-grid">
@@ -249,7 +249,7 @@ export default function LandingPage({ onStart }: Props) {
 
       {/* Landing Footer */}
       <footer className="landing-footer">
-        <p>© 2026 PJKRONX AI Companion by PJ COPETRANOVA. All rights reserved.</p>
+        <p>© 2026 Kronex AI Academic Companion & Intelligence Engine. All rights reserved.</p>
       </footer>
     </div>
   )

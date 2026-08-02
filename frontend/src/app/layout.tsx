@@ -9,17 +9,17 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: 'PJKRONX AI — Akili Bandia ya Tanzania & Academic Companion | PJKRONX Plus',
-  description: 'PJKRONX AI na PJ COPETRANOVA ni Mfumo Mkuu wa Akili Bandia nchini Tanzania unaomsaidia mwanafunzi kutatua assignments, hesabu, kutengeneza picha 8K za FLUX, na tafiti za kitaaluma kwa haraka na ufasaha wa hali ya juu.',
+  title: 'Kronex AI — Premier Academic Companion & Advanced Intelligence Engine',
+  description: 'Kronex AI is an advanced artificial intelligence platform engineered for students, researchers, and professionals to solve complex academic assignments, mathematics, software development, research thesis writing, and creative AI generation with precision.',
   keywords: [
-    'pjkronx',
-    'pjkronx ai',
-    'pjkronxai',
-    'pj copetranova',
-    'pjkronx plus',
-    'pjkronx tanzania',
-    'akili bandia tanzania',
-    'mwalimu ai tanzania'
+    'kronex',
+    'kronex ai',
+    'kronexai',
+    'academic ai',
+    'student ai companion',
+    'ai research assistant',
+    'tanzania ai',
+    'ai homework solver'
   ],
   verification: {
     google: '4jBwESfIU4dUQ8-AJiw6Otam1M-JDsIGmQJ2WJnZZ8U',

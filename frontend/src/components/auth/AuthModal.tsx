@@ -108,11 +108,11 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
             <span style={{ fontSize: '24px', fontWeight: '900', letterSpacing: '-0.5px' }}>KRON X</span>
           </div>
 
-          <h1 style={{ fontSize: '32px', fontWeight: '800', margin: '0 0 12px 0', letterSpacing: '-0.5px', color: '#ffffff' }}>
-            PJKRONX AI Companion
-          </h1>
-          <p style={{ fontSize: '14.5px', color: '#94a3b8', lineHeight: '1.6', marginBottom: '28px' }}>
-            PJKRONX AI is an advanced AI study companion created by PJ COPETRANOVA specifically to empower students with step-by-step academic explanations, homework guidance, research thesis writing, and programming.
+          <h3 style={{ fontSize: '32px', fontWeight: '800', margin: '0 0 12px 0', letterSpacing: '-0.5px', color: '#ffffff' }}>
+            Kronex AI Companion
+          </h3>
+          <p className="auth-brand-desc">
+            Kronex AI is an advanced AI study companion created to empower students with step-by-step academic explanations, homework guidance, research thesis writing, and programming.
           </p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '14px' }}>
@@ -156,7 +156,7 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
             {tab === 'login' ? 'Welcome Back' : 'Create Account'}
           </h2>
           <p style={{ fontSize: '13.5px', color: '#64748b', margin: 0 }}>
-            {tab === 'login' ? 'Sign in to access your PJKRONX AI workspace' : 'Register to get started with PJKRONX AI'}
+            {tab === 'login' ? 'Sign in to access your Kronex AI workspace' : 'Register to get started with Kronex AI'}
           </p>
         </div>
 

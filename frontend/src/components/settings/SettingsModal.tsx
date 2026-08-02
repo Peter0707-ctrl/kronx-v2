@@ -84,7 +84,7 @@ export default function SettingsModal() {
 
   const plans = {
     plus: {
-      name: 'PJKRONX Plus',
+      name: 'Kronex Plus',
       monthly: 15000,
       yearly: 12000,
       features: [
@@ -96,7 +96,7 @@ export default function SettingsModal() {
       ]
     },
     pro: {
-      name: 'PJKRONX Pro',
+      name: 'Kronex Pro',
       monthly: 35000,
       yearly: 28000,
       features: [
@@ -114,7 +114,7 @@ export default function SettingsModal() {
   const price = billingCycle === 'monthly' ? activePlan.monthly : activePlan.yearly
 
   const handleContactAdmin = () => {
-    const planLabel = selectedPlan === 'plus' ? 'PJKRONX Plus (15,000 TZS/month)' : 'PJKRONX Pro (35,000 TZS/month)'
+    const planLabel = selectedPlan === 'plus' ? 'Kronex Plus (15,000 TZS/month)' : 'Kronex Pro (35,000 TZS/month)'
     const text = encodeURIComponent(
       `Habari Admin Peter! Nataka kujiandikisha kwenye:\n\n` +
       `MPANGO: ${planLabel}\n` +
@@ -172,7 +172,7 @@ export default function SettingsModal() {
                 fontSize: '11px', fontWeight: '700', color: '#94d2ff',
                 letterSpacing: '1px', textTransform: 'uppercase'
               }}>
-                PJKRONX SUBSCRIPTION
+                KRONEX SUBSCRIPTION
               </div>
             </div>
             <h2 style={{ fontSize: '22px', fontWeight: '800', color: '#ffffff', margin: '4px 0 0 0' }}>
@@ -239,7 +239,7 @@ export default function SettingsModal() {
                       {sw ? 'Umeshainuliwa!' : 'You are already subscribed!'}
                     </div>
                     <div style={{ color: '#a7f3d0', fontSize: '13px', marginTop: '2px' }}>
-                      {sw ? 'Mpango wako wa PJKRONX Plus unaendelea. Asante!' : 'Your PJKRONX Plus plan is active. Thank you!'}
+                      {sw ? 'Mpango wako wa Kronex Plus unaendelea. Asante!' : 'Your Kronex Plus plan is active. Thank you!'}
                     </div>
                   </div>
                 </div>
@@ -569,7 +569,7 @@ export default function SettingsModal() {
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
                     <h3 style={{ fontSize: '18px', fontWeight: '800', margin: 0, color: '#ffffff' }}>
-                      {user?.name || 'PJKRONX User'}
+                      {user?.name || 'Kronex User'}
                     </h3>
                     <span style={{
                       background: user?.role === 'admin' ? '#38bdf8' : (isPremium ? '#10b981' : '#475569'),
@@ -598,7 +598,7 @@ export default function SettingsModal() {
                 {[
                   {
                     label: sw ? 'Mpango wa Sasa' : 'Current Plan',
-                    value: user?.role === 'admin' ? 'Master Admin Unlimited' : (isPremium ? 'PJKRONX Plus ✓' : 'Free Tier'),
+                    value: user?.role === 'admin' ? 'Master Admin Unlimited' : (isPremium ? 'Kronex Plus ✓' : 'Free Tier'),
                     valueColor: user?.role === 'admin' ? '#0284c7' : (isPremium ? '#10b981' : '#64748b'),
                   },
                   {
