@@ -181,12 +181,13 @@ class KronxOrchestrator:
         full_response = ""
         success = False
 
-        # Provider 1: Google Gemini API Models
+        # Provider 1: Google Gemini API Models (with Live Google Search Web Grounding)
         for m in models_to_try:
             direct_url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent?key={self.api_key}"
             payload = {
                 "system_instruction": {"parts": [{"text": system}]},
                 "contents": contents,
+                "tools": [{"google_search": {}}],
                 "generationConfig": {
                     "temperature": 0.7,
                     "maxOutputTokens": 2048
