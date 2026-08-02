@@ -83,6 +83,7 @@ export interface SystemTelemetry {
   ram_optimization: string
   total_memories: number
   active_conversations_in_store: number
+  diagnostics?: any[]
 }
 
 export interface AdminUserRecord {
