@@ -1,6 +1,6 @@
 import { KronxMode, Language, Message } from '@/types'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://miraculous-forgiveness-production-10d4.up.railway.app'
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || ''
 
 export interface ChatRequest {
   message: string

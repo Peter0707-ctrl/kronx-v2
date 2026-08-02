@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useKronxStore } from '@/store/useKronxStore'
 import { AdminUserRecord, SystemTelemetry } from '@/types'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://miraculous-forgiveness-production-10d4.up.railway.app'
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || ''
 
 type UserPlan = 'free' | 'plus' | 'pro'
 
@@ -133,11 +133,12 @@ export default function AdminDashboard() {
                 const nameInput = prompt('Enter User Full Name:')
                 const emailInput = prompt('Enter User Email:')
                 if (nameInput && emailInput) {
-                  const newUser: AdminUserRecord = {
+                  const newUser: AdminUserRecord & { plan: UserPlan } = {
                     id: 'u-' + Date.now(),
                     name: nameInput,
                     email: emailInput,
                     role: 'user',
+                    plan: 'free',
                     avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(nameInput)}`,
                     lastActive: 'Just now',
                     conversationCount: 0
