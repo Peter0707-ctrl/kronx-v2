@@ -25,11 +25,10 @@ export function useChat() {
         lower.includes('photo')
       ) {
         if (!store.canGeneratePicture()) {
-          const limitMsg = store.language === 'sw'
-            ? `Umefikia kikomo cha picha za leo (${store.user?.plan === 'premium' ? '10' : '3'} kwa siku). Tafadhali kuboresha usajili wako kupata picha zaidi.`
-            : `You have reached your daily picture limit (${store.user?.plan === 'premium' ? '10' : '3'} per day). Please upgrade your plan for higher limits.`
+          const limitMsg = `You have reached chat limit. Upgrade`
           store.addMessage(text, 'user')
           store.addMessage(limitMsg, 'ai')
+          store.setSettingsModalOpen(true)
           return
         }
         store.incrementPictureUsage()
@@ -55,11 +54,10 @@ export function useChat() {
         lower.includes('generate video')
       ) {
         if (!store.canGenerateVideo()) {
-          const limitMsg = store.language === 'sw'
-            ? `Umefikia kikomo cha video za leo (${store.user?.plan === 'premium' ? '3' : '1'} kwa siku). Tafadhali kuboresha usajili wako kupata video zaidi.`
-            : `You have reached your daily video limit (${store.user?.plan === 'premium' ? '3' : '1'} per day). Please upgrade your plan for higher limits.`
+          const limitMsg = `You have reached chat limit. Upgrade`
           store.addMessage(text, 'user')
           store.addMessage(limitMsg, 'ai')
+          store.setSettingsModalOpen(true)
           return
         }
         store.incrementVideoUsage()

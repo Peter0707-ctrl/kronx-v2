@@ -19,6 +19,7 @@ export interface UserProfile {
   picturesUsedToday: number
   videosUsedToday: number
   chatsUsedToday: number
+  lastResetTimestamp?: string
   provider: 'google' | 'email'
   createdAt: string
 }
