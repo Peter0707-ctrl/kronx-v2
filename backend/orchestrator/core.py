@@ -11,6 +11,9 @@ load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
 
+# HIGH-SPEED IN-MEMORY RESPONSE CACHE FOR FREQUENTLY ASKED QUESTIONS
+RESPONSE_CACHE = {}
+
 class KronxOrchestrator:
     def __init__(self):
         self.memory = MemoryManager()
@@ -165,6 +168,18 @@ class KronxOrchestrator:
         conversation_id: str,
         history: List
     ) -> AsyncGenerator[str, None]:
+        # High-Speed Response Cache Lookup for Frequently Asked Questions (Sub-millisecond latency)
+        cache_key = f"{mode}:{language}:{message.strip().lower()}"
+        if cache_key in RESPONSE_CACHE:
+            cached_ans = RESPONSE_CACHE[cache_key]
+            yield cached_ans
+            self.memory.extract_and_save(
+                conversation_id=conversation_id,
+                user_message=message,
+                ai_response=cached_ans
+            )
+            return
+
         memory_context = self.memory.get_context(conversation_id)
         system = self._build_system_prompt(mode, language, memory_context)
         contents = self._build_contents(history, message)
@@ -286,6 +301,10 @@ class KronxOrchestrator:
                 )
             yield smart_response
             full_response = smart_response
+
+        # Cache successful response for sub-millisecond future answers
+        if full_response and success:
+            RESPONSE_CACHE[cache_key] = full_response
 
         self.memory.extract_and_save(
             conversation_id=conversation_id,
