@@ -102,10 +102,11 @@ export default function InputBar({ onSend }: Props) {
           id="file-upload-input"
           type="file"
           style={{ display: 'none' }}
-          onChange={e => {
+          accept=".pdf,.docx,.xlsx,.pptx,.png,.jpg,.jpeg,.txt"
+          onChange={(e) => {
             const file = e.target.files?.[0]
             if (file) {
-              setValue(prev => (prev ? prev + ` [Attached file: ${file.name}]` : `Analyze file: ${file.name}`))
+              setValue(prev => `${prev} [Attached File: ${file.name}] `)
             }
           }}
         />
@@ -121,7 +122,7 @@ export default function InputBar({ onSend }: Props) {
             alignItems: 'center',
             justifyContent: 'center'
           }}
-          title="Upload document or file"
+          title="Upload document or file (PDF, Word, Excel, Images)"
         >
           <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
             <line x1="12" y1="5" x2="12" y2="19" />

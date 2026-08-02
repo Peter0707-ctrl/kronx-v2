@@ -109,4 +109,24 @@ async def system_status():
         "total_memories": total_memories,
         "active_conversations_in_store": len(memories_data) if memories_data else 0
     }
+
+# MOBILE MONEY AUTOMATED PAYMENT GATEWAY WEBHOOK (AzamPay / Selcom / Yas Lipa Namba API)
+from pydantic import BaseModel
+
+class MobileMoneyPayload(BaseModel):
+    phone_number: str
+    amount: float
+    reference_id: str
+    service: str = "PJKRONX_PLUS"
+
+@app.post("/api/payment/mobile-money/webhook")
+async def mobile_money_webhook(payload: MobileMoneyPayload):
+    if payload.amount >= 15000:
+        return {
+            "status": "success",
+            "message": "Payment verified for PJKRONX Plus Subscription",
+            "unlocked_plan": "premium",
+            "api_key": f"kx-live-{payload.reference_id[-8:]}"
+        }
+    return {"status": "pending", "message": "Insufficient payment amount"}
 

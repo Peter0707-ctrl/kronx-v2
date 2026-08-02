@@ -17,6 +17,13 @@ export const metadata: Metadata = {
   verification: {
     google: '4jBwESfIU4dUQ8-AJiw6Otam1M-JDsIGmQJ2WJnZZ8U',
   },
+  manifest: '/manifest.json',
+  themeColor: '#2563eb',
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
