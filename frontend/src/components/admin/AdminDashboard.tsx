@@ -258,17 +258,10 @@ export default function AdminDashboard() {
               <tbody>
                 <tr>
                   <td>August 2026</td>
-                  <td>10 Plus Users</td>
-                  <td>Lipa Namba 45342017 (Mix by Yas)</td>
-                  <td><strong>150,000 TZS</strong></td>
-                  <td><span style={{ background: '#10b981', color: '#fff', padding: '3px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: '800' }}>Active Month</span></td>
-                </tr>
-                <tr>
-                  <td>July 2026</td>
-                  <td>6 Plus Users</td>
-                  <td>Lipa Namba 45342017 (Mix by Yas)</td>
-                  <td><strong>90,000 TZS</strong></td>
-                  <td><span style={{ background: '#64748b', color: '#fff', padding: '3px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: '800' }}>Completed</span></td>
+                  <td>Live Payments (Mix by Yas)</td>
+                  <td>Lipa Namba 45342017</td>
+                  <td><strong>0 TZS (Live)</strong></td>
+                  <td><span style={{ background: '#10b981', color: '#fff', padding: '3px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: '800' }}>Active Live Monitoring</span></td>
                 </tr>
               </tbody>
             </table>
