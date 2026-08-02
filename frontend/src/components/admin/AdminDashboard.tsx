@@ -9,10 +9,10 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000'
 const REAL_USERS: AdminUserRecord[] = [
   {
     id: 'u-admin-master',
-    name: 'PJ COPETRANOVA (Master Admin)',
+    name: 'Peter Joseph Msira (Master Admin)',
     email: 'pj0040280@gmail.com',
     role: 'admin',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=PJ',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Peter',
     lastActive: 'Active Now',
     conversationCount: 1
   }

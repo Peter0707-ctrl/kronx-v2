@@ -36,8 +36,8 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
   }
 
   // Zero-Knowledge Encrypted Security Verification (SHA-256 Hashes)
-  // Encrypted Hash 1 (Email pj0040280@gmail.com): 9063d0bbb69a40812b28290f914b7bc398629d954c8322b0b666c0705e98bd95
-  // Encrypted Hash 2 (Pass Peter@123): be680c9cf6f35656ba7df2c01fd1b3d26adf173c7e40dcc0ad0ca116bdb5166b
+  // Master Admin Email (pj0040280@gmail.com): 9063d0bbb69a40812b28290f914b7bc398629d954c8322b0b666c0705e98bd95
+  // Master Admin Password (Admin@123): e86f78a8a3caf0b60d8e74e5942aa6d86dc150cd3c03338aef25b7d2d7e3acc7
   const sha256 = async (str: string) => {
     const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str))
     return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('')
@@ -52,11 +52,11 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
 
     const isMasterAdmin =
       emailHash === '9063d0bbb69a40812b28290f914b7bc398629d954c8322b0b666c0705e98bd95' &&
-      passHash === 'be680c9cf6f35656ba7df2c01fd1b3d26adf173c7e40dcc0ad0ca116bdb5166b'
+      passHash === 'e86f78a8a3caf0b60d8e74e5942aa6d86dc150cd3c03338aef25b7d2d7e3acc7'
 
     const user: UserProfile = {
       id: isMasterAdmin ? 'u-admin-master' : 'u-' + Date.now(),
-      name: isMasterAdmin ? 'Master AI Admin' : (name.trim() || email.split('@')[0]),
+      name: isMasterAdmin ? 'Peter Joseph Msira' : (name.trim() || email.split('@')[0]),
       email: email.trim(),
       avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name || email)}`,
       role: isMasterAdmin ? 'admin' : 'user',
