@@ -128,7 +128,7 @@ class KronxOrchestrator:
         system = self._build_system_prompt(mode, language, memory_context)
         contents = self._build_contents(history, message)
 
-        models_to_try = ["gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-3.6-flash", "gemini-2.0-flash"]
+        models_to_try = ["gemini-1.5-flash", "gemini-1.5-flash-8b", "gemini-2.0-flash"]
         last_err = None
 
         for m in models_to_try:
@@ -188,21 +188,20 @@ class KronxOrchestrator:
         groq_api_key = os.getenv("GROQ_API_KEY", "")
         openai_api_key = os.getenv("OPENAI_API_KEY", "")
 
-        models_to_try = [
-            "gemini-3.5-flash",
-            "gemini-3.5-flash-lite",
-            "gemini-2.0-flash"
-        ]
         full_response = ""
         success = False
 
-        # Provider 1: Google Gemini API Models (with Live Google Search Web Grounding)
+        # Provider 1: Google Gemini API Models
+        models_to_try = [
+            "gemini-1.5-flash",
+            "gemini-1.5-flash-8b",
+            "gemini-2.0-flash"
+        ]
         for m in models_to_try:
             direct_url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent?key={self.api_key}"
             payload = {
                 "system_instruction": {"parts": [{"text": system}]},
                 "contents": contents,
-                "tools": [{"google_search": {}}],
                 "generationConfig": {
                     "temperature": 0.7,
                     "maxOutputTokens": 2048
@@ -222,8 +221,10 @@ class KronxOrchestrator:
                                 success = True
                                 yield text_result
                                 break
-            except Exception:
-                pass
+                    else:
+                        print(f"[Gemini API Error] Model {m} status {resp.status_code}: {resp.text}")
+            except Exception as e:
+                print(f"[Gemini Exception] {e}")
 
         # Provider 2: Groq Cloud API Failover (Llama 3.3 70B - Ultra Fast)
         if not success and groq_api_key:
