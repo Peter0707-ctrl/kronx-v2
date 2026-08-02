@@ -5,4 +5,4 @@ Allow: /landing
 Allow: /admin
 
 # Sitemap directive for Googlebot and Bingbot
-Sitemap: https://profound-rejoicing-production-1ce5.up.railway.app/sitemap.xml
+Sitemap: https://miraculous-forgiveness-production-10d4.up.railway.app/sitemap.xml

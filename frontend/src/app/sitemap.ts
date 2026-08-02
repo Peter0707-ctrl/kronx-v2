@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://profound-rejoicing-production-1ce5.up.railway.app'
+  const baseUrl = 'https://miraculous-forgiveness-production-10d4.up.railway.app'
   return [
     {
       url: baseUrl,
