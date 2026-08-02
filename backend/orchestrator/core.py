@@ -169,14 +169,19 @@ class KronxOrchestrator:
         system = self._build_system_prompt(mode, language, memory_context)
         contents = self._build_contents(history, message)
 
+        # MULTI-PROVIDER CLOUD API FAILOVER ROUTER (Zero Local RAM Consumption for 8GB PC)
+        groq_api_key = os.getenv("GROQ_API_KEY", "")
+        openai_api_key = os.getenv("OPENAI_API_KEY", "")
+
         models_to_try = [
             "gemini-3.5-flash",
             "gemini-3.5-flash-lite",
-            "gemini-3.6-flash"
+            "gemini-2.0-flash"
         ]
         full_response = ""
         success = False
 
+        # Provider 1: Google Gemini API Models
         for m in models_to_try:
             direct_url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent?key={self.api_key}"
             payload = {
@@ -188,7 +193,7 @@ class KronxOrchestrator:
                 }
             }
             try:
-                async with httpx.AsyncClient(timeout=12.0) as client:
+                async with httpx.AsyncClient(timeout=10.0) as client:
                     resp = await client.post(direct_url, json=payload)
                     if resp.status_code == 200:
                         data = resp.json()
@@ -204,35 +209,51 @@ class KronxOrchestrator:
             except Exception:
                 pass
 
-            # 2. Try streaming SSE endpoint if direct POST fails
-            stream_url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:streamGenerateContent?alt=sse&key={self.api_key}"
+        # Provider 2: Groq Cloud API Failover (Llama 3.3 70B - Ultra Fast)
+        if not success and groq_api_key:
             try:
-                async with httpx.AsyncClient(timeout=25.0) as client:
-                    async with client.stream("POST", stream_url, json=payload) as response:
-                        if response.status_code != 200:
-                            continue
-                        async for line in response.aiter_lines():
-                            if line.startswith("data: "):
-                                raw_data = line[6:].strip()
-                                if not raw_data:
-                                    continue
-                                try:
-                                    data = json.loads(raw_data)
-                                    candidates = data.get("candidates", [])
-                                    if candidates and "content" in candidates[0]:
-                                        parts = candidates[0]["content"].get("parts", [])
-                                        for part in parts:
-                                            chunk = part.get("text", "")
-                                            if chunk:
-                                                full_response += chunk
-                                                success = True
-                                                yield chunk
-                                except json.JSONDecodeError:
-                                    continue
-                        if success:
-                            break
+                groq_url = "https://api.groq.com/openai/v1/chat/completions"
+                groq_payload = {
+                    "model": "llama-3.3-70b-versatile",
+                    "messages": [{"role": "system", "content": system}, {"role": "user", "content": message}],
+                    "temperature": 0.7,
+                    "max_tokens": 2048
+                }
+                groq_headers = {"Authorization": f"Bearer {groq_api_key}", "Content-Type": "application/json"}
+                async with httpx.AsyncClient(timeout=12.0) as client:
+                    resp = await client.post(groq_url, json=groq_payload, headers=groq_headers)
+                    if resp.status_code == 200:
+                        groq_data = resp.json()
+                        text_result = groq_data["choices"][0]["message"]["content"].strip()
+                        if text_result:
+                            full_response = text_result
+                            success = True
+                            yield text_result
             except Exception:
-                continue
+                pass
+
+        # Provider 3: OpenAI API Failover (GPT-4o-mini)
+        if not success and openai_api_key:
+            try:
+                openai_url = "https://api.openai.com/v1/chat/completions"
+                openai_payload = {
+                    "model": "gpt-4o-mini",
+                    "messages": [{"role": "system", "content": system}, {"role": "user", "content": message}],
+                    "temperature": 0.7,
+                    "max_tokens": 2048
+                }
+                openai_headers = {"Authorization": f"Bearer {openai_api_key}", "Content-Type": "application/json"}
+                async with httpx.AsyncClient(timeout=12.0) as client:
+                    resp = await client.post(openai_url, json=openai_payload, headers=openai_headers)
+                    if resp.status_code == 200:
+                        openai_data = resp.json()
+                        text_result = openai_data["choices"][0]["message"]["content"].strip()
+                        if text_result:
+                            full_response = text_result
+                            success = True
+                            yield text_result
+            except Exception:
+                pass
 
         if not success:
             query = message.strip()
