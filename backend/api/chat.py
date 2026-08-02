@@ -58,9 +58,9 @@ async def chat_stream(request: ChatRequest):
                     history=request.history
                 ):
                     if chunk:
-                        # Escape newlines for SSE payload encoding if necessary, or stream raw chunk json
-                        payload = chunk.replace("\n", "\\n")
-                        yield f"data: {payload}\n\n"
+                        # Clean SSE payload formatting
+                        clean_chunk = chunk.replace("\r", "").replace("\n", "\\n")
+                        yield f"data: {clean_chunk}\n\n"
                 yield "data: [DONE]\n\n"
             except Exception as e:
                 err_msg = str(e).replace("\n", " ")
