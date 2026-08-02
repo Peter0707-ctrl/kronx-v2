@@ -94,10 +94,15 @@ export default function TopBar() {
       <div ref={brandMenuRef} style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
         <div
           onClick={() => setBrandMenuOpen(!brandMenuOpen)}
-          style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', padding: '4px 10px', borderRadius: '12px', background: brandMenuOpen ? 'rgba(255,255,255,0.8)' : 'transparent' }}
+          style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', padding: '4px 10px', borderRadius: '12px', background: brandMenuOpen ? 'rgba(255,255,255,0.8)' : 'transparent' }}
         >
-          <span style={{ fontSize: '22px', fontWeight: '900', color: '#000000', fontFamily: "Calibri, 'Calibri Light', sans-serif", letterSpacing: '-0.5px' }}>KRON X</span>
-          <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth={3} style={{ transform: brandMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}>
+          <img
+            src="/logo.jpg"
+            alt="PJKRONX AI Logo"
+            style={{ width: '28px', height: '28px', borderRadius: '8px', objectFit: 'cover', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}
+          />
+          <span style={{ fontSize: '20px', fontWeight: '900', color: '#000000', fontFamily: "Calibri, 'Calibri Light', sans-serif", letterSpacing: '-0.5px' }}>PJKRONX AI</span>
+          <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth={3} style={{ transform: brandMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}>
             <polyline points="6 9 12 15 18 9" />
           </svg>
         </div>

@@ -79,7 +79,11 @@ export interface MemoryFact {
 export interface SystemTelemetry {
   status: string
   active_model: string
-  ollama_url: string
+  uptime_percentage?: string
+  avg_response_time_ms?: number
+  cache_hit_rate?: string
+  total_api_failures_caught?: number
+  auto_solved_issues?: number
   ram_optimization: string
   total_memories: number
   active_conversations_in_store: number
