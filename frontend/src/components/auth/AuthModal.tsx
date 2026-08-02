@@ -203,6 +203,25 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
           <span>Continue with Google</span>
         </button>
 
+        <button
+          type="button"
+          onClick={handleGoogleLogin}
+          style={{
+            width: '100%',
+            padding: '10px',
+            marginTop: '8px',
+            borderRadius: '12px',
+            border: '1px solid #cbd5e1',
+            background: '#f8fafc',
+            color: '#0f172a',
+            fontWeight: '700',
+            fontSize: '13.5px',
+            cursor: 'pointer'
+          }}
+        >
+          ⚡ Try Free as Guest (Instant Access)
+        </button>
+
         <div className="auth-divider">
           <span>or continue with email</span>
         </div>

@@ -93,7 +93,7 @@ export const useKronxStore = create<KronxStore>()(
       isStreaming: false,
       activeView: 'chat',
       goals: DEFAULT_GOALS,
-      user: null,
+      user: DEFAULT_USER,
       authModalOpen: false,
       settingsModalOpen: false,
       sidebarOpen: true,
