@@ -2,7 +2,7 @@
 
 import { useCallback } from 'react'
 import { useKronxStore } from '@/store/useKronxStore'
-import { streamMessage, buildHistory } from '@/services/chat'
+import { streamMessage, sendMessage, buildHistory } from '@/services/chat'
 
 export function useChat() {
   const store = useKronxStore()
@@ -106,11 +106,19 @@ export function useChat() {
           }
         }
       } catch (err) {
-        const fallbackMsg = store.language === 'sw'
-          ? 'Nipo tayari kukusaidia! Tafadhali rudia swali lako.'
-          : 'I am ready to help you! Please repeat your request.'
-        store.updateLastAiMessage(fallbackMsg)
-        console.error('[Kronx chat error]', err)
+        console.warn('[Copetra AI stream fallback triggered]', err)
+        try {
+          const directText = await sendMessage({
+            message: text,
+            mode: store.mode,
+            language: store.language,
+            conversation_id: store.activeConversationId ?? 'new',
+            history: buildHistory(store.activeMessages()),
+          })
+          store.replaceLastAiMessage(directText)
+        } catch (directErr) {
+          console.error('[Copetra direct fetch error]', directErr)
+        }
       } finally {
         store.setStreaming(false)
       }

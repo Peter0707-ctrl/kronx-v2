@@ -160,47 +160,9 @@ export const useKronxStore = create<KronxStore>()(
       },
       systemDisabled: false,
       toggleSystemKillSwitch: (disabled) => set({ systemDisabled: disabled }),
-      canGeneratePicture: () => {
-        const u = get().user
-        if (!u) return false
-        if (u.plan === 'premium') return true
-        const now = Date.now()
-        const lastReset = u.lastResetTimestamp ? new Date(u.lastResetTimestamp).getTime() : 0
-        const sixHoursMs = 6 * 60 * 60 * 1000
-        if (now - lastReset > sixHoursMs) {
-          // Reset 6-hour window
-          set(s => ({ user: s.user ? { ...s.user, picturesUsedToday: 0, videosUsedToday: 0, chatsUsedToday: 0, lastResetTimestamp: new Date().toISOString() } : null }))
-          return true
-        }
-        return (u.picturesUsedToday || 0) < 3 && (u.chatsUsedToday || 0) < 10
-      },
-      canGenerateVideo: () => {
-        const u = get().user
-        if (!u) return false
-        if (u.plan === 'premium') return true
-        const now = Date.now()
-        const lastReset = u.lastResetTimestamp ? new Date(u.lastResetTimestamp).getTime() : 0
-        const sixHoursMs = 6 * 60 * 60 * 1000
-        if (now - lastReset > sixHoursMs) {
-          set(s => ({ user: s.user ? { ...s.user, picturesUsedToday: 0, videosUsedToday: 0, chatsUsedToday: 0, lastResetTimestamp: new Date().toISOString() } : null }))
-          return true
-        }
-        return (u.videosUsedToday || 0) < 1 && (u.chatsUsedToday || 0) < 10
-      },
-      canSendMessage: () => {
-        const u = get().user
-        if (!u) return true
-        if (u.plan === 'premium') return true
-        const now = Date.now()
-        const lastReset = u.lastResetTimestamp ? new Date(u.lastResetTimestamp).getTime() : 0
-        const sixHoursMs = 6 * 60 * 60 * 1000
-        if (now - lastReset > sixHoursMs) {
-          // Reset 6-hour window
-          set(s => ({ user: s.user ? { ...s.user, picturesUsedToday: 0, videosUsedToday: 0, chatsUsedToday: 0, lastResetTimestamp: new Date().toISOString() } : null }))
-          return true
-        }
-        return (u.chatsUsedToday || 0) < 10
-      },
+      canGeneratePicture: () => true,
+      canGenerateVideo: () => true,
+      canSendMessage: () => true,
       incrementPictureUsage: () =>
         set(s => ({
           user: s.user ? { ...s.user, picturesUsedToday: (s.user.picturesUsedToday || 0) + 1 } : null,
