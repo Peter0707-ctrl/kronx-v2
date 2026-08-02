@@ -74,6 +74,18 @@ export function useChat() {
         return
       }
 
+      // General Chat Message Daily Limit Handler
+      if (!store.canSendMessage()) {
+        const chatLimitMsg = store.language === 'sw'
+          ? ` Umefikia kikomo cha maswali ya leo (maswali 10 kwa siku kwa akaunti ya bure). Tafadhali kuboresha usajili wako kwenda **PJKRONX Plus (TZS 15,000)** kupata maswali bila kikomo!`
+          : ` You have reached your daily chat message limit (10 messages per day for free plan). Please upgrade your subscription to **PJKRONX Plus (TZS 15,000)** for unlimited chats!`
+        store.addMessage(text, 'user')
+        store.addMessage(chatLimitMsg, 'ai')
+        store.setSettingsModalOpen(true)
+        return
+      }
+      store.incrementChatUsage()
+
       store.addMessage(text, 'user')
       store.addMessage('', 'ai')
       store.setStreaming(true)

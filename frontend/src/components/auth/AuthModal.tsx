@@ -29,6 +29,7 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
       plan: 'free',
       picturesUsedToday: 0,
       videosUsedToday: 0,
+      chatsUsedToday: 0,
       provider: 'google',
       createdAt: new Date().toISOString(),
     }
@@ -63,6 +64,7 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
       plan: isMasterAdmin ? 'premium' : 'free',
       picturesUsedToday: 0,
       videosUsedToday: 0,
+      chatsUsedToday: 0,
       provider: 'email',
       createdAt: new Date().toISOString(),
     }

@@ -35,8 +35,10 @@ interface KronxStore {
   generateApiKey: () => string
   canGeneratePicture: () => boolean
   canGenerateVideo: () => boolean
+  canSendMessage: () => boolean
   incrementPictureUsage: () => void
   incrementVideoUsage: () => void
+  incrementChatUsage: () => void
   systemDisabled: boolean
   toggleSystemKillSwitch: (disabled: boolean) => void
 
@@ -76,6 +78,7 @@ const DEFAULT_USER: UserProfile = {
   plan: 'free',
   picturesUsedToday: 0,
   videosUsedToday: 0,
+  chatsUsedToday: 0,
   provider: 'email',
   createdAt: new Date().toISOString(),
 }
@@ -169,6 +172,12 @@ export const useKronxStore = create<KronxStore>()(
         const limit = u.plan === 'premium' ? 3 : 1
         return (u.videosUsedToday || 0) < limit
       },
+      canSendMessage: () => {
+        const u = get().user
+        if (!u) return true
+        const limit = u.plan === 'premium' ? 1000 : 10
+        return (u.chatsUsedToday || 0) < limit
+      },
       incrementPictureUsage: () =>
         set(s => ({
           user: s.user ? { ...s.user, picturesUsedToday: (s.user.picturesUsedToday || 0) + 1 } : null,
@@ -176,6 +185,10 @@ export const useKronxStore = create<KronxStore>()(
       incrementVideoUsage: () =>
         set(s => ({
           user: s.user ? { ...s.user, videosUsedToday: (s.user.videosUsedToday || 0) + 1 } : null,
+        })),
+      incrementChatUsage: () =>
+        set(s => ({
+          user: s.user ? { ...s.user, chatsUsedToday: (s.user.chatsUsedToday || 0) + 1 } : null,
         })),
 
       addMessage: (content, role) => {

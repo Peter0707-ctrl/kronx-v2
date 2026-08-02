@@ -18,6 +18,7 @@ export interface UserProfile {
   apiKey?: string
   picturesUsedToday: number
   videosUsedToday: number
+  chatsUsedToday: number
   provider: 'google' | 'email'
   createdAt: string
 }
