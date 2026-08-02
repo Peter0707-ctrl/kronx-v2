@@ -108,32 +108,29 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
             <span style={{ fontSize: '24px', fontWeight: '900', letterSpacing: '-0.5px' }}>KRON X</span>
           </div>
 
-          <h2 style={{ fontSize: '26px', fontWeight: '800', marginBottom: '14px', lineHeight: '1.25' }}>
-            {sw ? 'Karibu Kronx AI — Mshauri wa Wanafunzi na Elimu' : 'Welcome to Kronx AI — Student Study Companion'}
-          </h2>
-
+          <h1 style={{ fontSize: '32px', fontWeight: '800', margin: '0 0 12px 0', letterSpacing: '-0.5px', color: '#ffffff' }}>
+            PJKRONX AI Companion
+          </h1>
           <p style={{ fontSize: '14.5px', color: '#94a3b8', lineHeight: '1.6', marginBottom: '28px' }}>
-            {sw
-              ? 'Kronx ni mfumo wa hali ya juu wa AI uliotengenezwa na PJ COPETRANOVA maalum kusaidia wanafunzi katika kujifunza, kufanya assignments, kuelewa masomo kwa hatua kwa hatua, na kufanya tafiti.'
-              : 'Kronx is an advanced AI study companion created by PJ COPETRANOVA specifically to empower students with step-by-step academic explanations, homework guidance, research thesis writing, and programming.'}
+            PJKRONX AI is an advanced AI study companion created by PJ COPETRANOVA specifically to empower students with step-by-step academic explanations, homework guidance, research thesis writing, and programming.
           </p>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span style={{ background: 'rgba(255,255,255,0.1)', padding: '4px 8px', borderRadius: '8px', fontWeight: '800', color: '#38bdf8' }}>•</span>
-              <span>{sw ? 'Usaidizi wa masomo kwa hatua kwa hatua' : 'Step-by-step academic explanation & homework help'}</span>
+              <span>Step-by-step academic explanation & homework help</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span style={{ background: 'rgba(255,255,255,0.1)', padding: '4px 8px', borderRadius: '8px', fontWeight: '800', color: '#38bdf8' }}>•</span>
-              <span>{sw ? 'Ufasaha wa Kiswahili na Kiingereza katika masomo' : 'Dual Language Support (Swahili & English)'}</span>
+              <span>Dual Language Support (Swahili & English)</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span style={{ background: 'rgba(255,255,255,0.1)', padding: '4px 8px', borderRadius: '8px', fontWeight: '800', color: '#38bdf8' }}>•</span>
-              <span>{sw ? 'Uwezo wa kutengeneza Picha za FLUX 8K na Video' : 'FLUX 8K Image Renders & Video Generators'}</span>
+              <span>FLUX 8K Image Renders & Video Generators</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span style={{ background: 'rgba(255,255,255,0.1)', padding: '4px 8px', borderRadius: '8px', fontWeight: '800', color: '#38bdf8' }}>•</span>
-              <span>{sw ? 'Fursa ya kupata Developer API Keys' : 'Developer API Keys for Premium Subscribers'}</span>
+              <span>Developer API Keys for Premium Subscribers</span>
             </div>
           </div>
         </div>
@@ -145,57 +142,41 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
 
       {/* RIGHT SIDE: AUTHENTICATION FORM */}
       <div style={{ flex: 1, padding: '40px 36px', background: '#ffffff', position: 'relative' }}>
-        {!isPage && (
-          <button
-            className="auth-close-btn"
-            onClick={() => setAuthModalOpen(false)}
-            title="Funga · Close"
-            style={{ top: '16px', right: '16px' }}
-          >
-            ✕
-          </button>
-        )}
-
-        {/* Language Switcher on Front Page */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-          <div className="lang-toggle-mini">
-            <button
-              className={`mini-pill ${sw ? 'pill-active' : ''}`}
-              onClick={() => setLanguage('sw')}
-            >
-              Kiswahili
-            </button>
-            <button
-              className={`mini-pill ${!sw ? 'pill-active' : ''}`}
-              onClick={() => setLanguage('en')}
-            >
-              English
-            </button>
-          </div>
-        </div>
+        <button
+          className="auth-close-btn"
+          onClick={() => setAuthModalOpen(false)}
+          title="Back to Home Page"
+          style={{ top: '16px', right: '16px', background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', fontWeight: '700', color: '#0f172a' }}
+        >
+          ✕
+        </button>
 
         <div className="auth-header" style={{ marginBottom: '20px' }}>
           <h2 style={{ fontSize: '22px', fontWeight: '800', margin: '0 0 4px 0', color: '#0f172a' }}>
-            {tab === 'login' ? (sw ? 'Karibu Tena' : 'Welcome Back') : (sw ? 'Fungua Akaunti' : 'Create Account')}
+            {tab === 'login' ? 'Welcome Back' : 'Create Account'}
           </h2>
           <p style={{ fontSize: '13.5px', color: '#64748b', margin: 0 }}>
-            {sw ? 'Ingia au Jisajili kuanza kutumia Kronx' : 'Sign in or register to get started with Kronx'}
+            {tab === 'login' ? 'Sign in to access your PJKRONX AI workspace' : 'Register to get started with PJKRONX AI'}
           </p>
         </div>
 
-        {/* Auth Tabs */}
-        <div className="auth-tabs" style={{ marginBottom: '20px' }}>
+        {/* Tab Selector: Login vs Register */}
+        <div className="auth-tabs" style={{ display: 'flex', background: '#f1f5f9', padding: '4px', borderRadius: '12px', marginBottom: '20px' }}>
           <button
-            className={`auth-tab ${tab === 'login' ? 'auth-tab--active' : ''}`}
+            type="button"
+            className={`auth-tab-btn ${tab === 'login' ? 'tab-active' : ''}`}
             onClick={() => setTab('login')}
+            style={{ flex: 1, padding: '8px 12px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '13px', background: tab === 'login' ? '#ffffff' : 'transparent', color: tab === 'login' ? '#0f172a' : '#64748b', boxShadow: tab === 'login' ? '0 2px 6px rgba(0,0,0,0.05)' : 'none' }}
           >
-            {sw ? 'Ingia · Login' : 'Sign In'}
+            Sign In
           </button>
           <button
-            className={`auth-tab ${tab === 'register' ? 'auth-tab--active' : ''}`}
+            type="button"
+            className={`auth-tab-btn ${tab === 'register' ? 'tab-active' : ''}`}
             onClick={() => setTab('register')}
+            style={{ flex: 1, padding: '8px 12px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '13px', background: tab === 'register' ? '#ffffff' : 'transparent', color: tab === 'register' ? '#0f172a' : '#64748b', boxShadow: tab === 'register' ? '0 2px 6px rgba(0,0,0,0.05)' : 'none' }}
           >
-            {sw ? 'Jisajili · Register' : 'Create Account'}
+            Create Account
           </button>
         </div>
 
@@ -219,18 +200,18 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
               d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.7 1.27 6.61l4.01 3.15c.95-2.85 3.6-4.96 6.72-4.96z"
             />
           </svg>
-          <span>{sw ? 'Endelea na Google' : 'Continue with Google'}</span>
+          <span>Continue with Google</span>
         </button>
 
         <div className="auth-divider">
-          <span>{sw ? 'au tumia barua pepe' : 'or continue with email'}</span>
+          <span>or continue with email</span>
         </div>
 
         {/* Email Auth Form */}
         <form onSubmit={handleSubmit} className="auth-form">
           {tab === 'register' && (
             <div className="auth-field">
-              <label>{sw ? 'Jina Kamili' : 'Full Name'}</label>
+              <label>Full Name</label>
               <input
                 type="text"
                 className="auth-input"
@@ -243,7 +224,7 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
           )}
 
           <div className="auth-field">
-            <label>{sw ? 'Barua Pepe' : 'Email Address'}</label>
+            <label>Email Address</label>
             <input
               type="email"
               className="auth-input"
@@ -255,7 +236,7 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
           </div>
 
           <div className="auth-field">
-            <label>{sw ? 'Neno la Siri' : 'Password'}</label>
+            <label>Password</label>
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
               <input
                 type={showPassword ? 'text' : 'password'}
@@ -278,9 +259,7 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
           </div>
 
           <button type="submit" className="auth-submit-btn">
-            {tab === 'login'
-              ? (sw ? 'Ingia Sasa' : 'Sign In')
-              : (sw ? 'Tengeneza Akaunti' : 'Create Account')}
+            {tab === 'login' ? 'Sign In' : 'Create Account'}
           </button>
         </form>
 
