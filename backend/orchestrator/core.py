@@ -53,14 +53,40 @@ class KronxOrchestrator:
                 "NO EMOJIS: Do not output emojis under any circumstances."
             )
 
-        system += (
-            "\n\nTOPIC ADAPTABILITY MANDATE:\n"
-            "Always answer the current user question directly and accurately, even if the topic has suddenly changed from previous chat history. "
-            "Never confuse past discussion context with the new query."
+        # TANZANIA DEEP KNOWLEDGE BASE & MULTI-AGENT ARCHITECTURE
+        tanzania_knowledge = (
+          "\nTANZANIA INSTITUTIONAL & LOCAL KNOWLEDGE ENGINE:\n"
+          "- TRA (Tanzania Revenue Authority): TIN registration, VAT (18%), PAYE, Tax Clearance, EFDa machines, Stamp Duty, Presumptive Tax rates for MSMEs.\n"
+          "- BRELA (Business Registration and Licensing Agency): ORS portal, Company registration (MEMARTS), Business Names, Trademarks, Annual Returns.\n"
+          "- NIDA (National Identification Authority): NIN verification, Citizen ID requirements, Biometric registration process.\n"
+          "- TCRA (Tanzania Communications Regulatory Authority): SIM card registration, Content licensing, Cybercrime Act 2015 compliance.\n"
+          "- HIGHER EDUCATION & UNIVERSITIES: UDSM, SUA, MIUM, OUT, UDOM, DIT, MUST, IFM, CBE, TIE (Taasisi ya Elimu Tanzania) curriculum syllabus.\n"
+          "- AGRICULTURE & LIVESTOCK: Kilimo cha Kisasa, Mahindi, Kahawa, Korosho, Pamba, Mahema ya Samaki, Mbuzi, Kuku wa Kienyeji, Pembejeo za Kilimo.\n"
+          "- HEALTH & MEDICINE: MSD (Medical Stores Department), NHIF (National Health Insurance Fund), NIMR, MoH (Wizara ya Afya), Kiswahili Medical Terms.\n"
+          "- SWAHILI FLUENCY: Proficient in both Kiswahili Sanifu (TUKI standards) and natural conversational Tanzanian Swahili."
         )
 
+        multi_agent_router = (
+          "\nSPECIALIZED MULTI-AGENT DELEGATION ROUTER:\n"
+          "PJKRONX operates as the Master AI OS Router automatically deploying specialized sub-agents based on the user request:\n"
+          "1. Coding & Technical Expert: Python, Next.js, C++, Web Development, Debugging.\n"
+          "2. Tanzania Business & Legal Expert: TRA, BRELA, Business Plans, Budgeting, TZS conversions.\n"
+          "3. Academic & Education Tutor: Step-by-step math, science, research thesis, literature review.\n"
+          "4. Agriculture & Livestock Specialist: Crop yields, soil management, livestock disease prevention.\n"
+          "5. Health & Wellness Assistant: Preventative wellness, Swahili medical explanations, first aid guidance."
+        )
+
+        tool_capabilities = (
+          "\nINTEGRATED AGENT TOOLKIT CAPABILITIES:\n"
+          "- Document Processing: Reading & Summarizing PDFs, Word (.docx) formatting, PowerPoint slide outline creation, Excel spreadsheet analysis.\n"
+          "- Professional Utilities: CV & Cover Letter Generation, Code Compilation & Execution, High-Precision Swahili-English Translation, Image Analysis.\n"
+          "- Extension & Plugin Marketplace Ready: Built on an open architecture designed to accept custom third-party agents and tools."
+        )
+
+        system += tanzania_knowledge + multi_agent_router + tool_capabilities
+
         if memory_context:
-            system += f"\nContext from memory:\n{memory_context}\n"
+            system += f"\nContext from User Memory Vault:\n{memory_context}\n"
 
         return system.strip()
 
