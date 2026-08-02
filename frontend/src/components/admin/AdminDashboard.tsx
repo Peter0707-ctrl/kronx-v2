@@ -6,12 +6,15 @@ import { AdminUserRecord, SystemTelemetry } from '@/types'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://miraculous-forgiveness-production-10d4.up.railway.app'
 
-const REAL_USERS: AdminUserRecord[] = [
+type UserPlan = 'free' | 'plus' | 'pro'
+
+const REAL_USERS: (AdminUserRecord & { plan: UserPlan })[] = [
   {
     id: 'u-admin-master',
     name: 'Peter Joseph Msira (Master Admin)',
     email: 'pj0040280@gmail.com',
     role: 'admin',
+    plan: 'pro',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Peter',
     lastActive: 'Active Now',
     conversationCount: 1
@@ -21,12 +24,19 @@ const REAL_USERS: AdminUserRecord[] = [
 export default function AdminDashboard() {
   const { language, setActiveView, user, updateUserRole, systemDisabled, toggleSystemKillSwitch } = useKronxStore()
   const [telemetry, setTelemetry] = useState<SystemTelemetry | null>(null)
-  const [usersList, setUsersList] = useState<AdminUserRecord[]>(REAL_USERS)
+  const [usersList, setUsersList] = useState<(AdminUserRecord & { plan: UserPlan })[]>(REAL_USERS)
   const [userSearchQuery, setUserSearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState<'users' | 'revenue' | 'telemetry' | 'tuning'>('users')
   const [tempSetting, setTempSetting] = useState(0.4)
   const [maxTokensSetting, setMaxTokensSetting] = useState(1024)
+  const [subscriptionUpdated, setSubscriptionUpdated] = useState<string | null>(null)
   const sw = language === 'sw'
+
+  const handleUpgradePlan = (userId: string, plan: UserPlan) => {
+    setUsersList(prev => prev.map(u => u.id === userId ? { ...u, plan } : u))
+    setSubscriptionUpdated(userId)
+    setTimeout(() => setSubscriptionUpdated(null), 3000)
+  }
 
   useEffect(() => {
     fetch(`${API_BASE}/api/system/status`)
@@ -141,15 +151,27 @@ export default function AdminDashboard() {
             </button>
           </div>
 
+          {subscriptionUpdated && (
+            <div style={{
+              background: 'linear-gradient(135deg, #064e3b, #065f46)',
+              color: '#6ee7b7', borderRadius: '12px', padding: '12px 16px',
+              fontSize: '13.5px', fontWeight: '700', marginBottom: '14px',
+              display: 'flex', alignItems: 'center', gap: '8px',
+            }}>
+              ✓ {sw ? 'Subscription imebadilishwa kwa mafanikio!' : 'Subscription updated successfully!'}
+            </div>
+          )}
+
           <div className="table-wrapper">
             <table className="admin-table">
               <thead>
                 <tr>
                   <th>{sw ? 'Mtumiaji' : 'User'}</th>
                   <th>Email</th>
+                  <th>{sw ? 'Mpango' : 'Plan'}</th>
                   <th>Role</th>
                   <th>{sw ? 'Mazungumzo' : 'Chats'}</th>
-                  <th>{sw ? 'Vipengele vya Kitendo' : 'Actions'}</th>
+                  <th style={{ minWidth: '260px' }}>{sw ? 'Usimamizi wa Subscription' : 'Subscription Management'}</th>
                 </tr>
               </thead>
               <tbody>
@@ -163,53 +185,70 @@ export default function AdminDashboard() {
                     <td>
                       <div className="user-cell">
                         <img src={u.avatar} alt={u.name} className="user-avatar-mini" />
-                        <span>{u.name}</span>
+                        <span style={{ fontWeight: '700' }}>{u.name}</span>
                       </div>
                     </td>
-                    <td>{u.email}</td>
+                    <td style={{ fontSize: '12.5px', color: '#64748b' }}>{u.email}</td>
+                    <td>
+                      <span style={{
+                        fontSize: '11px', fontWeight: '800',
+                        padding: '4px 10px', borderRadius: '8px',
+                        background: u.plan === 'pro' ? '#4c1d95' : u.plan === 'plus' ? '#065f46' : '#f1f5f9',
+                        color: u.plan === 'pro' ? '#ddd6fe' : u.plan === 'plus' ? '#6ee7b7' : '#64748b',
+                        letterSpacing: '0.5px',
+                      }}>
+                        {u.plan === 'pro' ? 'PRO' : u.plan === 'plus' ? 'PLUS ✓' : 'FREE'}
+                      </span>
+                    </td>
                     <td>
                       <span className={`role-badge role-${u.role}`}>
-                        {u.role === 'admin' ? 'AI Admin' : 'User'}
+                        {u.role === 'admin' ? 'Admin' : 'User'}
                       </span>
                     </td>
                     <td>{u.conversationCount}</td>
                     <td>
-                      <div style={{ display: 'flex', gap: '6px' }}>
-                        {u.role === 'admin' ? (
-                          <span style={{ fontSize: '12px', fontWeight: '800', color: '#0284c7', background: '#e0f2fe', padding: '4px 10px', borderRadius: '8px' }}>
-                            🔒 Protected Master Admin
-                          </span>
-                        ) : (
-                          <>
+                      {u.role === 'admin' ? (
+                        <span style={{ fontSize: '12px', fontWeight: '800', color: '#0284c7', background: '#e0f2fe', padding: '5px 12px', borderRadius: '8px' }}>
+                          🔒 Master Admin — Unlimited
+                        </span>
+                      ) : (
+                        <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+                          {u.plan !== 'free' && (
                             <button
-                              className="role-toggle-btn"
-                              onClick={() => handleToggleRole(u.id)}
+                              onClick={() => handleUpgradePlan(u.id, 'free')}
+                              style={{ background: '#f1f5f9', color: '#64748b', border: '1px solid #cbd5e1', padding: '5px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}
                             >
-                              Make Admin
+                              {sw ? 'Rudisha Bure' : 'Set Free'}
                             </button>
+                          )}
+                          {u.plan !== 'plus' && (
                             <button
-                              onClick={() => {
-                                if (confirm(`Approve Kronx Plus Premium for ${u.name}?`)) {
-                                  alert(`Kronx Plus subscription granted to ${u.email}`)
-                                }
-                              }}
-                              style={{ background: '#10b981', color: '#fff', border: 'none', padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}
+                              onClick={() => handleUpgradePlan(u.id, 'plus')}
+                              style={{ background: '#10b981', color: '#fff', border: 'none', padding: '5px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: '800', cursor: 'pointer' }}
                             >
-                              Approve Plus
+                              ✓ {sw ? 'Ongeza Plus' : 'Grant Plus'}
                             </button>
+                          )}
+                          {u.plan !== 'pro' && (
                             <button
-                              onClick={() => {
-                                if (confirm(`Delete user ${u.name}?`)) {
-                                  setUsersList(prev => prev.filter(item => item.id !== u.id))
-                                }
-                              }}
-                              style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '4px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}
+                              onClick={() => handleUpgradePlan(u.id, 'pro')}
+                              style={{ background: '#7c3aed', color: '#fff', border: 'none', padding: '5px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: '800', cursor: 'pointer' }}
                             >
-                              Remove
+                              ✦ {sw ? 'Ongeza Pro' : 'Grant Pro'}
                             </button>
-                          </>
-                        )}
-                      </div>
+                          )}
+                          <button
+                            onClick={() => {
+                              if (confirm(`Remove user ${u.name}?`)) {
+                                setUsersList(prev => prev.filter(item => item.id !== u.id))
+                              }
+                            }}
+                            style={{ background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', padding: '5px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}
+                          >
+                            {sw ? 'Ondoa' : 'Remove'}
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}

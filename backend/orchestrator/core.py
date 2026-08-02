@@ -2,7 +2,7 @@ import os
 import json
 import httpx
 import re
-from typing import List, AsyncGenerator
+from typing import List, AsyncGenerator, Optional
 from dotenv import load_dotenv
 from memory.manager import MemoryManager
 from utils.helpers import get_mode_context
@@ -14,6 +14,124 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
 # HIGH-SPEED IN-MEMORY RESPONSE CACHE FOR FREQUENTLY ASKED QUESTIONS
 RESPONSE_CACHE = {}
+
+# ==============================================================================
+#  PJKRONX WEB SEARCH ENGINE — Free, No API Key Required
+#  Solves "always updating" problem (presidents retire, new events happen)
+#  Sources: DuckDuckGo Instant Answer API + Wikipedia REST API
+# ==============================================================================
+
+async def _web_search(query: str) -> Optional[str]:
+    """
+    Search the live web using free APIs (DuckDuckGo + Wikipedia).
+    Returns a formatted answer string or None if no result found.
+    This solves the 'president retired / outdated knowledge' problem
+    by fetching REAL-TIME data from the internet.
+    """
+    query_clean = query.strip()
+    result_parts = []
+
+    try:
+        # ── Source 1: DuckDuckGo Instant Answer API (free, no key) ──
+        ddg_url = f"https://api.duckduckgo.com/?q={httpx.URL(scheme='', host='', path='').copy_with()}"
+        ddg_params = {
+            "q": query_clean,
+            "format": "json",
+            "no_redirect": "1",
+            "no_html": "1",
+            "skip_disambig": "1",
+        }
+        async with httpx.AsyncClient(timeout=8.0) as client:
+            ddg_resp = await client.get("https://api.duckduckgo.com/", params=ddg_params)
+            if ddg_resp.status_code == 200:
+                ddg_data = ddg_resp.json()
+                abstract = ddg_data.get("Abstract", "").strip()
+                abstract_text = ddg_data.get("AbstractText", "").strip()
+                answer = ddg_data.get("Answer", "").strip()
+                definition = ddg_data.get("Definition", "").strip()
+                source = ddg_data.get("AbstractSource", "").strip()
+                source_url = ddg_data.get("AbstractURL", "").strip()
+
+                if answer:
+                    result_parts.append(f"**Direct Answer:** {answer}")
+                if abstract_text:
+                    result_parts.append(f"**{abstract or query_clean}**\n\n{abstract_text}")
+                    if source:
+                        result_parts.append(f"*Source: {source}* — {source_url}")
+                if definition:
+                    result_parts.append(f"**Definition:** {definition}")
+
+                # DuckDuckGo related topics
+                related = ddg_data.get("RelatedTopics", [])[:3]
+                if related and not result_parts:
+                    topics = []
+                    for topic in related:
+                        if isinstance(topic, dict) and topic.get("Text"):
+                            topics.append(f"- {topic['Text'][:150]}")
+                    if topics:
+                        result_parts.append("**Related Information:**\n" + "\n".join(topics))
+    except Exception as e:
+        print(f"[DuckDuckGo Search Error] {e}")
+
+    # ── Source 2: Wikipedia REST API (free, no key) ──
+    if not result_parts:
+        try:
+            # Extract potential entity name from query
+            wiki_query = query_clean.lower()
+            wiki_query = re.sub(r'\b(who is|what is|tell me about|explain|define|describe|the|a|an|of|about)\b', '', wiki_query)
+            wiki_query = wiki_query.strip().replace(' ', '_').title()
+
+            if len(wiki_query) > 2:
+                wiki_url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{httpx.URL(scheme='', host='', path='').copy_with()}"
+                async with httpx.AsyncClient(timeout=8.0) as client:
+                    wiki_resp = await client.get(
+                        f"https://en.wikipedia.org/api/rest_v1/page/summary/{wiki_query}",
+                        headers={"User-Agent": "PJKRONX-AI/2.0"}
+                    )
+                    if wiki_resp.status_code == 200:
+                        wiki_data = wiki_resp.json()
+                        title = wiki_data.get("title", "")
+                        extract = wiki_data.get("extract", "").strip()
+                        page_url = wiki_data.get("content_urls", {}).get("desktop", {}).get("page", "")
+
+                        if extract and len(extract) > 80:
+                            # Trim to first 3 paragraphs
+                            paragraphs = [p.strip() for p in extract.split('\n') if p.strip()][:3]
+                            formatted = "\n\n".join(paragraphs)
+                            result_parts.append(f"**{title}** (Wikipedia)\n\n{formatted}")
+                            if page_url:
+                                result_parts.append(f"*Full article: {page_url}*")
+        except Exception as e:
+            print(f"[Wikipedia Search Error] {e}")
+
+    if result_parts:
+        web_result = "\n\n".join(result_parts)
+        return (
+            f"**Live Web Search Result for: \"{query_clean}\"**\n\n"
+            f"{web_result}\n\n"
+            f"---\n*Note: This answer was fetched live from the web. Information may have changed — verify with official sources.*"
+        )
+
+    return None
+
+
+async def _is_current_events_query(query: str) -> bool:
+    """
+    Detect if a query is about current events, news, or real-time data
+    that should be searched on the web rather than answered from static KB.
+    """
+    query_lower = query.lower()
+    current_events_keywords = [
+        "current", "latest", "recent", "now", "today", "2024", "2025", "2026",
+        "new", "just", "breaking", "update", "news", "who is the president",
+        "who is president", "who won", "who is the prime minister", "who is pm",
+        "rais wa sasa", "waziri mkuu wa sasa", "habari za leo",
+        "latest news", "what happened", "when did", "retired", "resigned",
+        "elected", "appointed", "died", "new government", "new minister",
+        "price of", "rate of", "exchange rate", "dollar rate", "bei ya",
+        "weather", "hali ya hewa", "score", "match result",
+    ]
+    return any(kw in query_lower for kw in current_events_keywords)
 
 # ==============================================================================
 #  PJKRONX EMBEDDED INTELLIGENCE ENGINE - Works 100% Without API Keys
@@ -226,7 +344,7 @@ class KronxOrchestrator:
         system = self._build_system_prompt(mode, language, memory_context)
         contents = self._build_contents(history, message)
 
-        # Check knowledge base first (instant response)
+        # Step 1: Knowledge Base (instant, no latency)
         kb_answer = _search_knowledge_base(message)
         if kb_answer:
             self.memory.extract_and_save(
@@ -235,6 +353,17 @@ class KronxOrchestrator:
                 ai_response=kb_answer
             )
             return kb_answer
+
+        # Step 2: Live Web Search for current events (solves 'president retired' / news queries)
+        if await _is_current_events_query(message):
+            web_answer = await _web_search(message)
+            if web_answer:
+                self.memory.extract_and_save(
+                    conversation_id=conversation_id,
+                    user_message=message,
+                    ai_response=web_answer
+                )
+                return web_answer
 
         models_to_try = ["gemini-1.5-flash", "gemini-1.5-flash-8b", "gemini-2.0-flash"]
         last_err = None
@@ -332,6 +461,19 @@ class KronxOrchestrator:
                 ai_response=kb_answer
             )
             return
+
+        # ── Live Web Search for Current Events (president retired? new news?) ──
+        if await _is_current_events_query(message):
+            web_answer = await _web_search(message)
+            if web_answer:
+                yield web_answer
+                RESPONSE_CACHE[cache_key] = web_answer
+                self.memory.extract_and_save(
+                    conversation_id=conversation_id,
+                    user_message=message,
+                    ai_response=web_answer
+                )
+                return
 
         memory_context = self.memory.get_context(conversation_id)
         system = self._build_system_prompt(mode, language, memory_context)

@@ -3,65 +3,129 @@
 import { useState } from 'react'
 import { useKronxStore } from '@/store/useKronxStore'
 
+// Payment provider logos (SVG inline for zero dependency)
+const MpesaLogo = () => (
+  <svg width="52" height="28" viewBox="0 0 120 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="120" height="48" rx="8" fill="#009B3A"/>
+    <text x="60" y="31" textAnchor="middle" fill="white" fontSize="16" fontWeight="800" fontFamily="Arial">M-PESA</text>
+  </svg>
+)
+
+const TigoLogo = () => (
+  <svg width="52" height="28" viewBox="0 0 120 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="120" height="48" rx="8" fill="#0050FF"/>
+    <text x="60" y="31" textAnchor="middle" fill="white" fontSize="17" fontWeight="800" fontFamily="Arial">TIGO</text>
+  </svg>
+)
+
+const AirtelLogo = () => (
+  <svg width="52" height="28" viewBox="0 0 120 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="120" height="48" rx="8" fill="#ED1C24"/>
+    <text x="60" y="31" textAnchor="middle" fill="white" fontSize="14" fontWeight="800" fontFamily="Arial">AIRTEL</text>
+  </svg>
+)
+
+const HalotelLogo = () => (
+  <svg width="52" height="28" viewBox="0 0 120 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="120" height="48" rx="8" fill="#F7941D"/>
+    <text x="60" y="31" textAnchor="middle" fill="white" fontSize="13" fontWeight="800" fontFamily="Arial">HALOTEL</text>
+  </svg>
+)
+
+const VisaLogo = () => (
+  <svg width="52" height="28" viewBox="0 0 120 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="120" height="48" rx="8" fill="#1A1F71"/>
+    <text x="60" y="31" textAnchor="middle" fill="#F7B600" fontSize="18" fontWeight="900" fontFamily="Arial Narrow, Arial">VISA</text>
+  </svg>
+)
+
+const MastercardLogo = () => (
+  <svg width="52" height="28" viewBox="0 0 120 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="120" height="48" rx="8" fill="#252525"/>
+    <circle cx="44" cy="24" r="16" fill="#EB001B"/>
+    <circle cx="76" cy="24" r="16" fill="#F79E1B"/>
+    <path d="M60 13.8a16 16 0 0 1 0 20.4A16 16 0 0 1 60 13.8z" fill="#FF5F00"/>
+  </svg>
+)
+
+const WhatsAppIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+    <path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.555 4.121 1.527 5.854L0 24l6.338-1.501A11.934 11.934 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.793 9.793 0 0 1-5.028-1.385l-.36-.214-3.761.891.951-3.665-.235-.376A9.818 9.818 0 0 1 2.182 12C2.182 6.57 6.57 2.182 12 2.182S21.818 6.57 21.818 12 17.43 21.818 12 21.818z"/>
+  </svg>
+)
+
+const CheckIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="20 6 9 17 4 12"/>
+  </svg>
+)
+
 export default function SettingsModal() {
   const {
     settingsModalOpen,
     setSettingsModalOpen,
     user,
     logoutUser,
-    upgradeSubscription,
-    language
+    language,
   } = useKronxStore()
 
   const [activeTab, setActiveTab] = useState<'upgrade' | 'account'>('upgrade')
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
-  const [selectedMethod, setSelectedMethod] = useState<'mpesa' | 'card'>('mpesa')
-  const [phone, setPhone] = useState('')
-  const [payerName, setPayerName] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [pushSent, setPushSent] = useState(false)
-  const [pin, setPin] = useState('')
+  const [selectedPlan, setSelectedPlan] = useState<'plus' | 'pro'>('plus')
+  const [contactSent, setContactSent] = useState(false)
 
   if (!settingsModalOpen) return null
 
   const isPremium = user?.plan === 'premium'
   const picUsed = user?.picturesUsedToday || 0
   const vidUsed = user?.videosUsedToday || 0
-  const picLimit = isPremium ? 10 : 3
-  const vidLimit = isPremium ? 3 : 1
+  const sw = language === 'sw'
 
-  const handlePay = () => {
-    if (selectedMethod === 'mpesa' && (!phone.trim() || !payerName.trim())) {
-      alert(language === 'sw' ? 'Tafadhali ingiza namba ya simu na jina lililotumika kulipia' : 'Please enter your phone number and payer full name')
-      return
+  const plans = {
+    plus: {
+      name: 'PJKRONX Plus',
+      monthly: 15000,
+      yearly: 12000,
+      features: [
+        sw ? 'Kipaumbele cha jibu la AI' : 'Priority AI response speed',
+        sw ? 'Picha 10 kwa siku' : '10 AI images per day',
+        sw ? 'Video 3 kwa siku' : '3 AI videos per day',
+        sw ? 'Msaada wa haraka' : 'Priority customer support',
+        sw ? 'Kumbukumbu ya mazungumzo' : 'Extended conversation memory',
+      ]
+    },
+    pro: {
+      name: 'PJKRONX Pro',
+      monthly: 35000,
+      yearly: 28000,
+      features: [
+        sw ? 'Kila kitu cha Plus' : 'Everything in Plus',
+        sw ? 'Picha Zisizo na Kikomo' : 'Unlimited AI images',
+        sw ? 'Video Zisizo na Kikomo' : 'Unlimited AI videos',
+        sw ? 'Upatikanaji wa API' : 'API access & integration',
+        sw ? 'Kipaumbele cha Kwanza cha Msaada' : 'Priority 1 support (WhatsApp)',
+        sw ? 'Uchambuzi wa Kina wa Biashara' : 'Advanced business analytics',
+      ]
     }
-    setLoading(true)
-    setTimeout(() => {
-      setLoading(false)
-      setPushSent(true)
-    }, 1200)
   }
 
-  const handleSendWhatsAppVerification = () => {
+  const activePlan = plans[selectedPlan]
+  const price = billingCycle === 'monthly' ? activePlan.monthly : activePlan.yearly
+
+  const handleContactAdmin = () => {
+    const planLabel = selectedPlan === 'plus' ? 'PJKRONX Plus (15,000 TZS/month)' : 'PJKRONX Pro (35,000 TZS/month)'
     const text = encodeURIComponent(
-      `HABARI ADMIN, NIMEFANYA MALIPO YA KRONX PLUS (15,000 TZS).\n\n` +
-      `Jina la Mlipaji: ${payerName.trim() || user?.name || 'Mtumiaji'}\n` +
-      `Namba Iliyotumika Kulipia: ${phone.trim()}\n` +
-      `Lipa Namba: 45342017 (Mix by Yas)\n` +
-      `Email: ${user?.email || 'N/A'}\n\n` +
-      `Tafadhali thibitisha malipo yangu na uboreshe akaunti yangu.`
+      `Habari Admin Peter! Nataka kujiandikisha kwenye:\n\n` +
+      `MPANGO: ${planLabel}\n` +
+      `BILI: ${billingCycle === 'monthly' ? 'Kila Mwezi' : 'Kila Mwaka'}\n` +
+      `JINA: ${user?.name || 'Mtumiaji'}\n` +
+      `EMAIL: ${user?.email || 'N/A'}\n\n` +
+      `Tafadhali nielekeze jinsi ya kulipa na kuamilisha akaunti yangu.`
     )
     window.open(`https://wa.me/255673190931?text=${text}`, '_blank')
-  }
-
-  const handleConfirmPush = () => {
-    setLoading(true)
-    setTimeout(() => {
-      upgradeSubscription('premium')
-      setLoading(false)
-      setPushSent(false)
-      alert(language === 'sw' ? 'Malipo yamefanikiwa! Akaunti yako imeboreshwa kuwa Kronx Plus (15,000 TZS).' : 'Payment Successful! STK Push confirmed. Your account has been upgraded to Kronx Plus.')
-    }, 1500)
+    setContactSent(true)
+    setTimeout(() => setContactSent(false), 5000)
   }
 
   const handleLogout = () => {
@@ -70,319 +134,536 @@ export default function SettingsModal() {
   }
 
   return (
-    <div className="auth-backdrop" onClick={() => setSettingsModalOpen(false)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(15, 23, 42, 0.55)', backdropFilter: 'blur(10px)', position: 'fixed', inset: 0, zIndex: 9999, padding: '20px' }}>
-      <div className="auth-modal" style={{ width: '100%', maxWidth: '780px', maxHeight: '90vh', overflowY: 'auto', padding: '36px', background: '#ffffff', borderRadius: '28px', border: '1px solid #e2e8f0', boxShadow: '0 25px 60px rgba(0, 0, 0, 0.12)', fontFamily: "Calibri, 'Calibri Light', sans-serif" }} onClick={e => e.stopPropagation()}>
-
-        {/* Modal Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+    <div
+      onClick={() => setSettingsModalOpen(false)}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 9999,
+        background: 'rgba(10, 15, 30, 0.7)',
+        backdropFilter: 'blur(12px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '16px',
+        fontFamily: "'Inter', 'Segoe UI', sans-serif",
+      }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          width: '100%', maxWidth: '820px',
+          maxHeight: '92vh', overflowY: 'auto',
+          background: '#ffffff',
+          borderRadius: '28px',
+          border: '1px solid #e2e8f0',
+          boxShadow: '0 32px 80px rgba(0,0,0,0.18)',
+          scrollbarWidth: 'thin',
+        }}
+      >
+        {/* Gradient Header */}
+        <div style={{
+          background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)',
+          borderRadius: '28px 28px 0 0',
+          padding: '28px 32px',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        }}>
           <div>
-            <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#0f172a', margin: 0, letterSpacing: '-0.4px' }}>
-              {language === 'sw' ? 'Upgrade mpango wako' : 'Upgrade your plan'}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
+              <div style={{
+                background: 'rgba(255,255,255,0.15)',
+                borderRadius: '10px', padding: '6px 12px',
+                fontSize: '11px', fontWeight: '700', color: '#94d2ff',
+                letterSpacing: '1px', textTransform: 'uppercase'
+              }}>
+                PJKRONX SUBSCRIPTION
+              </div>
+            </div>
+            <h2 style={{ fontSize: '22px', fontWeight: '800', color: '#ffffff', margin: '4px 0 0 0' }}>
+              {sw ? 'Chagua Mpango Wako' : 'Choose Your Plan'}
             </h2>
-            <p style={{ fontSize: '14px', color: '#64748b', margin: '4px 0 0 0' }}>
-              {language === 'sw' ? 'Pata fursa ya kutengeneza picha na video zaidi kila siku' : 'Get higher picture & video generation limits and priority response speed'}
+            <p style={{ fontSize: '13px', color: '#94a3b8', margin: '4px 0 0 0' }}>
+              {sw
+                ? 'Lipa kupitia simu yako — Admin atakuongezea subscription baada ya malipo'
+                : 'Pay via mobile money — Admin will activate your subscription after payment'}
             </p>
           </div>
-
           <button
             onClick={() => setSettingsModalOpen(false)}
-            style={{ width: '32px', height: '32px', borderRadius: '50%', border: 'none', background: '#f1f5f9', color: '#64748b', cursor: 'pointer', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-          >
-            ✕
-          </button>
+            style={{
+              width: '36px', height: '36px', borderRadius: '50%',
+              border: '1px solid rgba(255,255,255,0.2)',
+              background: 'rgba(255,255,255,0.1)',
+              color: '#ffffff', cursor: 'pointer',
+              fontSize: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+          >✕</button>
         </div>
 
-        {/* Top Segment Control (Upgrade vs Account) */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px' }}>
-          <div style={{ display: 'flex', gap: '20px' }}>
+        {/* Tab Bar */}
+        <div style={{
+          display: 'flex', gap: '0', borderBottom: '1px solid #e2e8f0',
+          padding: '0 32px', background: '#fafafa'
+        }}>
+          {['upgrade', 'account'].map(tab => (
             <button
-              onClick={() => setActiveTab('upgrade')}
-              style={{ background: 'none', border: 'none', padding: '6px 0', fontSize: '15px', fontWeight: '700', color: activeTab === 'upgrade' ? '#0f172a' : '#94a3b8', borderBottom: activeTab === 'upgrade' ? '2.5px solid #0f172a' : 'none', cursor: 'pointer' }}
+              key={tab}
+              onClick={() => setActiveTab(tab as 'upgrade' | 'account')}
+              style={{
+                padding: '16px 20px', border: 'none', background: 'none',
+                fontSize: '14px', fontWeight: '700', cursor: 'pointer',
+                color: activeTab === tab ? '#0f172a' : '#94a3b8',
+                borderBottom: activeTab === tab ? '2.5px solid #0f172a' : '2.5px solid transparent',
+                transition: 'all 0.2s',
+              }}
             >
-              Plans & Pricing
+              {tab === 'upgrade' ? (sw ? 'Mipango & Bei' : 'Plans & Pricing') : (sw ? 'Akaunti Yangu' : 'My Account')}
             </button>
-            <button
-              onClick={() => setActiveTab('account')}
-              style={{ background: 'none', border: 'none', padding: '6px 0', fontSize: '15px', fontWeight: '700', color: activeTab === 'account' ? '#0f172a' : '#94a3b8', borderBottom: activeTab === 'account' ? '2.5px solid #0f172a' : 'none', cursor: 'pointer' }}
-            >
-              Account & Security
-            </button>
-          </div>
+          ))}
+        </div>
 
+        <div style={{ padding: '28px 32px' }}>
+
+          {/* ═══════════════════════════════════════════
+              TAB 1: PLANS & PRICING
+          ═══════════════════════════════════════════ */}
           {activeTab === 'upgrade' && (
-            /* Monthly / Yearly Toggle Switch */
-            <div style={{ display: 'flex', background: '#f1f5f9', padding: '3px', borderRadius: '20px' }}>
+            <div>
+              {/* Already Premium Banner */}
+              {isPremium && (
+                <div style={{
+                  background: 'linear-gradient(135deg, #064e3b, #065f46)',
+                  borderRadius: '16px', padding: '16px 20px',
+                  display: 'flex', alignItems: 'center', gap: '12px',
+                  marginBottom: '24px',
+                }}>
+                  <div style={{ fontSize: '24px' }}>✓</div>
+                  <div>
+                    <div style={{ color: '#6ee7b7', fontWeight: '800', fontSize: '15px' }}>
+                      {sw ? 'Umeshainuliwa!' : 'You are already subscribed!'}
+                    </div>
+                    <div style={{ color: '#a7f3d0', fontSize: '13px', marginTop: '2px' }}>
+                      {sw ? 'Mpango wako wa PJKRONX Plus unaendelea. Asante!' : 'Your PJKRONX Plus plan is active. Thank you!'}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Billing cycle toggle */}
+              {!isPremium && (
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
+                  <div style={{
+                    display: 'inline-flex', background: '#f1f5f9',
+                    borderRadius: '24px', padding: '4px', gap: '4px'
+                  }}>
+                    {(['monthly', 'yearly'] as const).map(cycle => (
+                      <button
+                        key={cycle}
+                        onClick={() => setBillingCycle(cycle)}
+                        style={{
+                          padding: '8px 20px', borderRadius: '20px', border: 'none',
+                          background: billingCycle === cycle ? '#0f172a' : 'transparent',
+                          color: billingCycle === cycle ? '#ffffff' : '#64748b',
+                          fontSize: '13px', fontWeight: '700', cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          display: 'flex', alignItems: 'center', gap: '6px',
+                        }}
+                      >
+                        {cycle === 'monthly' ? (sw ? 'Kila Mwezi' : 'Monthly') : (sw ? 'Kila Mwaka' : 'Yearly')}
+                        {cycle === 'yearly' && (
+                          <span style={{ background: '#10b981', color: '#fff', borderRadius: '8px', padding: '1px 6px', fontSize: '10px' }}>
+                            -20%
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Plan Cards */}
+              {!isPremium && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '28px' }}>
+
+                  {/* Free Card */}
+                  <div style={{
+                    border: '1px solid #e2e8f0', borderRadius: '20px',
+                    padding: '22px', background: '#fafafa',
+                    display: 'flex', flexDirection: 'column',
+                  }}>
+                    <div style={{ fontSize: '13px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px' }}>Free</div>
+                    <div style={{ fontSize: '26px', fontWeight: '900', color: '#0f172a', marginBottom: '4px' }}>0 TZS</div>
+                    <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '20px' }}>{sw ? 'Daima bila malipo' : 'Always free'}</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, fontSize: '12.5px', color: '#475569' }}>
+                      <div style={{ display: 'flex', gap: '7px', alignItems: 'flex-start' }}>
+                        <span style={{ color: '#10b981', marginTop: '1px', flexShrink: 0 }}><CheckIcon /></span>
+                        {sw ? 'Picha 3 kwa siku' : '3 images/day'} ({picUsed}/3 used)
+                      </div>
+                      <div style={{ display: 'flex', gap: '7px', alignItems: 'flex-start' }}>
+                        <span style={{ color: '#10b981', marginTop: '1px', flexShrink: 0 }}><CheckIcon /></span>
+                        {sw ? 'Video 1 kwa siku' : '1 video/day'} ({vidUsed}/1 used)
+                      </div>
+                      <div style={{ display: 'flex', gap: '7px', alignItems: 'flex-start' }}>
+                        <span style={{ color: '#10b981', marginTop: '1px', flexShrink: 0 }}><CheckIcon /></span>
+                        {sw ? 'Jibu la kawaida la AI' : 'Standard AI answers'}
+                      </div>
+                    </div>
+                    <button disabled style={{
+                      marginTop: '20px', width: '100%', padding: '11px',
+                      borderRadius: '14px', background: '#e2e8f0',
+                      color: '#94a3b8', border: 'none', fontWeight: '700', fontSize: '13px'
+                    }}>
+                      {sw ? 'Mpango wa Sasa' : 'Current Plan'}
+                    </button>
+                  </div>
+
+                  {/* Plus Card */}
+                  <div
+                    onClick={() => setSelectedPlan('plus')}
+                    style={{
+                      border: selectedPlan === 'plus' ? '2.5px solid #0f172a' : '1px solid #cbd5e1',
+                      borderRadius: '20px', padding: '22px',
+                      background: selectedPlan === 'plus' ? '#ffffff' : '#fafafa',
+                      display: 'flex', flexDirection: 'column',
+                      cursor: 'pointer', position: 'relative',
+                      boxShadow: selectedPlan === 'plus' ? '0 8px 30px rgba(15,23,42,0.1)' : 'none',
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    <div style={{
+                      position: 'absolute', top: '-11px', left: '50%', transform: 'translateX(-50%)',
+                      background: '#0f172a', color: '#fff', fontSize: '10px', fontWeight: '800',
+                      padding: '3px 12px', borderRadius: '10px', letterSpacing: '1px', whiteSpace: 'nowrap',
+                    }}>
+                      POPULAR
+                    </div>
+                    <div style={{ fontSize: '13px', fontWeight: '700', color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px' }}>Plus</div>
+                    <div style={{ fontSize: '26px', fontWeight: '900', color: '#0f172a', marginBottom: '4px' }}>
+                      {billingCycle === 'monthly' ? '15,000' : '12,000'} <span style={{ fontSize: '13px', fontWeight: '500', color: '#64748b' }}>TZS</span>
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '20px' }}>
+                      {sw ? 'kwa mwezi' : 'per month'}
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, fontSize: '12.5px', color: '#334155' }}>
+                      {plans.plus.features.map((f, i) => (
+                        <div key={i} style={{ display: 'flex', gap: '7px', alignItems: 'flex-start' }}>
+                          <span style={{ color: '#10b981', marginTop: '1px', flexShrink: 0 }}><CheckIcon /></span>
+                          {f}
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{
+                      marginTop: '16px', padding: '8px',
+                      borderRadius: '10px', textAlign: 'center',
+                      background: selectedPlan === 'plus' ? '#0f172a' : '#f1f5f9',
+                      color: selectedPlan === 'plus' ? '#fff' : '#64748b',
+                      fontSize: '12px', fontWeight: '700',
+                    }}>
+                      {selectedPlan === 'plus' ? (sw ? 'Umechagua' : 'Selected') : (sw ? 'Chagua' : 'Select')}
+                    </div>
+                  </div>
+
+                  {/* Pro Card */}
+                  <div
+                    onClick={() => setSelectedPlan('pro')}
+                    style={{
+                      border: selectedPlan === 'pro' ? '2.5px solid #7c3aed' : '1px solid #cbd5e1',
+                      borderRadius: '20px', padding: '22px',
+                      background: selectedPlan === 'pro' ? '#fdf4ff' : '#fafafa',
+                      display: 'flex', flexDirection: 'column',
+                      cursor: 'pointer', position: 'relative',
+                      boxShadow: selectedPlan === 'pro' ? '0 8px 30px rgba(124,58,237,0.12)' : 'none',
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    <div style={{ fontSize: '13px', fontWeight: '700', color: '#7c3aed', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px' }}>Pro</div>
+                    <div style={{ fontSize: '26px', fontWeight: '900', color: '#0f172a', marginBottom: '4px' }}>
+                      {billingCycle === 'monthly' ? '35,000' : '28,000'} <span style={{ fontSize: '13px', fontWeight: '500', color: '#64748b' }}>TZS</span>
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '20px' }}>
+                      {sw ? 'kwa mwezi' : 'per month'}
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, fontSize: '12.5px', color: '#334155' }}>
+                      {plans.pro.features.map((f, i) => (
+                        <div key={i} style={{ display: 'flex', gap: '7px', alignItems: 'flex-start' }}>
+                          <span style={{ color: '#7c3aed', marginTop: '1px', flexShrink: 0 }}><CheckIcon /></span>
+                          {f}
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{
+                      marginTop: '16px', padding: '8px',
+                      borderRadius: '10px', textAlign: 'center',
+                      background: selectedPlan === 'pro' ? '#7c3aed' : '#f1f5f9',
+                      color: selectedPlan === 'pro' ? '#fff' : '#64748b',
+                      fontSize: '12px', fontWeight: '700',
+                    }}>
+                      {selectedPlan === 'pro' ? (sw ? 'Umechagua' : 'Selected') : (sw ? 'Chagua' : 'Select')}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Payment Instructions + Contact Admin Box */}
+              {!isPremium && (
+                <div style={{
+                  background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+                  border: '1.5px solid #bae6fd',
+                  borderRadius: '20px', padding: '24px',
+                  marginBottom: '24px',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+                    <div style={{
+                      width: '40px', height: '40px', borderRadius: '12px',
+                      background: 'linear-gradient(135deg, #0284c7, #0ea5e9)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '20px', color: '#fff',
+                    }}>ℹ</div>
+                    <div>
+                      <div style={{ fontSize: '15px', fontWeight: '800', color: '#0c4a6e' }}>
+                        {sw ? 'Jinsi ya Kulipa na Kuamilisha Akaunti' : 'How to Pay & Activate Your Account'}
+                      </div>
+                      <div style={{ fontSize: '12.5px', color: '#0369a1', marginTop: '2px' }}>
+                        {sw ? 'Mchakato rahisi wa hatua 2' : '2-step simple process'}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                      <div style={{
+                        width: '28px', height: '28px', borderRadius: '50%',
+                        background: '#0284c7', color: '#fff',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '13px', fontWeight: '800', flexShrink: 0,
+                      }}>1</div>
+                      <div style={{ fontSize: '13.5px', color: '#0c4a6e', lineHeight: '1.5' }}>
+                        <strong>{sw ? 'Lipa Kwa Simu:' : 'Pay via Mobile Money:'}</strong>{' '}
+                        {sw
+                          ? `Tuma TZS ${price.toLocaleString()} kwenye Lipa Namba 45342017 (Mix by Yas) — M-Pesa, Tigo Pesa, Airtel Money, au Halotel`
+                          : `Send TZS ${price.toLocaleString()} to Lipa Namba 45342017 (Mix by Yas) — via M-Pesa, Tigo Pesa, Airtel Money, or Halotel`}
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                      <div style={{
+                        width: '28px', height: '28px', borderRadius: '50%',
+                        background: '#10b981', color: '#fff',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '13px', fontWeight: '800', flexShrink: 0,
+                      }}>2</div>
+                      <div style={{ fontSize: '13.5px', color: '#0c4a6e', lineHeight: '1.5' }}>
+                        <strong>{sw ? 'Wasiliana na Admin:' : 'Contact Admin:'}</strong>{' '}
+                        {sw
+                          ? 'Bonyeza kitufe cha WhatsApp hapa chini kumtumia Admin Peter uthibitisho wa malipo yako. Ataongeza subscription yako kwa dakika!'
+                          : 'Click the WhatsApp button below to send Admin Peter your payment confirmation. He will activate your subscription within minutes!'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Payment Logo Strip */}
+                  <div style={{ marginBottom: '20px' }}>
+                    <div style={{ fontSize: '11px', fontWeight: '700', color: '#0369a1', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '10px' }}>
+                      {sw ? 'Njia Zinazokubaliwa za Malipo' : 'Accepted Payment Methods'}
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                      <MpesaLogo />
+                      <TigoLogo />
+                      <AirtelLogo />
+                      <HalotelLogo />
+                      <div style={{ width: '1px', height: '28px', background: '#cbd5e1', margin: '0 4px' }} />
+                      <VisaLogo />
+                      <MastercardLogo />
+                    </div>
+                  </div>
+
+                  {/* Lipa Namba Highlight */}
+                  <div style={{
+                    background: '#0f172a', borderRadius: '14px',
+                    padding: '14px 18px', marginBottom: '16px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  }}>
+                    <div>
+                      <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+                        {sw ? 'Lipa Namba (M-Pesa/Tigo/Airtel/Halotel)' : 'Lipa Namba (M-Pesa/Tigo/Airtel/Halotel)'}
+                      </div>
+                      <div style={{ fontSize: '22px', fontWeight: '900', color: '#38bdf8', letterSpacing: '2px', marginTop: '2px' }}>
+                        45342017
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>Mix by Yas</div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>
+                        {sw ? 'Kiasi' : 'Amount'}
+                      </div>
+                      <div style={{ fontSize: '20px', fontWeight: '900', color: '#4ade80' }}>
+                        {price.toLocaleString()} TZS
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#64748b' }}>
+                        {activePlan.name}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* WhatsApp Contact Admin Button */}
+                  {contactSent ? (
+                    <div style={{
+                      width: '100%', padding: '14px',
+                      borderRadius: '16px', background: '#10b981',
+                      color: '#fff', textAlign: 'center',
+                      fontWeight: '800', fontSize: '14px',
+                    }}>
+                      {sw ? '✓ Ujumbe Umetumwa! Admin atajibu hivi karibuni.' : '✓ Message Sent! Admin will respond shortly.'}
+                    </div>
+                  ) : (
+                    <button
+                      onClick={handleContactAdmin}
+                      style={{
+                        width: '100%', padding: '14px',
+                        borderRadius: '16px',
+                        background: 'linear-gradient(135deg, #25D366, #128C7E)',
+                        color: '#ffffff', border: 'none',
+                        fontWeight: '800', fontSize: '14.5px',
+                        cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+                        boxShadow: '0 6px 20px rgba(37, 211, 102, 0.35)',
+                        transition: 'transform 0.15s ease',
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-1px)')}
+                      onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}
+                    >
+                      <WhatsAppIcon />
+                      {sw
+                        ? `Wasiliana na Admin Peter — Omba ${activePlan.name}`
+                        : `Contact Admin Peter — Subscribe to ${activePlan.name}`}
+                    </button>
+                  )}
+
+                  <p style={{ fontSize: '12px', color: '#64748b', textAlign: 'center', marginTop: '12px', lineHeight: '1.5' }}>
+                    {sw
+                      ? 'Admin Peter atakuongezea subscription mara tu baada ya kuthibitisha malipo yako.'
+                      : 'Admin Peter will manually activate your subscription immediately after verifying your payment.'}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ═══════════════════════════════════════════
+              TAB 2: ACCOUNT & SECURITY
+          ═══════════════════════════════════════════ */}
+          {activeTab === 'account' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+              {/* Profile Banner */}
+              <div style={{
+                background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+                borderRadius: '20px', padding: '24px',
+                display: 'flex', alignItems: 'center', gap: '18px',
+                boxShadow: '0 8px 24px rgba(15,23,42,0.15)',
+              }}>
+                <div style={{
+                  width: '64px', height: '64px', borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #38bdf8, #0ea5e9)',
+                  color: '#0f172a', fontWeight: '900', fontSize: '22px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0, boxShadow: '0 4px 16px rgba(56,189,248,0.3)',
+                }}>
+                  {user?.name ? user.name.substring(0, 2).toUpperCase() : 'PJ'}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
+                    <h3 style={{ fontSize: '18px', fontWeight: '800', margin: 0, color: '#ffffff' }}>
+                      {user?.name || 'PJKRONX User'}
+                    </h3>
+                    <span style={{
+                      background: user?.role === 'admin' ? '#38bdf8' : (isPremium ? '#10b981' : '#475569'),
+                      color: '#fff',
+                      fontSize: '10px', fontWeight: '900',
+                      padding: '3px 10px', borderRadius: '10px', letterSpacing: '0.5px'
+                    }}>
+                      {user?.role === 'admin' ? 'MASTER ADMIN' : (isPremium ? 'PLUS' : 'FREE')}
+                    </span>
+                  </div>
+                  <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>
+                    {user?.email || 'user@kronx.ai'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Subscription Info */}
+              <div style={{
+                background: '#ffffff', border: '1px solid #e2e8f0',
+                borderRadius: '18px', padding: '20px',
+                boxShadow: '0 4px 16px rgba(0,0,0,0.04)',
+              }}>
+                <div style={{ fontSize: '11px', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '14px' }}>
+                  {sw ? 'Maelezo ya Akaunti' : 'Account Details'}
+                </div>
+                {[
+                  {
+                    label: sw ? 'Mpango wa Sasa' : 'Current Plan',
+                    value: user?.role === 'admin' ? 'Master Admin Unlimited' : (isPremium ? 'PJKRONX Plus ✓' : 'Free Tier'),
+                    valueColor: user?.role === 'admin' ? '#0284c7' : (isPremium ? '#10b981' : '#64748b'),
+                  },
+                  {
+                    label: sw ? 'Picha Zilizotumika Leo' : 'Images Used Today',
+                    value: `${picUsed} / ${isPremium ? 10 : 3}`,
+                    valueColor: '#0f172a',
+                  },
+                  {
+                    label: sw ? 'Video Zilizotumika Leo' : 'Videos Used Today',
+                    value: `${vidUsed} / ${isPremium ? 3 : 1}`,
+                    valueColor: '#0f172a',
+                  },
+                  {
+                    label: sw ? 'Usalama wa Akaunti' : 'Account Security',
+                    value: 'SHA-256 Encrypted',
+                    valueColor: '#10b981',
+                  },
+                ].map((row, i, arr) => (
+                  <div key={i} style={{
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    padding: '13px 0',
+                    borderBottom: i < arr.length - 1 ? '1px solid #f1f5f9' : 'none',
+                    fontSize: '13.5px',
+                  }}>
+                    <span style={{ color: '#64748b', fontWeight: '600' }}>{row.label}</span>
+                    <span style={{ fontWeight: '800', color: row.valueColor }}>{row.value}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Upgrade CTA if free */}
+              {!isPremium && user?.role !== 'admin' && (
+                <button
+                  onClick={() => setActiveTab('upgrade')}
+                  style={{
+                    width: '100%', padding: '14px',
+                    borderRadius: '16px',
+                    background: 'linear-gradient(135deg, #0f172a, #1e3a5f)',
+                    color: '#ffffff', border: 'none',
+                    fontWeight: '800', fontSize: '14px', cursor: 'pointer',
+                    boxShadow: '0 6px 20px rgba(15,23,42,0.2)',
+                  }}
+                >
+                  {sw ? 'Nunua Subscription — Angalia Mipango' : 'Get Subscription — View Plans'}
+                </button>
+              )}
+
+              {/* Logout */}
               <button
-                onClick={() => setBillingCycle('monthly')}
-                style={{ padding: '4px 14px', borderRadius: '16px', border: 'none', background: billingCycle === 'monthly' ? '#ffffff' : 'transparent', color: billingCycle === 'monthly' ? '#0f172a' : '#64748b', fontSize: '12.5px', fontWeight: '700', cursor: 'pointer', boxShadow: billingCycle === 'monthly' ? '0 2px 6px rgba(0,0,0,0.06)' : 'none' }}
+                onClick={handleLogout}
+                style={{
+                  width: '100%', padding: '13px',
+                  borderRadius: '16px', background: '#fef2f2',
+                  color: '#dc2626', border: '1px solid #fecaca',
+                  fontWeight: '800', fontSize: '14px', cursor: 'pointer',
+                  transition: 'background 0.2s',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = '#fee2e2')}
+                onMouseLeave={e => (e.currentTarget.style.background = '#fef2f2')}
               >
-                Monthly
-              </button>
-              <button
-                onClick={() => setBillingCycle('yearly')}
-                style={{ padding: '4px 14px', borderRadius: '16px', border: 'none', background: billingCycle === 'yearly' ? '#ffffff' : 'transparent', color: billingCycle === 'yearly' ? '#0f172a' : '#64748b', fontSize: '12.5px', fontWeight: '700', cursor: 'pointer', boxShadow: billingCycle === 'yearly' ? '0 2px 6px rgba(0,0,0,0.06)' : 'none' }}
-              >
-                Yearly <span style={{ color: '#10b981', fontSize: '11px' }}>(Save 20%)</span>
+                {sw ? 'Toka kwenye Akaunti' : 'Sign out of Kronx Account'}
               </button>
             </div>
           )}
         </div>
-
-        {/* TAB 1: MODERN INTERNATIONAL AI PRICING CARDS */}
-        {activeTab === 'upgrade' && (
-          <div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '28px' }}>
-
-              {/* Free Tier Card */}
-              <div style={{ border: '1px solid #e2e8f0', borderRadius: '20px', padding: '24px', background: '#ffffff', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                <div>
-                  <div style={{ fontSize: '18px', fontWeight: '700', color: '#0f172a', marginBottom: '4px' }}>Free</div>
-                  <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '16px' }}>For exploring AI capabilities</div>
-                  <div style={{ fontSize: '28px', fontWeight: '800', color: '#0f172a', marginBottom: '20px' }}>0 TZS <span style={{ fontSize: '13px', color: '#64748b', fontWeight: '500' }}>/ month</span></div>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13.5px', color: '#334155' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ color: '#10b981', fontWeight: '800' }}>✓</span> Standard AI response speed
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ color: '#10b981', fontWeight: '800' }}>✓</span> Max 3 Pictures per day ({picUsed}/3 used)
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ color: '#10b981', fontWeight: '800' }}>✓</span> Max 1 Video per day ({vidUsed}/1 used)
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ marginTop: '24px' }}>
-                  <button
-                    disabled
-                    style={{ width: '100%', padding: '12px', borderRadius: '20px', background: '#f1f5f9', color: '#94a3b8', border: 'none', fontWeight: '700', fontSize: '14px' }}
-                  >
-                    Current Plan
-                  </button>
-                </div>
-              </div>
-
-              {/* Premium Plus Tier Card */}
-              <div style={{ border: '2px solid #0f172a', borderRadius: '20px', padding: '24px', background: '#ffffff', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', boxShadow: '0 10px 30px rgba(0, 0, 0, 0.06)' }}>
-                <span style={{ position: 'absolute', top: '-12px', right: '20px', background: '#0f172a', color: '#ffffff', fontSize: '11px', fontWeight: '700', padding: '3px 12px', borderRadius: '12px', letterSpacing: '0.5px' }}>
-                  MOST POPULAR
-                </span>
-                <div>
-                  <div style={{ fontSize: '18px', fontWeight: '700', color: '#0f172a', marginBottom: '4px' }}>Plus</div>
-                  <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '16px' }}>For power users seeking maximum limits</div>
-                  <div style={{ fontSize: '28px', fontWeight: '800', color: '#0f172a', marginBottom: '20px' }}>
-                    {billingCycle === 'monthly' ? '15,000 TZS' : '12,000 TZS'} <span style={{ fontSize: '13px', color: '#64748b', fontWeight: '500' }}>/ month</span>
-                  </div>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13.5px', color: '#0f172a', fontWeight: '600' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ color: '#10b981', fontWeight: '800' }}>✓</span> High Priority response speed
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ color: '#10b981', fontWeight: '800' }}>✓</span> Max 10 Pictures per day
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ color: '#10b981', fontWeight: '800' }}>✓</span> Max 3 Videos per day
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ color: '#10b981', fontWeight: '800' }}>✓</span> Priority customer support
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ marginTop: '24px' }}>
-                  {!isPremium ? (
-                    <button
-                      onClick={handlePay}
-                      disabled={loading}
-                      style={{ width: '100%', padding: '12px', borderRadius: '20px', background: '#0f172a', color: '#ffffff', border: 'none', fontWeight: '700', fontSize: '14px', cursor: 'pointer', boxShadow: '0 4px 14px rgba(15, 23, 42, 0.2)' }}
-                    >
-                      {loading ? 'Processing...' : 'Upgrade to Plus'}
-                    </button>
-                  ) : (
-                    <button
-                      disabled
-                      style={{ width: '100%', padding: '12px', borderRadius: '20px', background: '#10b981', color: '#ffffff', border: 'none', fontWeight: '700', fontSize: '14px' }}
-                    >
-                      ✓ Plus Active
-                    </button>
-                  )}
-                </div>
-              </div>
-
-            </div>
-
-            {/* Payment Method Selector */}
-            {!isPremium && (
-              <div style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '22px', padding: '24px', boxShadow: '0 8px 24px rgba(0,0,0,0.04)', marginTop: '20px' }}>
-                <div style={{ fontSize: '15px', fontWeight: '800', color: '#0f172a', marginBottom: '14px', letterSpacing: '-0.3px' }}>
-                  Select Mobile Payment Method
-                </div>
-                <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
-                  <button
-                    onClick={() => setSelectedMethod('mpesa')}
-                    style={{ flex: 1, padding: '12px', borderRadius: '14px', border: selectedMethod === 'mpesa' ? '2px solid #0f172a' : '1px solid #cbd5e1', background: selectedMethod === 'mpesa' ? '#f8fafc' : '#ffffff', fontWeight: '800', fontSize: '13.5px', color: '#0f172a', cursor: 'pointer', textAlign: 'center' }}
-                  >
-                    Mobile Money (M-Pesa / Tigo / Airtel)
-                  </button>
-                  <button
-                    onClick={() => setSelectedMethod('card')}
-                    style={{ flex: 1, padding: '12px', borderRadius: '14px', border: selectedMethod === 'card' ? '2px solid #0f172a' : '1px solid #cbd5e1', background: selectedMethod === 'card' ? '#f8fafc' : '#ffffff', fontWeight: '800', fontSize: '13.5px', color: '#0f172a', cursor: 'pointer', textAlign: 'center' }}
-                  >
-                    Credit / Debit Card
-                  </button>
-                </div>
-
-                {selectedMethod === 'mpesa' && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                    <div style={{ background: '#0f172a', color: '#ffffff', padding: '16px 20px', borderRadius: '16px', fontSize: '13.5px', lineHeight: '1.5' }}>
-                      <div style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#94a3b8', letterSpacing: '0.8px', marginBottom: '4px' }}>LIPA NAMBA PAYMENT DETAILS</div>
-                      Pay <strong>15,000 TZS</strong> to Lipa Namba <strong>45342017 (Mix by Yas)</strong>. Enter your full name and phone number below to send payment verification directly to Admin on WhatsApp for instant activation.
-                    </div>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                      <input
-                        type="text"
-                        placeholder="Full Name of Payer (Jina la Mlipaji)"
-                        value={payerName}
-                        onChange={e => setPayerName(e.target.value)}
-                        style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', background: '#f8fafc', fontWeight: '600', color: '#0f172a' }}
-                      />
-                      <input
-                        type="text"
-                        placeholder="Phone Number Used to Pay (Namba Uliyolipia 07XX XXX XXX)"
-                        value={phone}
-                        onChange={e => setPhone(e.target.value)}
-                        style={{ padding: '12px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none', background: '#f8fafc', fontWeight: '600', color: '#0f172a' }}
-                      />
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
-                      <button
-                        onClick={handlePay}
-                        disabled={loading}
-                        style={{ flex: 1, padding: '12px', borderRadius: '14px', background: '#0f172a', color: '#ffffff', border: 'none', fontWeight: '800', fontSize: '13.5px', cursor: 'pointer', boxShadow: '0 4px 14px rgba(15, 23, 42, 0.2)' }}
-                      >
-                        {loading ? 'Sending Prompt...' : 'Send STK Push'}
-                      </button>
-                      <button
-                        onClick={handleSendWhatsAppVerification}
-                        style={{ flex: 1, padding: '12px', borderRadius: '14px', background: '#10b981', color: '#ffffff', border: 'none', fontWeight: '800', fontSize: '13.5px', cursor: 'pointer', boxShadow: '0 4px 14px rgba(16, 185, 129, 0.2)' }}
-                      >
-                        Verify on WhatsApp
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Mobile Phone STK Push Notification Overlay */}
-            {pushSent && (
-              <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(8px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <div style={{ background: '#ffffff', borderRadius: '24px', padding: '28px', width: '100%', maxWidth: '380px', boxShadow: '0 20px 50px rgba(0,0,0,0.3)', border: '1px solid #e2e8f0', textAlign: 'center', animation: 'fadeIn 0.3s ease-out' }}>
-                  <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: '#f1f5f9', color: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px auto', fontWeight: '900', fontSize: '16px' }}>
-                    STK
-                  </div>
-                  <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a', margin: '0 0 6px 0' }}>
-                    M-Pesa STK Push Sent!
-                  </h3>
-                  <p style={{ fontSize: '13.5px', color: '#475569', margin: '0 0 16px 0', lineHeight: '1.5' }}>
-                    A payment prompt of <strong>15,000 TZS</strong> for <strong>Kronx Plus Subscription</strong> has been pushed to <strong>{phone || '07XX XXX XXX'}</strong>.
-                  </p>
-
-                  <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '12px', marginBottom: '16px' }}>
-                    <label style={{ fontSize: '11.5px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>
-                      Enter M-Pesa PIN to Confirm
-                    </label>
-                    <input
-                      type="password"
-                      maxLength={4}
-                      placeholder="••••"
-                      value={pin}
-                      onChange={e => setPin(e.target.value)}
-                      style={{ width: '100%', textAlign: 'center', letterSpacing: '8px', fontSize: '20px', padding: '8px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none' }}
-                    />
-                  </div>
-
-                  <div style={{ display: 'flex', gap: '10px' }}>
-                    <button
-                      onClick={() => setPushSent(false)}
-                      style={{ flex: 1, padding: '10px', borderRadius: '12px', border: '1px solid #cbd5e1', background: '#fff', color: '#64748b', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleConfirmPush}
-                      disabled={loading || pin.length < 4}
-                      style={{ flex: 1, padding: '10px', borderRadius: '12px', border: 'none', background: pin.length >= 4 ? '#10b981' : '#cbd5e1', color: '#fff', fontWeight: '700', fontSize: '13px', cursor: pin.length >= 4 ? 'pointer' : 'default' }}
-                    >
-                      {loading ? 'Confirming...' : 'Confirm PIN'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* TAB 2: ACCOUNT MANAGEMENT & SECURITY */}
-        {activeTab === 'account' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', animation: 'fadeIn 0.3s ease-out' }}>
-            {/* User Profile Header Banner Card */}
-            <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', borderRadius: '24px', padding: '28px', color: '#ffffff', boxShadow: '0 12px 30px rgba(15, 23, 42, 0.15)', display: 'flex', alignItems: 'center', gap: '20px' }}>
-              <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: '#38bdf8', color: '#0f172a', fontWeight: '900', fontSize: '26px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 6px 20px rgba(56, 189, 248, 0.3)' }}>
-                {user?.name ? user.name.substring(0, 2).toUpperCase() : 'PJ'}
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-                  <h3 style={{ fontSize: '20px', fontWeight: '800', margin: 0, color: '#ffffff' }}>
-                    {user?.name || 'PJ COPETRANOVA'}
-                  </h3>
-                  <span style={{ background: user?.role === 'admin' ? '#38bdf8' : '#10b981', color: '#0f172a', fontSize: '11px', fontWeight: '900', padding: '3px 10px', borderRadius: '12px', letterSpacing: '0.5px' }}>
-                    {user?.role === 'admin' ? 'MASTER ADMIN' : (isPremium ? 'PLUS TIER' : 'FREE TIER')}
-                  </span>
-                </div>
-                <p style={{ fontSize: '14px', color: '#94a3b8', margin: 0 }}>
-                  {user?.email || 'pj0040280@gmail.com'}
-                </p>
-              </div>
-            </div>
-
-            {/* Account & Security Information Card */}
-            <div style={{ background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '22px', padding: '24px', boxShadow: '0 8px 24px rgba(0,0,0,0.04)' }}>
-              <div style={{ fontSize: '13px', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>
-                SECURITY & SUBSCRIPTION PROFILE
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: '1px solid #f1f5f9', fontSize: '14.5px' }}>
-                <span style={{ color: '#64748b', fontWeight: '600' }}>Active Subscription Plan</span>
-                <span style={{ fontWeight: '800', color: '#0f172a', background: '#f8fafc', padding: '6px 14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-                  {user?.role === 'admin' ? 'Master Admin Unlimited' : (isPremium ? 'Kronx Plus (15,000 TZS)' : 'Free Tier')}
-                </span>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderBottom: '1px solid #f1f5f9', fontSize: '14.5px' }}>
-                <span style={{ color: '#64748b', fontWeight: '600' }}>Authentication Standard</span>
-                <span style={{ fontWeight: '700', color: '#0f172a' }}>Zero-Knowledge SHA-256 Protocol</span>
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', fontSize: '14.5px' }}>
-                <span style={{ color: '#64748b', fontWeight: '600' }}>Device Persistent State</span>
-                <span style={{ fontWeight: '700', color: '#10b981' }}>Active Auto-Login Enabled</span>
-              </div>
-            </div>
-
-            <button
-              onClick={handleLogout}
-              style={{ width: '100%', padding: '14px', borderRadius: '16px', background: '#ef4444', color: '#ffffff', border: 'none', fontWeight: '800', fontSize: '14.5px', cursor: 'pointer', boxShadow: '0 4px 16px rgba(239, 68, 68, 0.25)', transition: 'transform 0.2s ease' }}
-            >
-              Sign out of Kronx Account
-            </button>
-          </div>
-        )}
-
       </div>
     </div>
   )
