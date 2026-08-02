@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 
 // ── TANZANIA & GENERAL KNOWLEDGE BASE ──
 const KNOWLEDGE_BASE: Record<string, string> = {
-  "president of tanzania": `**President of Tanzania (2025/2026):**\n\nThe current President of the United Republic of Tanzania is **Samia Suluhu Hassan**, who took office on **March 19, 2021**, following the death of President John Pombe Magufuli. She is the **first female president** in Tanzania's history and in East Africa.\n\n**Cabinet & Key Ministers (Hassan Administration):**\n- **Vice President:** Philip Mpango\n- **Prime Minister:** Kassim Majaliwa\n- **Minister of Finance:** Dr. Mwigulu Nchemba\n- **Minister of Foreign Affairs:** January Makamba\n- **Minister of Health:** Ummy Mwalimu\n- **Minister of Education:** Prof. Adolf Mkenda\n- **Minister of Agriculture:** Hussein Bashe\n- **Minister of Home Affairs:** Hamad Masauni\n- **Minister of Defense:** Stergomena Tax\n- **Attorney General:** Eliezer Feleshi\n\n**Background:**\nSamia Suluhu Hassan was born on **January 27, 1960**, in Zanzibar. She served as Vice President from 2015 to 2021 before ascending to the presidency. Her administration has focused on economic recovery, diplomatic engagement, COVID-19 response, and attracting foreign investment to Tanzania.\n\n*Source: PJKRONX Knowledge Engine*`,
+  "president of tanzania": `**President of Tanzania (2025/2026):**\n\nThe current President of the United Republic of Tanzania is **Samia Suluhu Hassan**, who took office on **March 19, 2021**, following the death of President John Pombe Magufuli. She is the **first female president** in Tanzania's history and in East Africa.\n\n**Cabinet & Key Ministers (Hassan Administration):**\n- **Vice President:** Philip Mpango\n- **Prime Minister:** Kassim Majaliwa\n- **Minister of Finance:** Dr. Mwigulu Nchemba\n- **Minister of Foreign Affairs:** January Makamba\n- **Minister of Health:** Ummy Mwalimu\n- **Minister of Education:** Prof. Adolf Mkenda\n- **Minister of Agriculture:** Hussein Bashe\n- **Minister of Home Affairs:** Hamad Masauni\n- **Minister of Defense:** Stergomena Tax\n- **Attorney General:** Eliezer Feleshi\n\n**Background:**\nSamia Suluhu Hassan was born on **January 27, 1960**, in Zanzibar. She served as Vice President from 2015 to 2021 before ascending to the presidency. Her administration has focused on economic recovery, diplomatic engagement, COVID-19 response, and attracting foreign investment to Tanzania.\n\n*Source: Kronex Knowledge Engine*`,
 
-  "rais wa tanzania": `**Rais wa Tanzania (2025/2026):**\n\nRais wa sasa wa Jamhuri ya Muungano wa Tanzania ni **Samia Suluhu Hassan**, aliyeapishwa tarehe **19 Machi 2021** baada ya kifo cha Rais John Pombe Magufuli. Ni rais wa kwanza mwanamke katika historia ya Tanzania na Afrika Mashariki.\n\n**Viongozi Wakuu wa Serikali:**\n- **Makamu wa Rais:** Dr. Philip Mpango\n- **Waziri Mkuu:** Kassim Majaliwa\n- **Waziri wa Fedha:** Dr. Mwigulu Nchemba\n- **Waziri wa Mambo ya Nje:** January Makamba\n- **Waziri wa Elimu:** Prof. Adolf Mkenda\n\n*Chanzo: PJKRONX Knowledge Engine*`,
+  "rais wa tanzania": `**Rais wa Tanzania (2025/2026):**\n\nRais wa sasa wa Jamhuri ya Muungano wa Tanzania ni **Samia Suluhu Hassan**, aliyeapishwa tarehe **19 Machi 2021** baada ya kifo cha Rais John Pombe Magufuli. Ni rais wa kwanza mwanamke katika historia ya Tanzania na Afrika Mashariki.\n\n**Viongozi Wakuu wa Serikali:**\n- **Makamu wa Rais:** Dr. Philip Mpango\n- **Waziri Mkuu:** Kassim Majaliwa\n- **Waziri wa Fedha:** Dr. Mwigulu Nchemba\n- **Waziri wa Mambo ya Nje:** January Makamba\n- **Waziri wa Elimu:** Prof. Adolf Mkenda\n\n*Chanzo: Kronex Knowledge Engine*`,
 
-  "waziri mkuu wa tanzania": `**Waziri Mkuu wa Tanzania:**\n\nWaziri Mkuu wa sasa wa Jamhuri ya Muungano wa Tanzania ni **Kassim Majaliwa Majaliwa**, ambaye ameshikilia wadhifu huu tangu mwaka **2015**.\n\n**Rais wa Tanzania:** Samia Suluhu Hassan (tangu Machi 2021)\n**Makamu wa Rais:** Philip Mpango\n\n*Chanzo: PJKRONX Knowledge Engine*`,
+  "waziri mkuu wa tanzania": `**Waziri Mkuu wa Tanzania:**\n\nWaziri Mkuu wa sasa wa Jamhuri ya Muungano wa Tanzania ni **Kassim Majaliwa Majaliwa**, ambaye ameshikilia wadhifu huu tangu mwaka **2015**.\n\n**Rais wa Tanzania:** Samia Suluhu Hassan (tangu Machi 2021)\n**Makamu wa Rais:** Philip Mpango\n\n*Chanzo: Kronex Knowledge Engine*`,
 
   "samia suluhu": `**Samia Suluhu Hassan - President of Tanzania:**\n\nSamia Suluhu Hassan is the **6th President of the United Republic of Tanzania**, born on January 27, 1960, in Zanzibar. She became the first female president in Tanzania and East Africa after President John Magufuli passed away on March 17, 2021.\n\n**Key facts:**\n- First female president in Tanzania and East Africa\n- Born in Zanzibar\n- Served as Vice President 2015–2021\n- CCM party leader\n- Her administration focuses on: economic revival, tourism, foreign investment, and social development`,
 
@@ -16,6 +16,7 @@ const KNOWLEDGE_BASE: Record<string, string> = {
 }
 
 function searchKnowledgeBase(query: string): string | null {
+  if (!query) return null
   const q = query.toLowerCase().trim()
   for (const [key, value] of Object.entries(KNOWLEDGE_BASE)) {
     if (q.includes(key)) {
@@ -30,7 +31,7 @@ async function webSearch(query: string): Promise<string | null> {
   try {
     const cleanQuery = encodeURIComponent(query.trim())
     const ddgUrl = `https://api.duckduckgo.com/?q=${cleanQuery}&format=json&no_redirect=1&no_html=1&skip_disambig=1`
-    const res = await fetch(ddgUrl, { headers: { 'User-Agent': 'PJKRONX-AI/2.0' }, next: { revalidate: 3600 } })
+    const res = await fetch(ddgUrl, { headers: { 'User-Agent': 'Kronex-AI/2.0' }, cache: 'no-store' })
     if (res.ok) {
       const data = await res.json()
       const abstractText = data.AbstractText || data.Answer || data.Definition
@@ -47,7 +48,7 @@ async function webSearch(query: string): Promise<string | null> {
     const topic = query.replace(/\b(who is|what is|tell me about|explain|define)\b/gi, '').trim()
     if (topic.length > 2) {
       const wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(topic)}`
-      const wikiRes = await fetch(wikiUrl, { headers: { 'User-Agent': 'PJKRONX-AI/2.0' } })
+      const wikiRes = await fetch(wikiUrl, { headers: { 'User-Agent': 'Kronex-AI/2.0' }, cache: 'no-store' })
       if (wikiRes.ok) {
         const wikiData = await wikiRes.json()
         if (wikiData.extract && wikiData.extract.length > 40) {
@@ -63,7 +64,7 @@ async function webSearch(query: string): Promise<string | null> {
 }
 
 // ── GEMINI API CALL ──
-async function callGemini(message: string, history: any[]): Promise<string | null> {
+async function callGemini(message: string): Promise<string | null> {
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey || apiKey === 'YOUR_GEMINI_API_KEY_HERE') return null
 
@@ -86,7 +87,8 @@ async function callGemini(message: string, history: any[]): Promise<string | nul
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents, generationConfig: { maxOutputTokens: 2048, temperature: 0.7 } })
+        body: JSON.stringify({ contents, generationConfig: { maxOutputTokens: 2048, temperature: 0.7 } }),
+        cache: 'no-store'
       })
 
       if (response.ok) {
@@ -105,7 +107,7 @@ async function callGemini(message: string, history: any[]): Promise<string | nul
 
 // ── HEURISTIC ACADEMIC ANSWER GENERATOR ──
 function generateStructuredAnswer(query: string, language: string = 'en'): string {
-  const q = query.trim()
+  const q = query ? query.trim() : 'Academic Query'
   const isSw = language === 'sw'
 
   if (isSw) {
@@ -116,38 +118,52 @@ function generateStructuredAnswer(query: string, language: string = 'en'): strin
 }
 
 export async function POST(req: NextRequest) {
+  let message = ''
+  let language = 'en'
+
   try {
-    const body = await req.json()
-    const { message, mode, language } = body
+    const body = await req.json().catch(() => ({}))
+    message = body.message || ''
+    language = body.language || 'en'
+  } catch (e) {
+    console.error('Request body parsing error:', e)
+  }
 
-    if (!message) {
-      return NextResponse.json({ response: 'Please provide a valid question.' }, { status: 400 })
-    }
+  if (!message) {
+    return NextResponse.json({ response: 'Please provide a valid question.' }, { status: 400 })
+  }
 
-    // 1. Check Knowledge Base
+  // 1. Check Knowledge Base
+  try {
     const kbAnswer = searchKnowledgeBase(message)
     if (kbAnswer) {
       return NextResponse.json({ response: kbAnswer })
     }
+  } catch (err) {
+    console.error('KB Search Error:', err)
+  }
 
-    // 2. Try Gemini API
-    const geminiAnswer = await callGemini(message, body.history || [])
+  // 2. Try Gemini API
+  try {
+    const geminiAnswer = await callGemini(message)
     if (geminiAnswer) {
       return NextResponse.json({ response: geminiAnswer })
     }
+  } catch (err) {
+    console.error('Gemini API Call Error:', err)
+  }
 
-    // 3. Try Web Search
+  // 3. Try Web Search
+  try {
     const webAnswer = await webSearch(message)
     if (webAnswer) {
       return NextResponse.json({ response: webAnswer })
     }
-
-    // 4. Structured Fallback Answer
-    const fallback = generateStructuredAnswer(message, language)
-    return NextResponse.json({ response: fallback })
-
-  } catch (error: any) {
-    console.error('Chat Route API Error:', error)
-    return NextResponse.json({ response: 'PJKRONX AI is processing your request. Please try asking your question again.' }, { status: 200 })
+  } catch (err) {
+    console.error('Web Search Error:', err)
   }
+
+  // 4. Structured Fallback Answer
+  const fallback = generateStructuredAnswer(message, language)
+  return NextResponse.json({ response: fallback })
 }
