@@ -9,16 +9,16 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: 'Kronex AI — Premier Academic Companion & Advanced Intelligence Engine',
-  description: 'Kronex AI is an advanced artificial intelligence platform engineered for students, researchers, and professionals to solve complex academic assignments, mathematics, software development, research thesis writing, and creative AI generation with precision.',
+  title: 'Copetra AI — Premier Academic Companion & Advanced Intelligence Engine',
+  description: 'Copetra AI is an advanced artificial intelligence platform engineered by PJ Copetranova for students, researchers, and professionals to solve complex academic assignments, mathematics, software development, research thesis writing, and creative AI generation with precision.',
   keywords: [
-    'kronex',
-    'kronex ai',
-    'kronexai',
-    'academic ai',
-    'student ai companion',
-    'ai research assistant',
-    'tanzania ai',
+    'copetra',
+    'copetra ai',
+    'copetraai',
+    'pj copetranova',
+    'copetra tanzania',
+    'copetra academic ai',
+    'academic ai companion',
     'ai homework solver'
   ],
   verification: {

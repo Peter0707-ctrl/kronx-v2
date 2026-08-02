@@ -40,7 +40,7 @@ async function callGemini(message: string): Promise<string | null> {
       role: 'user',
       parts: [
         {
-          text: `You are Kronex AI, an elite AI Assistant and Academic Companion. Answer clearly, accurately, and thoroughly in markdown.\n\nUser Question: ${message}`
+          text: `You are Copetra AI, an elite AI Assistant and Academic Companion engineered by PJ Copetranova. Answer clearly, accurately, and thoroughly in markdown.\n\nUser Question: ${message}`
         }
       ]
     }
@@ -107,9 +107,9 @@ export async function POST(req: NextRequest) {
   // 3. Fallback
   if (!responseText) {
     if (language === 'sw') {
-      responseText = `**Uchambuzi wa Kronex AI: ${message}**\n\nAsante kwa swali lako la kitaaluma. Hapa kuna muhtasari wa kiutafiti:\n\n1. **Muhtasari:** Swali lako linahusu mada ya msingi katika masomo na utafiti.\n2. **Ufafanuzi:** Mada hii inahitaji kuelewa misingi ya kisayansi na utekelezaji wake kwa vitendo.\n3. **Hitimisho:** Hakikisha unarejelea vitabu vyako vya masomo kwa mifano zaidi.\n\n*Kronex AI — Academic Intelligence Engine*`
+      responseText = `**Uchambuzi wa Copetra AI: ${message}**\n\nAsante kwa swali lako la kitaaluma. Hapa kuna muhtasari wa kiutafiti:\n\n1. **Muhtasari:** Swali lako linahusu mada ya msingi katika masomo na utafiti.\n2. **Ufafanuzi:** Mada hii inahitaji kuelewa misingi ya kisayansi na utekelezaji wake kwa vitendo.\n3. **Hitimisho:** Hakikisha unarejelea vitabu vyako vya masomo kwa mifano zaidi.\n\n*Copetra AI — Academic Intelligence Engine*`
     } else {
-      responseText = `**Kronex AI Academic Response: ${message}**\n\nThank you for your academic query. Here is a clear breakdown to support your learning:\n\n1. **Core Concept:** Understanding **"${message}"** involves analyzing its fundamental principles and theoretical foundations.\n2. **Practical Context:** In coursework and assignments, this topic is key to solving complex analytical problems step-by-step.\n3. **Recommendation:** Review course materials and practice related exercises.\n\n*Kronex AI — Academic Companion & Intelligence Engine*`
+      responseText = `**Copetra AI Academic Response: ${message}**\n\nThank you for your academic query. Here is a clear breakdown to support your learning:\n\n1. **Core Concept:** Understanding **"${message}"** involves analyzing its fundamental principles and theoretical foundations.\n2. **Practical Context:** In coursework and assignments, this topic is key to solving complex analytical problems step-by-step.\n3. **Recommendation:** Review course materials and practice related exercises.\n\n*Copetra AI — Academic Companion & Intelligence Engine*`
     }
   }
 

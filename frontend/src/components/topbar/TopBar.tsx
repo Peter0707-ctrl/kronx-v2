@@ -101,7 +101,7 @@ export default function TopBar() {
             alt="PJKRONX AI Logo"
             style={{ width: '28px', height: '28px', borderRadius: '8px', objectFit: 'cover', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}
           />
-          <span style={{ fontSize: '20px', fontWeight: '900', color: '#000000', fontFamily: "Calibri, 'Calibri Light', sans-serif", letterSpacing: '-0.5px' }}>Kronex AI</span>
+          <span style={{ fontSize: '20px', fontWeight: '900', color: '#000000', fontFamily: "Calibri, 'Calibri Light', sans-serif", letterSpacing: '-0.5px' }}>Copetra AI</span>
           <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth={3} style={{ transform: brandMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}>
             <polyline points="6 9 12 15 18 9" />
           </svg>
