@@ -311,7 +311,7 @@ class KronxOrchestrator:
 
     async def get_active_model(self) -> str:
         """Get the name of the currently active AI model."""
-        models_to_try = ["gemini-1.5-flash", "gemini-1.5-flash-8b", "gemini-2.0-flash"]
+        models_to_try = ["gemini-2.0-flash-lite", "gemini-2.5-flash", "gemini-2.0-flash", "gemini-3.5-flash"]
         if not self.api_key or self.api_key == "YOUR_GEMINI_API_KEY_HERE":
             groq_api_key = os.getenv("GROQ_API_KEY", "")
             if groq_api_key:
@@ -365,7 +365,7 @@ class KronxOrchestrator:
                 )
                 return web_answer
 
-        models_to_try = ["gemini-1.5-flash", "gemini-1.5-flash-8b", "gemini-2.0-flash"]
+        models_to_try = ["gemini-2.0-flash-lite", "gemini-2.5-flash", "gemini-2.0-flash", "gemini-3.5-flash"]
         last_err = None
 
         for m in models_to_try:
@@ -488,9 +488,10 @@ class KronxOrchestrator:
 
         # Provider 1: Google Gemini API Models
         models_to_try = [
-            "gemini-1.5-flash",
-            "gemini-1.5-flash-8b",
-            "gemini-2.0-flash"
+            "gemini-2.0-flash-lite",
+            "gemini-2.5-flash",
+            "gemini-2.0-flash",
+            "gemini-3.5-flash"
         ]
         for m in models_to_try:
             if success:
