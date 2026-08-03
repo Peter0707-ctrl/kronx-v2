@@ -29,40 +29,38 @@ function searchKnowledgeBase(query: string): string | null {
   return null
 }
 
-// ── DUCKDUCKGO + WIKIPEDIA WEB SEARCH ──
-async function webSearch(query: string): Promise<string | null> {
-  try {
-    const cleanQuery = encodeURIComponent(query.trim())
-    const ddgUrl = `https://api.duckduckgo.com/?q=${cleanQuery}&format=json&no_redirect=1&no_html=1&skip_disambig=1`
-    const res = await fetch(ddgUrl, { headers: { 'User-Agent': 'Kronex-AI/2.0' }, cache: 'no-store' })
-    if (res.ok) {
-      const data = await res.json()
-      const abstractText = data.AbstractText || data.Answer || data.Definition
-      if (abstractText && abstractText.length > 30) {
-        return `**Live Web Search Result for "${query}":**\n\n${abstractText}\n\n*Source: ${data.AbstractSource || 'DuckDuckGo Web Search'}*`
-      }
-    }
-  } catch (err) {
-    console.error('Web search error:', err)
-  }
+function extractKeywords(query: string): string {
+  const stopWords = /\b(what|is|the|importance|of|in|and|their|dis|advantages|tell|me|about|explain|define|can|you|how|why|does|do)\b/gi
+  let cleaned = query.replace(stopWords, ' ').replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim()
+  cleaned = cleaned.replace(/matterial/gi, 'matter')
+                   .replace(/invironment/gi, 'environment')
+                   .replace(/tanzanai/gi, 'tanzania')
+  return cleaned || query
+}
 
-  // Wikipedia fallback
+// ── SMART LIVE WIKIPEDIA & WEB SEARCH ──
+async function searchWikipedia(query: string): Promise<string | null> {
+  const keywords = extractKeywords(query)
   try {
-    const topic = query.replace(/\b(who is|what is|tell me about|explain|define)\b/gi, '').trim()
-    if (topic.length > 2) {
-      const wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(topic)}`
-      const wikiRes = await fetch(wikiUrl, { headers: { 'User-Agent': 'Kronex-AI/2.0' }, cache: 'no-store' })
-      if (wikiRes.ok) {
-        const wikiData = await wikiRes.json()
-        if (wikiData.extract && wikiData.extract.length > 40) {
-          return `**${wikiData.title}** (Wikipedia Summary):\n\n${wikiData.extract}\n\n*Full article: ${wikiData.content_urls?.desktop?.page || ''}*`
+    const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(keywords)}&format=json`
+    const searchRes = await fetch(searchUrl, { headers: { 'User-Agent': 'Copetra-AI/2.0' }, cache: 'no-store' })
+    if (searchRes.ok) {
+      const searchData = await searchRes.json()
+      if (searchData.query?.search?.length > 0) {
+        const topTitle = searchData.query.search[0].title
+        const summaryUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(topTitle)}`
+        const summaryRes = await fetch(summaryUrl, { headers: { 'User-Agent': 'Copetra-AI/2.0' }, cache: 'no-store' })
+        if (summaryRes.ok) {
+          const summaryData = await summaryRes.json()
+          if (summaryData.extract && summaryData.extract.length > 30) {
+            return `### 📚 Scientific Overview: ${summaryData.title}\n\n${summaryData.extract}\n\n*Source: Wikipedia Academic Database*`
+          }
         }
       }
     }
   } catch (err) {
-    console.error('Wikipedia search error:', err)
+    console.error('Smart Wikipedia Search Error:', err)
   }
-
   return null
 }
 
@@ -234,14 +232,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ response: responseText })
   }
 
-  // 3. Try Web Search
+  // 3. Try Smart Wikipedia Search
   try {
-    const webAnswer = await webSearch(message)
-    if (webAnswer) {
-      return NextResponse.json({ response: webAnswer })
+    const wikiAnswer = await searchWikipedia(message)
+    if (wikiAnswer) {
+      return NextResponse.json({ response: wikiAnswer })
     }
   } catch (err) {
-    console.error('Web Search Error:', err)
+    console.error('Wikipedia Search Call Error:', err)
   }
 
   // 4. Structured Fallback Answer
