@@ -9,11 +9,15 @@ export function useChat() {
 
   const send = useCallback(
     async (text: string) => {
-      if (!text.trim() || store.isStreaming) return
+      const activeState = useKronxStore.getState()
+      if (!text.trim() || activeState.isStreaming) return
 
-      if (!store.activeConversationId) {
-        store.newConversation()
+      if (!activeState.activeConversationId) {
+        activeState.newConversation()
       }
+
+      // Re-read to guarantee we have the initialized activeConversationId
+      const currentState = useKronxStore.getState()
 
       // Instant Picture generation request handler
       const lower = text.toLowerCase()
@@ -24,16 +28,15 @@ export function useChat() {
         lower.includes('draw') ||
         lower.includes('photo')
       ) {
-        if (!store.canGeneratePicture()) {
+        if (!currentState.canGeneratePicture()) {
           const limitMsg = `You have reached chat limit. Upgrade`
-          store.addMessage(text, 'user')
-          store.addMessage(limitMsg, 'ai')
-          store.setSettingsModalOpen(true)
+          currentState.addMessage(text, 'user')
+          currentState.addMessage(limitMsg, 'ai')
+          currentState.setSettingsModalOpen(true)
           return
         }
-        store.incrementPictureUsage()
+        currentState.incrementPictureUsage()
 
-        // Enhanced prompt engineering for Ultra-HD 8K photorealistic accuracy (FLUX model)
         const userPrompt = text.replace(/(generate|create|an|a|picture|image|photo|draw|tengeneza|picha|of|ya|please|help|me)/gi, '').trim() || 'futuristic masterpiece'
         const enhancedPrompt = `${userPrompt}, highly detailed photorealistic 8k resolution, cinematic lighting, masterpiece, hyperdetailed, professional photography, octane render`
         const encodedPrompt = encodeURIComponent(enhancedPrompt)
@@ -41,8 +44,8 @@ export function useChat() {
 
         const imageMarkdown = `Here is your Ultra-HD generated image for **"${userPrompt}"**:\n\n![Generated Image](${pollinationsUrl})`
 
-        store.addMessage(text, 'user')
-        store.addMessage(imageMarkdown, 'ai')
+        currentState.addMessage(text, 'user')
+        currentState.addMessage(imageMarkdown, 'ai')
         return
       }
 
@@ -53,56 +56,56 @@ export function useChat() {
         lower.includes('make video') ||
         lower.includes('generate video')
       ) {
-        if (!store.canGenerateVideo()) {
+        if (!currentState.canGenerateVideo()) {
           const limitMsg = `You have reached chat limit. Upgrade`
-          store.addMessage(text, 'user')
-          store.addMessage(limitMsg, 'ai')
-          store.setSettingsModalOpen(true)
+          currentState.addMessage(text, 'user')
+          currentState.addMessage(limitMsg, 'ai')
+          currentState.setSettingsModalOpen(true)
           return
         }
-        store.incrementVideoUsage()
+        currentState.incrementVideoUsage()
 
         const rawTopic = text.replace(/(generate|create|an|a|video|make|tengeneza|of|ya)/gi, '').trim() || 'cinematic animation'
         const sampleVideo = 'https://assets.mixkit.co/videos/preview/mixkit-futuristic-robotic-arm-operating-42861-large.mp4'
 
         const videoMarkdown = `Here is your AI generated video for **"${rawTopic}"**:\n\n<video controls autoplay loop muted style="width: 100%; max-width: 512px; border-radius: 16px; border: 1px solid #bae6fd; box-shadow: 0 8px 24px rgba(2, 132, 199, 0.15);\"><source src="${sampleVideo}" type="video/mp4" />Your browser does not support video tag.</video>`
 
-        store.addMessage(text, 'user')
-        store.addMessage(videoMarkdown, 'ai')
+        currentState.addMessage(text, 'user')
+        currentState.addMessage(videoMarkdown, 'ai')
         return
       }
 
       // General Chat Message Daily Limit Handler
-      if (!store.canSendMessage()) {
+      if (!currentState.canSendMessage()) {
         const chatLimitMsg = `You have reached chat limit. Upgrade`
-        store.addMessage(text, 'user')
-        store.addMessage(chatLimitMsg, 'ai')
-        store.setSettingsModalOpen(true)
+        currentState.addMessage(text, 'user')
+        currentState.addMessage(chatLimitMsg, 'ai')
+        currentState.setSettingsModalOpen(true)
         return
       }
-      store.incrementChatUsage()
+      currentState.incrementChatUsage()
 
-      store.addMessage(text, 'user')
-      store.addMessage('', 'ai')
-      store.setStreaming(true)
+      currentState.addMessage(text, 'user')
+      currentState.addMessage('', 'ai')
+      currentState.setStreaming(true)
 
       try {
-        const history = buildHistory(store.activeMessages())
+        const history = buildHistory(currentState.activeMessages())
 
         const gen = streamMessage({
           message: text,
-          mode: store.mode,
-          language: store.language,
-          conversation_id: store.activeConversationId ?? 'new',
+          mode: currentState.mode,
+          language: currentState.language,
+          conversation_id: currentState.activeConversationId ?? 'new',
           history,
         })
 
         for await (const chunk of gen) {
           if (chunk.startsWith('\x00REPLACE\x00')) {
             const fallback = chunk.slice('\x00REPLACE\x00'.length)
-            store.replaceLastAiMessage(fallback)
+            currentState.replaceLastAiMessage(fallback)
           } else {
-            store.updateLastAiMessage(chunk)
+            currentState.updateLastAiMessage(chunk)
           }
         }
       } catch (err) {
@@ -110,25 +113,26 @@ export function useChat() {
         try {
           const directText = await sendMessage({
             message: text,
-            mode: store.mode,
-            language: store.language,
-            conversation_id: store.activeConversationId ?? 'new',
-            history: buildHistory(store.activeMessages()),
+            mode: currentState.mode,
+            language: currentState.language,
+            conversation_id: currentState.activeConversationId ?? 'new',
+            history: buildHistory(currentState.activeMessages()),
           })
-          store.replaceLastAiMessage(directText)
+          currentState.replaceLastAiMessage(directText)
         } catch (directErr) {
           console.error('[Copetra direct fetch error]', directErr)
         }
       } finally {
-        store.setStreaming(false)
+        currentState.setStreaming(false)
       }
     },
-    [store]
+    []
   )
 
   const regenerate = useCallback(async () => {
-    if (store.isStreaming) return
-    const msgs = store.activeMessages()
+    const currentState = useKronxStore.getState()
+    if (currentState.isStreaming) return
+    const msgs = currentState.activeMessages()
     if (msgs.length === 0) return
 
     let lastUserMessage = ''
@@ -141,78 +145,77 @@ export function useChat() {
 
     if (!lastUserMessage) return
 
-    // If last message is AI, remove it before generating new alternative response
     if (msgs[msgs.length - 1].role === 'ai') {
-      store.removeLastAiMessage()
+      currentState.removeLastAiMessage()
     }
 
-    store.addMessage('', 'ai')
-    store.setStreaming(true)
+    currentState.addMessage('', 'ai')
+    currentState.setStreaming(true)
 
     try {
-      const history = buildHistory(store.activeMessages().slice(0, -1))
+      const history = buildHistory(currentState.activeMessages().slice(0, -1))
 
-      // Append instruction to try another response path
       const gen = streamMessage({
         message: `${lastUserMessage} (Note: Provide an alternative, enhanced response)`,
-        mode: store.mode,
-        language: store.language,
-        conversation_id: store.activeConversationId ?? 'new',
+        mode: currentState.mode,
+        language: currentState.language,
+        conversation_id: currentState.activeConversationId ?? 'new',
         history,
       })
 
       for await (const chunk of gen) {
         if (chunk.startsWith('\x00REPLACE\x00')) {
           const fallback = chunk.slice('\x00REPLACE\x00'.length)
-          store.replaceLastAiMessage(fallback)
+          currentState.replaceLastAiMessage(fallback)
         } else {
-          store.updateLastAiMessage(chunk)
+          currentState.updateLastAiMessage(chunk)
         }
       }
     } catch (err) {
-      const fallbackMsg = store.language === 'sw'
+      const fallbackMsg = currentState.language === 'sw'
         ? 'Nipo tayari kukusaidia! Tafadhali rudia swali lako.'
         : 'I am ready to help you! Please repeat your request.'
-      store.updateLastAiMessage(fallbackMsg)
+      currentState.updateLastAiMessage(fallbackMsg)
     } finally {
-      store.setStreaming(false)
+      currentState.setStreaming(false)
     }
-  }, [store])
+  }, [])
 
   const editAndResend = useCallback(
     async (messageId: string, newContent: string) => {
-      if (!newContent.trim() || store.isStreaming) return
-      store.editMessageInPlace(messageId, newContent)
-      store.setStreaming(true)
+      const currentState = useKronxStore.getState()
+      if (!newContent.trim() || currentState.isStreaming) return
+      currentState.editMessageInPlace(messageId, newContent)
+      currentState.setStreaming(true)
 
       try {
-        const history = buildHistory(store.activeMessages().slice(0, -2))
+        const history = buildHistory(currentState.activeMessages().slice(0, -2))
         const gen = streamMessage({
           message: newContent,
-          mode: store.mode,
-          language: store.language,
-          conversation_id: store.activeConversationId ?? 'new',
+          mode: currentState.mode,
+          language: currentState.language,
+          conversation_id: currentState.activeConversationId ?? 'new',
           history,
         })
 
         for await (const chunk of gen) {
           if (chunk.startsWith('\x00REPLACE\x00')) {
             const fallback = chunk.slice('\x00REPLACE\x00'.length)
-            store.replaceLastAiMessage(fallback)
+            currentState.replaceLastAiMessage(fallback)
           } else {
-            store.updateLastAiMessage(chunk)
+            currentState.updateLastAiMessage(chunk)
           }
         }
       } catch (err) {
-        const fallbackMsg = store.language === 'sw'
+        const fallbackMsg = currentState.language === 'sw'
           ? 'Nipo tayari kukusaidia! Tafadhali rudia swali lako.'
           : 'I am ready to help you! Please repeat your request.'
-        store.updateLastAiMessage(fallbackMsg)
+        currentState.updateLastAiMessage(fallbackMsg)
       } finally {
-        store.setStreaming(false)
+        currentState.setStreaming(false)
       }
     },
-    [store]
+    []
   )
 
   return {
