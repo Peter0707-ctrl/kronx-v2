@@ -116,7 +116,7 @@ export default function SettingsModal() {
   const handleContactAdmin = () => {
     const planLabel = selectedPlan === 'plus' ? 'Copetra Plus (15,000 TZS/month)' : 'Copetra Pro (35,000 TZS/month)'
     const text = encodeURIComponent(
-      `Habari Admin Peter! Nataka kujiandikisha kwenye:\n\n` +
+      `Habari Admin! Nataka kujiandikisha kwenye:\n\n` +
       `MPANGO: ${planLabel}\n` +
       `BILI: ${billingCycle === 'monthly' ? 'Kila Mwezi' : 'Kila Mwaka'}\n` +
       `JINA: ${user?.name || 'Mtumiaji'}\n` +
@@ -126,6 +126,20 @@ export default function SettingsModal() {
     window.open(`https://wa.me/255673190931?text=${text}`, '_blank')
     setContactSent(true)
     setTimeout(() => setContactSent(false), 5000)
+  }
+
+  const [feedbackType, setFeedbackType] = useState<'bug' | 'feature' | 'other'>('feature')
+  const [feedbackText, setFeedbackText] = useState('')
+  const handleSendFeedback = () => {
+    if (!feedbackText.trim()) return
+    const text = encodeURIComponent(
+      `*PJKRONX Feedback / Support*\n` +
+      `TYPE: ${feedbackType.toUpperCase()}\n` +
+      `FROM: ${user?.name || 'User'} (${user?.email || 'N/A'})\n\n` +
+      `MESSAGE:\n${feedbackText}`
+    )
+    window.open(`https://wa.me/255673190931?text=${text}`, '_blank')
+    setFeedbackText('')
   }
 
   const handleLogout = () => {
@@ -179,13 +193,15 @@ export default function SettingsModal() {
 
         {/* Tab Bar */}
         <div className="settings-tabs">
-          {['upgrade', 'account'].map(tab => (
+          {['upgrade', 'account', 'support'].map(tab => (
             <button
               key={tab}
               className={`settings-tab-btn ${activeTab === tab ? 'active' : ''}`}
-              onClick={() => setActiveTab(tab as 'upgrade' | 'account')}
+              onClick={() => setActiveTab(tab as any)}
             >
-              {tab === 'upgrade' ? (sw ? 'Mipango & Bei' : 'Plans & Pricing') : (sw ? 'Akaunti Yangu' : 'My Account')}
+              {tab === 'upgrade' ? (sw ? 'Mipango & Bei' : 'Plans & Pricing') : 
+               tab === 'account' ? (sw ? 'Akaunti Yangu' : 'My Account') : 
+               (sw ? 'Msaada & Maoni' : 'Support & Feedback')}
             </button>
           ))}
         </div>
@@ -410,8 +426,8 @@ export default function SettingsModal() {
                       <div style={{ fontSize: '13.5px', color: '#0c4a6e', lineHeight: '1.5' }}>
                         <strong>{sw ? 'Wasiliana na Admin:' : 'Contact Admin:'}</strong>{' '}
                         {sw
-                          ? 'Bonyeza kitufe cha WhatsApp hapa chini kumtumia Admin Peter uthibitisho wa malipo yako. Ataongeza subscription yako kwa dakika!'
-                          : 'Click the WhatsApp button below to send Admin Peter your payment confirmation. He will activate your subscription within minutes!'}
+                          ? 'Bonyeza kitufe cha WhatsApp hapa chini kumtumia Admin uthibitisho wa malipo yako. Ataongeza subscription yako kwa dakika!'
+                          : 'Click the WhatsApp button below to send Admin your payment confirmation. They will activate your subscription within minutes!'}
                       </div>
                     </div>
                   </div>
@@ -489,15 +505,15 @@ export default function SettingsModal() {
                     >
                       <WhatsAppIcon />
                       {sw
-                        ? `Wasiliana na Admin Peter — Omba ${activePlan.name}`
-                        : `Contact Admin Peter — Subscribe to ${activePlan.name}`}
+                        ? `Wasiliana na Admin — Omba ${activePlan.name}`
+                        : `Contact Admin — Subscribe to ${activePlan.name}`}
                     </button>
                   )}
 
                   <p style={{ fontSize: '12px', color: '#64748b', textAlign: 'center', marginTop: '12px', lineHeight: '1.5' }}>
                     {sw
-                      ? 'Admin Peter atakuongezea subscription mara tu baada ya kuthibitisha malipo yako.'
-                      : 'Admin Peter will manually activate your subscription immediately after verifying your payment.'}
+                      ? 'Admin atakuongezea subscription mara tu baada ya kuthibitisha malipo yako.'
+                      : 'Admin will manually activate your subscription immediately after verifying your payment.'}
                   </p>
                 </div>
               )}
@@ -621,6 +637,105 @@ export default function SettingsModal() {
               >
                 {sw ? 'Toka kwenye Akaunti' : 'Sign out of Kronx Account'}
               </button>
+            </div>
+          )}
+
+          {/* ═══════════════════════════════════════════
+              TAB 3: SUPPORT & FEEDBACK
+          ═══════════════════════════════════════════ */}
+          {activeTab === 'support' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div style={{
+                background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+                borderRadius: '20px', padding: '24px',
+                border: '1px solid #bae6fd'
+              }}>
+                <h3 style={{ margin: '0 0 8px 0', color: '#0c4a6e', fontSize: '18px', fontWeight: '800' }}>
+                  {sw ? 'Tusaidie Kuboresha Copetra AI' : 'Help Us Improve Copetra AI'}
+                </h3>
+                <p style={{ margin: 0, color: '#0369a1', fontSize: '13px', lineHeight: '1.6' }}>
+                  {sw 
+                    ? 'Una wazo la kipengele kipya? Umekutana na tatizo? Tunataka kusikia kutoka kwako moja kwa moja! Ujumbe wako utatumwa kwa Admin kwa ajili ya kufanyiwa kazi haraka.'
+                    : 'Have an idea for a new feature? Found a bug? We want to hear from you directly! Your message will be securely sent to Admin for immediate review.'}
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#0f172a', marginBottom: '8px' }}>
+                    {sw ? 'Aina ya Ujumbe' : 'Message Type'}
+                  </label>
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    {(['feature', 'bug', 'other'] as const).map(type => (
+                      <button
+                        key={type}
+                        onClick={() => setFeedbackType(type)}
+                        style={{
+                          flex: 1, padding: '10px',
+                          borderRadius: '12px', border: '1px solid',
+                          borderColor: feedbackType === type ? '#0ea5e9' : '#cbd5e1',
+                          background: feedbackType === type ? '#f0f9ff' : '#ffffff',
+                          color: feedbackType === type ? '#0284c7' : '#64748b',
+                          fontWeight: '700', fontSize: '13px', cursor: 'pointer',
+                          transition: 'all 0.2s',
+                        }}
+                      >
+                        {type === 'feature' ? (sw ? 'Wazo Kipya' : 'New Feature') : 
+                         type === 'bug' ? (sw ? 'Tatizo/Bug' : 'Report Bug') : 
+                         (sw ? 'Mengineyo' : 'Other')}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#0f172a', marginBottom: '8px' }}>
+                    {sw ? 'Ujumbe Wako' : 'Your Message'}
+                  </label>
+                  <textarea
+                    value={feedbackText}
+                    onChange={(e) => setFeedbackText(e.target.value)}
+                    placeholder={sw 
+                      ? 'Eleza wazo lako au tatizo unalokumbana nalo hapa...' 
+                      : 'Describe your feature request, idea, or issue here...'}
+                    style={{
+                      width: '100%', height: '140px', padding: '16px',
+                      borderRadius: '16px', border: '1px solid #cbd5e1',
+                      background: '#f8fafc', fontSize: '14px',
+                      color: '#0f172a', resize: 'none', outline: 'none',
+                      fontFamily: 'inherit'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#0ea5e9'
+                      e.target.style.background = '#ffffff'
+                      e.target.style.boxShadow = '0 0 0 3px rgba(14, 165, 233, 0.1)'
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#cbd5e1'
+                      e.target.style.background = '#f8fafc'
+                      e.target.style.boxShadow = 'none'
+                    }}
+                  />
+                </div>
+
+                <button
+                  onClick={handleSendFeedback}
+                  disabled={!feedbackText.trim()}
+                  style={{
+                    width: '100%', padding: '14px',
+                    borderRadius: '16px',
+                    background: feedbackText.trim() ? 'linear-gradient(135deg, #0f172a, #1e3a5f)' : '#e2e8f0',
+                    color: feedbackText.trim() ? '#ffffff' : '#94a3b8', 
+                    border: 'none',
+                    fontWeight: '800', fontSize: '14px', 
+                    cursor: feedbackText.trim() ? 'pointer' : 'not-allowed',
+                    boxShadow: feedbackText.trim() ? '0 6px 20px rgba(15,23,42,0.2)' : 'none',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  {sw ? 'Tuma Ujumbe kwa Admin' : 'Send Message to Admin'}
+                </button>
+              </div>
             </div>
           )}
         </div>
