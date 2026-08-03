@@ -213,7 +213,7 @@ export default function AdminDashboard() {
             </div>
 
             <button
-              onClick={() => {
+              onClick={async () => {
                 const nameInput = prompt('Enter User Full Name:')
                 const emailInput = prompt('Enter User Email:')
                 if (nameInput && emailInput) {
@@ -228,6 +228,11 @@ export default function AdminDashboard() {
                     conversationCount: 0
                   }
                   setUsersList(prev => [...prev, newUser])
+                  await fetch('/api/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newUser)
+                  }).catch(e => console.error('Failed to save manually added user to DB:', e))
                 }
               }}
               style={{ background: '#0284c7', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '10px', fontWeight: '800', fontSize: '13px', cursor: 'pointer' }}
