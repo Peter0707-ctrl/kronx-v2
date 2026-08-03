@@ -66,11 +66,7 @@ export function useChat() {
         }
         currentState.incrementVideoUsage()
 
-        // Don't strip words blindly
-        const rawTopic = text.trim() || 'cinematic animation'
-        const sampleVideo = 'https://assets.mixkit.co/videos/preview/mixkit-futuristic-robotic-arm-operating-42861-large.mp4'
-
-        const videoMarkdown = `Here is your AI generated video for **"${rawTopic}"**:\n\n<video controls autoplay loop muted style="width: 100%; max-width: 512px; border-radius: 16px; border: 1px solid #bae6fd; box-shadow: 0 8px 24px rgba(2, 132, 199, 0.15);\"><source src="${sampleVideo}" type="video/mp4" />Your browser does not support video tag.</video>`
+        const videoMarkdown = `**Video Generation is currently under maintenance.**\n\nWe are actively upgrading our video rendering pipeline to provide genuine AI-generated videos. Please check back later!`
 
         currentState.addMessage(text, 'user')
         currentState.addMessage(videoMarkdown, 'ai')
@@ -175,8 +171,8 @@ export function useChat() {
       }
     } catch (err) {
       const fallbackMsg = currentState.language === 'sw'
-        ? 'Nipo tayari kukusaidia! Tafadhali rudia swali lako.'
-        : 'I am ready to help you! Please repeat your request.'
+        ? '⚠️ Samahani, imeshindikana kupata majibu kwa sasa. Tafadhali jaribu tena.'
+        : '⚠️ Sorry, there was an error generating your response. Please try again.'
       currentState.updateLastAiMessage(fallbackMsg)
     } finally {
       currentState.setStreaming(false)
@@ -210,8 +206,8 @@ export function useChat() {
         }
       } catch (err) {
         const fallbackMsg = currentState.language === 'sw'
-          ? 'Nipo tayari kukusaidia! Tafadhali rudia swali lako.'
-          : 'I am ready to help you! Please repeat your request.'
+          ? '⚠️ Samahani, imeshindikana kupata majibu kwa sasa. Tafadhali jaribu tena.'
+          : '⚠️ Sorry, there was an error generating your response. Please try again.'
         currentState.updateLastAiMessage(fallbackMsg)
       } finally {
         currentState.setStreaming(false)
