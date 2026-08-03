@@ -186,8 +186,26 @@ export const useKronxStore = create<KronxStore>()(
           lang: get().language,
         }
         set(s => {
-          const convs = s.conversations.map(c => {
-            if (c.id !== s.activeConversationId) return c
+          let currentId = s.activeConversationId
+          let convs = [...s.conversations]
+
+          // Auto-heal: Ensure active conversation exists
+          let targetConv = convs.find(c => c.id === currentId)
+          if (!targetConv) {
+            targetConv = {
+              id: uuid(),
+              title: role === 'user' ? content.slice(0, 48) : 'New Conversation',
+              messages: [],
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              mode: s.mode,
+            }
+            convs = [targetConv, ...convs]
+            currentId = targetConv.id
+          }
+
+          const updatedConvs = convs.map(c => {
+            if (c.id !== currentId) return c
             const isFirst = c.messages.length === 0 && role === 'user'
             const updatedMsgs = [...c.messages, msg].slice(-50)
             return {
@@ -197,37 +215,82 @@ export const useKronxStore = create<KronxStore>()(
               updatedAt: new Date(),
             }
           })
-          return { conversations: convs.slice(0, 25) }
+
+          return {
+            conversations: updatedConvs.slice(0, 25),
+            activeConversationId: currentId
+          }
         })
         return msg
       },
 
       updateLastAiMessage: (chunk) => {
         set(s => {
-          const convs = s.conversations.map(c => {
-            if (c.id !== s.activeConversationId) return c
+          let currentId = s.activeConversationId
+          let convs = [...s.conversations]
+          let targetConv = convs.find(c => c.id === currentId)
+
+          if (!targetConv && convs.length > 0) {
+            targetConv = convs[0]
+            currentId = targetConv.id
+          }
+
+          if (!targetConv) return s
+
+          const updatedConvs = convs.map(c => {
+            if (c.id !== currentId) return c
             const msgs = [...c.messages]
             const last = msgs[msgs.length - 1]
-            if (last?.role === 'ai') {
+            if (last && last.role === 'ai') {
               msgs[msgs.length - 1] = { ...last, content: last.content + chunk }
+            } else {
+              msgs.push({
+                id: uuid(),
+                role: 'ai',
+                content: chunk,
+                timestamp: new Date(),
+                mode: s.mode,
+                lang: s.language,
+              })
             }
             return { ...c, messages: msgs }
           })
-          return { conversations: convs }
+          return { conversations: updatedConvs, activeConversationId: currentId }
         })
       },
 
       replaceLastAiMessage: (content) =>
-        set(s => ({
-          conversations: s.conversations.map(c => {
-            if (c.id !== s.activeConversationId) return c
+        set(s => {
+          let currentId = s.activeConversationId
+          let convs = [...s.conversations]
+          let targetConv = convs.find(c => c.id === currentId)
+
+          if (!targetConv && convs.length > 0) {
+            targetConv = convs[0]
+            currentId = targetConv.id
+          }
+
+          if (!targetConv) return s
+
+          const updatedConvs = convs.map(c => {
+            if (c.id !== currentId) return c
             const msgs = [...c.messages]
             if (msgs.length > 0 && msgs[msgs.length - 1].role === 'ai') {
               msgs[msgs.length - 1] = { ...msgs[msgs.length - 1], content }
+            } else {
+              msgs.push({
+                id: uuid(),
+                role: 'ai',
+                content,
+                timestamp: new Date(),
+                mode: s.mode,
+                lang: s.language,
+              })
             }
             return { ...c, messages: msgs }
-          }),
-        })),
+          })
+          return { conversations: updatedConvs, activeConversationId: currentId }
+        }),
 
       removeLastAiMessage: () =>
         set(s => ({
