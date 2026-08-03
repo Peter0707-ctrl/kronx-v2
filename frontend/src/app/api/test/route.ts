@@ -3,36 +3,62 @@ import { NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
-  const ollamaHost = process.env.OLLAMA_URL || 'http://ollama.railway.internal:11434'
+  const groqKey = process.env.GROQ_API_KEY
+  const ollamaUrl = process.env.OLLAMA_URL
+  const nextPublicApiUrl = process.env.NEXT_PUBLIC_API_URL
+
+  const result: Record<string, unknown> = {
+    timestamp: new Date().toISOString(),
+    env: {
+      GROQ_API_KEY: groqKey ? `SET ✅ (starts with: ${groqKey.slice(0, 8)}...)` : 'NOT SET ❌',
+      OLLAMA_URL: ollamaUrl || 'NOT SET',
+      NEXT_PUBLIC_API_URL: nextPublicApiUrl || 'NOT SET',
+    },
+    groq_test: null,
+  }
+
+  if (!groqKey) {
+    result.groq_test = 'SKIPPED — GROQ_API_KEY not set ❌'
+    return NextResponse.json(result)
+  }
 
   try {
     const controller = new AbortController()
-    setTimeout(() => controller.abort(), 25000)
+    setTimeout(() => controller.abort(), 15000)
 
-    const res = await fetch(`${ollamaHost}/api/generate`, {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Authorization': `Bearer ${groqKey}`,
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({
-        model: 'llama3.2:3b',
-        prompt: 'In one sentence, what is the importance of the food chain?',
+        model: 'llama-3.2-3b-preview',
+        messages: [
+          { role: 'user', content: 'In one sentence, what is the importance of the food chain?' }
+        ],
+        max_tokens: 80,
         stream: false,
-        options: { num_predict: 80, temperature: 0.5 }
       }),
       signal: controller.signal,
     })
 
     if (res.ok) {
       const data = await res.json()
-      return NextResponse.json({
+      const answer = data.choices?.[0]?.message?.content?.trim()
+      result.groq_test = {
         status: 'SUCCESS ✅',
-        model: 'llama3.2:3b',
-        ollama_host: ollamaHost,
-        answer: data.response?.trim() || 'No response text',
-      })
+        model: 'llama-3.2-3b-preview',
+        answer: answer || 'No text returned',
+      }
+    } else {
+      const errText = await res.text()
+      result.groq_test = { status: `HTTP ${res.status} ❌`, error: errText.slice(0, 200) }
     }
-    return NextResponse.json({ status: `HTTP ERROR ${res.status} ❌`, ollama_host: ollamaHost })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e)
-    return NextResponse.json({ status: 'FAILED ❌', error: msg, ollama_host: ollamaHost })
+    result.groq_test = { status: 'FAILED ❌', error: msg }
   }
+
+  return NextResponse.json(result)
 }
