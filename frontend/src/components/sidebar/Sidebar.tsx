@@ -1,5 +1,4 @@
-'use client'
-
+import { useState } from 'react'
 import { useKronxStore } from '@/store/useKronxStore'
 
 export default function Sidebar() {
@@ -16,7 +15,13 @@ export default function Sidebar() {
     user
   } = useKronxStore()
 
+  const [searchQuery, setSearchQuery] = useState('')
+
   if (!sidebarOpen) return null
+
+  const filteredConvs = conversations.filter(c =>
+    c.title.toLowerCase().includes(searchQuery.toLowerCase().trim())
+  )
 
   return (
     <aside style={{ width: '240px', background: '#f8fafc', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', flexShrink: 0, zIndex: 10, height: '100vh', fontFamily: "Calibri, 'Calibri Light', sans-serif" }}>
@@ -33,8 +38,19 @@ export default function Sidebar() {
         </button>
       </div>
 
+      {/* Search Input Bar */}
+      <div style={{ padding: '0 16px 8px 16px' }}>
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          placeholder="Search history..."
+          style={{ width: '100%', padding: '6px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12.5px', background: '#ffffff', color: '#0f172a', outline: 'none' }}
+        />
+      </div>
+
       {/* History List */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '8px 16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
           <span style={{ fontSize: '11px', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
             Chat History
@@ -51,13 +67,13 @@ export default function Sidebar() {
           )}
         </div>
 
-        {conversations.filter(c => c.id !== activeConversationId && c.messages.length > 0).length === 0 && (
+        {filteredConvs.length === 0 && (
           <p style={{ fontSize: '12.5px', color: '#94a3b8', fontStyle: 'italic', margin: '8px 0 0 0' }}>
-            No closed chat history.
+            {searchQuery ? 'No matching chats found.' : 'No closed chat history.'}
           </p>
         )}
 
-        {conversations.filter(c => c.id !== activeConversationId && c.messages.length > 0).map(conv => (
+        {filteredConvs.map(conv => (
           <div
             key={conv.id}
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', borderRadius: '8px', background: conv.id === activeConversationId ? '#e2e8f0' : 'transparent', marginBottom: '4px', cursor: 'pointer' }}

@@ -27,35 +27,44 @@ export default function WelcomeScreen({ onSend }: Props) {
   const suggestions = [
     {
       icon: (
-        <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+        <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#0284c7" strokeWidth={2}>
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+        </svg>
+      ),
+      text: 'Academic Research & Thesis Writing',
+      prompt: 'Help me outline a university research thesis methodology with academic citations.'
+    },
+    {
+      icon: (
+        <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth={2}>
+          <polyline points="16 18 22 12 16 6" />
+          <polyline points="8 6 2 12 8 18" />
+        </svg>
+      ),
+      text: 'Software Engineering & Code Generator',
+      prompt: 'Write a high-performance Python data processing script with error handling.'
+    },
+    {
+      icon: (
+        <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" strokeWidth={2}>
           <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
           <circle cx="8.5" cy="8.5" r="1.5" />
           <polyline points="21 15 16 10 5 21" />
         </svg>
       ),
-      text: 'Create an image',
-      prompt: 'Create a high quality image'
+      text: 'FLUX 8K Photorealistic Image Generator',
+      prompt: 'Generate an ultra-HD picture of a futuristic quantum research laboratory'
     },
     {
       icon: (
-        <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-          <path d="M12 20h9" />
-          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-        </svg>
-      ),
-      text: 'Write or edit',
-      prompt: 'Help me write or edit code'
-    },
-    {
-      icon: (
-        <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+        <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth={2}>
           <circle cx="12" cy="12" r="10" />
-          <line x1="2" y1="12" x2="22" y2="12" />
           <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
         </svg>
       ),
-      text: 'Search the web',
-      prompt: 'Search the web for news'
+      text: 'Mathematics & Complex Problem Solving',
+      prompt: 'Explain the principles of Partial Differential Equations with step-by-step examples.'
     }
   ]
 
