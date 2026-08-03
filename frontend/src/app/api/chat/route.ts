@@ -82,10 +82,13 @@ async function callOpenAI(message: string, mode: string = 'Friend'): Promise<str
     modeInstruction = "You are Copetra AI in CREATIVE ENGINE MODE. Provide innovative, engaging, imaginative, and eloquently crafted responses."
   }
 
-  const models = ['gpt-4o-mini', 'gpt-4o', 'gpt-3.5-turbo']
+  const models = ['gpt-4o-mini', 'gpt-4o']
 
   for (const model of models) {
     try {
+      const controller = new AbortController()
+      const timer = setTimeout(() => controller.abort(), 3000)
+
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -101,8 +104,16 @@ async function callOpenAI(message: string, mode: string = 'Friend'): Promise<str
           temperature: 0.7,
           max_tokens: 2048
         }),
+        signal: controller.signal,
         cache: 'no-store'
       })
+
+      clearTimeout(timer)
+
+      if (response.status === 429) {
+        console.warn('OpenAI quota exhausted (429), failing over to Gemini immediately.')
+        return null
+      }
 
       if (response.ok) {
         const data = await response.json()
