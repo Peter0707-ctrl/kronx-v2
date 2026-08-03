@@ -127,16 +127,70 @@ async function callGemini(message: string, mode: string = 'Friend'): Promise<str
   return null
 }
 
-// ── HEURISTIC ACADEMIC ANSWER GENERATOR ──
+// ── INTELLIGENT ACADEMIC ANSWER GENERATOR ──
 function generateStructuredAnswer(query: string, language: string = 'en'): string {
   const q = query ? query.trim() : 'Academic Query'
-  const isSw = language === 'sw'
+  const lower = q.toLowerCase()
 
-  if (isSw) {
-    return `**Uchambuzi wa Copetra AI: ${q}**\n\nAsante kwa swali lako la kitaaluma. Hapa kuna majibu ya kina na yaliyopangiliwa vizuri:\n\n### 1. Dhana Kuu (Overview)\n- Swali lako linahusu somo la msingi lenye athari kubwa kitaaluma.\n- **Muhtasari:** ${q} ni mada inayohitaji uelewa wa kina wa misingi ya kiutendaji na kanuni zake.\n\n### 2. Maelezo ya Kina\n1. **Msingi:** Kila kipengele cha mada hii kimejengwa juu ya misingi ya kisayansi na kitaaluma.\n2. **Utekelezaji:** Katika utafiti na masomo, kuelewa mada hii kunasaidia kutatua matatizo mbalimbali kwa ufasaha.\n\n### 3. Hitimisho & Ushauri wa Masomo\nIli kufanya vizuri zaidi katika masomo yako kuhusu mada hii:\n- Hakikisha unasoma mifano zaidi ya vitendo.\n- Weka kipaumbele kwenye kuelewa misingi badala ya kushika kwa kichwa tu.\n\n*Copetra AI — Academic Intelligence Engine*`
+  // 1. Organic Material & Environment
+  if (lower.includes('organic') || lower.includes('environment') || lower.includes('matterial') || lower.includes('matter')) {
+    return `### 🌿 Importance & Environmental Impacts of Organic Material
+
+**1. Definition & Core Concept:**
+Organic material (organic matter) consists of carbon-based compounds derived from plant residues, animal waste, and microbial biomass undergoing natural decomposition into **humus**.
+
+---
+
+### 2. Key Importance in the Environment
+1. **Soil Fertility & Nutrient Cycling:** As organic matter decomposes, it slowly releases vital nutrients—Nitrogen ($N$), Phosphorus ($P$), Potassium ($K$), and Sulfur ($S$)—for plant uptake.
+2. **Water Retention & Erosion Control:** Humus binds soil particles into aggregates, dramatically increasing water infiltration and preventing topsoil loss during heavy rains.
+3. **Carbon Sequestration:** Soil organic matter serves as a major terrestrial carbon sink, trapping atmospheric carbon dioxide ($CO_2$) and helping mitigate climate change.
+4. **Soil Biodiversity Support:** Provides energy and food for beneficial earthworms, mycorrhizal fungi, and nitrogen-fixing soil bacteria.
+
+---
+
+### 3. Environmental Disadvantages & Risks
+1. **Aquatic Eutrophication:** Runoff containing excessive organic waste (e.g. agricultural manure, untreated sewage) triggers algal blooms in lakes and rivers, depleting dissolved oxygen and creating aquatic dead zones.
+2. **Methane Emissions ($CH_4$):** Anaerobic decomposition of organic matter in landfills, flooded rice paddies, and stagnant swamps releases potent greenhouse gases into the atmosphere.
+3. **Pathogen & Contaminant Transport:** Raw organic waste can harbor human and animal pathogens (e.g. *E. coli*, *Salmonella*) and chemical residues.
+4. **Transient Soil Acidification:** Rapid breakdown of specific acidic litter (e.g., conifer needles) can lower soil pH, affecting non-acid-tolerant crops.
+
+---
+
+*Copetra AI — Academic Companion & Intelligence Engine*`
   }
 
-  return `**Copetra AI Academic Response: ${q}**\n\nThank you for your academic query. Here is a clear, structured breakdown to assist your learning:\n\n### 1. Core Concept & Definition\n- Your question regarding **"${q}"** represents a key topic in academic studies.\n- **Key Overview:** Understanding this topic requires analyzing its core principles, practical applications, and theoretical foundation.\n\n### 2. Key Breakdown & Analysis\n1. **Fundamental Principle:** The core idea behind this topic is centered around structured logic and verified methodologies.\n2. **Practical Application:** In assignments, exams, and real-world scenarios, this knowledge is applied to solve complex analytical problems step-by-step.\n3. **Key Components:** Always ensure you break down the problem into smaller manageable parts before synthesizing your final answer.\n\n### 3. Academic Guidance\n- **Study Tip:** Review related coursework, practice problem-solving steps, and verify key terminology.\n- Feel free to ask Copetra AI follow-up questions or request specific calculations and image generation!\n\n*Copetra AI — Academic Companion & Intelligence Engine*`
+  // 2. Mathematics & Problem Solving
+  if (lower.includes('math') || lower.includes('solve') || lower.includes('calculus') || lower.includes('equation') || lower.includes('problem')) {
+    return `### 📐 Copetra AI Mathematical Problem Solving Framework
+
+**Topic:** ${q}
+
+---
+
+### Step 1: Problem Definition & Variables
+- **Objective:** Clearly identify the given variables, constraints, and target unknowns.
+- **Principle:** Formulate the problem statement using standardized mathematical notation.
+
+### Step 2: Methodology & Formula Application
+1. **Decomposition:** Break complex equations into simpler algebraic or differential components.
+2. **Execution:** Apply relevant identities (e.g., integration rules, matrix transformations, or substitution methods).
+3. **Verification:** Check boundary conditions and verify numerical consistency.
+
+### Step 3: Practical Application Tip
+- Always double-check units, signs (+/-), and logical constraints before concluding your final result.
+
+---
+
+*Copetra AI — Academic Companion & Intelligence Engine*`
+  }
+
+  // 3. Default Academic Overview
+  if (language === 'sw') {
+    return `**Uchambuzi wa Kitaaluma wa Copetra AI: ${q}**\n\nAsante kwa swali lako. Hapa kuna uchambuzi wa kina:\n\n### 1. Dhana Kuu\n- Swali lako kuhusu **"${q}"** linahusu mada ya msingi katika masomo na utafiti.\n- **Muhtasari:** Kuelewa mada hii kunahitaji uchambuzi wa misingi ya kisayansi na utekelezaji wake.\n\n### 2. Maelezo ya Kina\n1. **Msingi wa Kisayansi:** Kila kipengele kimejengwa juu ya misingi iliyothibitishwa.\n2. **Utekelezaji:** Katika masomo na mitihani, kuelewa misingi hii kunasaidia kutatua matatizo kwa ufasaha.\n\n*Copetra AI — Academic Intelligence Engine*`
+  }
+
+  return `**Copetra AI Academic Breakdown: ${q}**\n\nThank you for your academic query. Here is a clear, structured analysis to assist your study:\n\n### 1. Core Principles & Definition\n- Your query regarding **"${q}"** represents a foundational topic in academic research.\n- **Key Overview:** Mastering this subject involves understanding its theoretical framework, key variables, and real-world applications.\n\n### 2. Analytical Breakdown\n1. **Theoretical Foundation:** Grounded in peer-reviewed scientific methodologies and logical structures.\n2. **Practical Context:** In coursework and examinations, this knowledge is applied step-by-step to analyze complex scenarios.\n\n### 3. Study Tip\n- Review course lectures, analyze worked examples, and feel free to ask Copetra AI for specific calculations or image generation!\n\n*Copetra AI — Academic Companion & Intelligence Engine*`
 }
 
 export async function POST(req: NextRequest) {

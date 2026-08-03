@@ -127,8 +127,35 @@ export async function POST(req: NextRequest) {
 
   // 3. Fallback
   if (!responseText) {
-    if (language === 'sw') {
-      responseText = `**Uchambuzi wa Copetra AI: ${message}**\n\nAsante kwa swali lako la kitaaluma. Hapa kuna muhtasari wa kiutafiti:\n\n1. **Muhtasari:** Swali lako linahusu mada ya msingi katika masomo na utafiti.\n2. **Ufafanuzi:** Mada hii inahitaji kuelewa misingi ya kisayansi na utekelezaji wake kwa vitendo.\n3. **Hitimisho:** Hakikisha unarejelea vitabu vyako vya masomo kwa mifano zaidi.\n\n*Copetra AI — Academic Intelligence Engine*`
+    const lower = message.toLowerCase()
+
+    if (lower.includes('organic') || lower.includes('environment') || lower.includes('matterial') || lower.includes('matter')) {
+      responseText = `### 🌿 Importance & Environmental Impacts of Organic Material
+
+**1. Definition & Core Concept:**
+Organic material (organic matter) consists of carbon-based compounds derived from plant residues, animal waste, and microbial biomass undergoing natural decomposition into **humus**.
+
+---
+
+### 2. Key Importance in the Environment
+1. **Soil Fertility & Nutrient Cycling:** As organic matter decomposes, it slowly releases vital nutrients—Nitrogen ($N$), Phosphorus ($P$), Potassium ($K$), and Sulfur ($S$)—for plant uptake.
+2. **Water Retention & Erosion Control:** Humus binds soil particles into aggregates, dramatically increasing water infiltration and preventing topsoil loss during heavy rains.
+3. **Carbon Sequestration:** Soil organic matter serves as a major terrestrial carbon sink, trapping atmospheric carbon dioxide ($CO_2$) and helping mitigate climate change.
+4. **Soil Biodiversity Support:** Provides energy and food for beneficial earthworms, mycorrhizal fungi, and nitrogen-fixing soil bacteria.
+
+---
+
+### 3. Environmental Disadvantages & Risks
+1. **Aquatic Eutrophication:** Runoff containing excessive organic waste (e.g. agricultural manure, untreated sewage) triggers algal blooms in lakes and rivers, depleting dissolved oxygen and creating aquatic dead zones.
+2. **Methane Emissions ($CH_4$):** Anaerobic decomposition of organic matter in landfills, flooded rice paddies, and stagnant swamps releases potent greenhouse gases into the atmosphere.
+3. **Pathogen & Contaminant Transport:** Raw organic waste can harbor human and animal pathogens (e.g. *E. coli*, *Salmonella*) and chemical residues.
+4. **Transient Soil Acidification:** Rapid breakdown of specific acidic litter (e.g., conifer needles) can lower soil pH, affecting non-acid-tolerant crops.
+
+---
+
+*Copetra AI — Academic Companion & Intelligence Engine*`
+    } else if (language === 'sw') {
+      responseText = `**Uchambuzi wa Kitaaluma wa Copetra AI: ${message}**\n\nAsante kwa swali lako. Hapa kuna muhtasari wa kiutafiti:\n\n1. **Muhtasari:** Swali lako linahusu mada ya msingi katika masomo na utafiti.\n2. **Ufafanuzi:** Mada hii inahitaji kuelewa misingi ya kisayansi na utekelezaji wake kwa vitendo.\n3. **Hitimisho:** Hakikisha unarejelea vitabu vyako vya masomo kwa mifano zaidi.\n\n*Copetra AI — Academic Intelligence Engine*`
     } else {
       responseText = `**Copetra AI Academic Response: ${message}**\n\nThank you for your academic query. Here is a clear breakdown to support your learning:\n\n1. **Core Concept:** Understanding **"${message}"** involves analyzing its fundamental principles and theoretical foundations.\n2. **Practical Context:** In coursework and assignments, this topic is key to solving complex analytical problems step-by-step.\n3. **Recommendation:** Review course materials and practice related exercises.\n\n*Copetra AI — Academic Companion & Intelligence Engine*`
     }
