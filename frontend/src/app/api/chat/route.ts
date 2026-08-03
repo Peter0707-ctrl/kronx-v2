@@ -67,18 +67,30 @@ async function webSearch(query: string): Promise<string | null> {
 }
 
 // ── GEMINI API CALL ──
-async function callGemini(message: string): Promise<string | null> {
+async function callGemini(message: string, mode: string = 'Friend'): Promise<string | null> {
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey || apiKey === 'YOUR_GEMINI_API_KEY_HERE') return null
 
   const models = ['gemini-2.0-flash-lite', 'gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-3.5-flash']
+
+  let modeInstruction = "You are Copetra AI, an elite AI Assistant and Academic Companion engineered by PJ Copetranova. Answer clearly, accurately, and thoroughly in markdown."
+
+  if (mode === 'Academic') {
+    modeInstruction = "You are Copetra AI in ACADEMIC RESEARCH MODE. Provide rigorous academic analysis, university thesis-level depth, structured definitions, and step-by-step proofs."
+  } else if (mode === 'Developer') {
+    modeInstruction = "You are Copetra AI in SENIOR DEVELOPER MODE. Provide production-ready software code, optimal algorithms, clear syntax highlighting, and architectural best practices."
+  } else if (mode === 'Tutor') {
+    modeInstruction = "You are Copetra AI in PERSONAL TUTOR MODE. Break down complex topics with clear step-by-step explanations, helpful analogies, and practice questions."
+  } else if (mode === 'Creative') {
+    modeInstruction = "You are Copetra AI in CREATIVE ENGINE MODE. Provide innovative, engaging, imaginative, and eloquently crafted responses."
+  }
 
   const contents = [
     {
       role: 'user',
       parts: [
         {
-          text: `You are Copetra AI, an elite AI Assistant and Academic Companion engineered by PJ Copetranova. Answer clearly, accurately, and thoroughly in markdown.\n\nUser Question: ${message}`
+          text: `${modeInstruction}\n\nUser Question: ${message}`
         }
       ]
     }
@@ -123,11 +135,13 @@ function generateStructuredAnswer(query: string, language: string = 'en'): strin
 export async function POST(req: NextRequest) {
   let message = ''
   let language = 'en'
+  let mode = 'Friend'
 
   try {
     const body = await req.json().catch(() => ({}))
     message = body.message || ''
     language = body.language || 'en'
+    mode = body.mode || 'Friend'
   } catch (e) {
     console.error('Request body parsing error:', e)
   }
@@ -135,6 +149,8 @@ export async function POST(req: NextRequest) {
   if (!message) {
     return NextResponse.json({ response: 'Please provide a valid question.' }, { status: 400 })
   }
+
+  let responseText: string | null = null
 
   // 1. Check Knowledge Base
   try {
@@ -146,14 +162,15 @@ export async function POST(req: NextRequest) {
     console.error('KB Search Error:', err)
   }
 
-  // 2. Try Gemini API
+  // 2. Gemini API
   try {
-    const geminiAnswer = await callGemini(message)
-    if (geminiAnswer) {
-      return NextResponse.json({ response: geminiAnswer })
-    }
+    responseText = await callGemini(message, mode)
   } catch (err) {
-    console.error('Gemini API Call Error:', err)
+    console.error('Gemini Call Error:', err)
+  }
+
+  if (responseText) {
+    return NextResponse.json({ response: responseText })
   }
 
   // 3. Try Web Search

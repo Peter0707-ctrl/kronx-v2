@@ -10,6 +10,7 @@ import AdminDashboard from '@/components/admin/AdminDashboard'
 import LandingPage from '@/components/landing/LandingPage'
 import AuthModal from '@/components/auth/AuthModal'
 import SettingsModal from '@/components/settings/SettingsModal'
+import ErrorBoundary from '@/components/ErrorBoundary'
 import { useChat } from '@/hooks/useChat'
 import { useKronxStore } from '@/store/useKronxStore'
 
@@ -97,21 +98,23 @@ export default function Home() {
 
 
   return (
-    <main className="shell" role="main">
-      <Sidebar />
-      <div className="main-panel">
-        <TopBar />
-        {activeView === 'admin' ? (
-          <AdminDashboard />
-        ) : (
-          <>
-            <ChatArea onSend={handleSend} onRegenerate={regenerate} onEditAndResend={editAndResend} />
-            <InputBar onSend={handleSend} />
-          </>
-        )}
-      </div>
-      <AuthModal />
-      <SettingsModal />
-    </main>
+    <ErrorBoundary>
+      <main className="shell" role="main">
+        <Sidebar />
+        <div className="main-panel">
+          <TopBar />
+          {activeView === 'admin' ? (
+            <AdminDashboard />
+          ) : (
+            <>
+              <ChatArea onSend={handleSend} onRegenerate={regenerate} onEditAndResend={editAndResend} />
+              <InputBar onSend={handleSend} />
+            </>
+          )}
+        </div>
+        <AuthModal />
+        <SettingsModal />
+      </main>
+    </ErrorBoundary>
   )
 }
