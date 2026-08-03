@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
       user.email,
       user.role || 'user',
       user.plan || 'free',
-      user.avatar || \`https://api.dicebear.com/7.x/avataaars/svg?seed=\${encodeURIComponent(user.name || 'User')}\`,
+      user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.name || 'User')}`,
       user.lastActive || 'Just now',
       user.conversationCount || 0,
       user.isDeveloper || false

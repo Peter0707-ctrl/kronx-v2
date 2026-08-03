@@ -74,6 +74,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="canonical" href="https://miraculous-forgiveness-production-10d4.up.railway.app" />
         <meta name="application-name" content="Copetra AI" />
         <meta name="apple-mobile-web-app-title" content="Copetra AI" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body>{children}</body>
     </html>
