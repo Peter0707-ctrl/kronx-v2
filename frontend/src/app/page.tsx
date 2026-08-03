@@ -21,6 +21,14 @@ export default function Home() {
 
   useEffect(() => {
     setMounted(true)
+    if (typeof window !== 'undefined') {
+      const v = localStorage.getItem('copetra_v')
+      if (v !== '3.5') {
+        localStorage.clear()
+        localStorage.setItem('copetra_v', '3.5')
+        window.location.reload()
+      }
+    }
   }, [])
 
   const handleSend = useCallback(
