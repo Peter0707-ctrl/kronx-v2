@@ -23,9 +23,9 @@ export default function Home() {
     setMounted(true)
     if (typeof window !== 'undefined') {
       const v = localStorage.getItem('copetra_v')
-      if (v !== '3.5') {
+      if (v !== '4.0') {
         localStorage.clear()
-        localStorage.setItem('copetra_v', '3.5')
+        localStorage.setItem('copetra_v', '4.0')
         window.location.reload()
       }
     }
