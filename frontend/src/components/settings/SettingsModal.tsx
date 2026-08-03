@@ -135,36 +135,16 @@ export default function SettingsModal() {
 
   return (
     <div
+      className="settings-modal-backdrop"
       onClick={() => setSettingsModalOpen(false)}
-      style={{
-        position: 'fixed', inset: 0, zIndex: 9999,
-        background: 'rgba(10, 15, 30, 0.7)',
-        backdropFilter: 'blur(12px)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: '16px',
-        fontFamily: "'Inter', 'Segoe UI', sans-serif",
-      }}
     >
       <div
+        className="settings-modal-container"
         onClick={e => e.stopPropagation()}
-        style={{
-          width: '100%', maxWidth: '820px',
-          maxHeight: '92vh', overflowY: 'auto',
-          background: '#ffffff',
-          borderRadius: '28px',
-          border: '1px solid #e2e8f0',
-          boxShadow: '0 32px 80px rgba(0,0,0,0.18)',
-          scrollbarWidth: 'thin',
-        }}
       >
         {/* Gradient Header */}
-        <div style={{
-          background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)',
-          borderRadius: '28px 28px 0 0',
-          padding: '28px 32px',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        }}>
-          <div>
+        <div className="settings-header">
+          <div style={{ position: 'relative', zIndex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
               <div style={{
                 background: 'rgba(255,255,255,0.15)',
@@ -192,33 +172,25 @@ export default function SettingsModal() {
               background: 'rgba(255,255,255,0.1)',
               color: '#ffffff', cursor: 'pointer',
               fontSize: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              position: 'relative', zIndex: 1
             }}
           >✕</button>
         </div>
 
         {/* Tab Bar */}
-        <div style={{
-          display: 'flex', gap: '0', borderBottom: '1px solid #e2e8f0',
-          padding: '0 32px', background: '#fafafa'
-        }}>
+        <div className="settings-tabs">
           {['upgrade', 'account'].map(tab => (
             <button
               key={tab}
+              className={`settings-tab-btn ${activeTab === tab ? 'active' : ''}`}
               onClick={() => setActiveTab(tab as 'upgrade' | 'account')}
-              style={{
-                padding: '16px 20px', border: 'none', background: 'none',
-                fontSize: '14px', fontWeight: '700', cursor: 'pointer',
-                color: activeTab === tab ? '#0f172a' : '#94a3b8',
-                borderBottom: activeTab === tab ? '2.5px solid #0f172a' : '2.5px solid transparent',
-                transition: 'all 0.2s',
-              }}
             >
               {tab === 'upgrade' ? (sw ? 'Mipango & Bei' : 'Plans & Pricing') : (sw ? 'Akaunti Yangu' : 'My Account')}
             </button>
           ))}
         </div>
 
-        <div style={{ padding: '28px 32px' }}>
+        <div className="settings-content">
 
           {/* ═══════════════════════════════════════════
               TAB 1: PLANS & PRICING
@@ -279,29 +251,25 @@ export default function SettingsModal() {
 
               {/* Plan Cards */}
               {!isPremium && (
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '28px' }}>
+                <div className="plans-grid">
 
                   {/* Free Card */}
-                  <div style={{
-                    border: '1px solid #e2e8f0', borderRadius: '20px',
-                    padding: '22px', background: '#fafafa',
-                    display: 'flex', flexDirection: 'column',
-                  }}>
+                  <div className="plan-card free">
                     <div style={{ fontSize: '13px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px' }}>Free</div>
-                    <div style={{ fontSize: '26px', fontWeight: '900', color: '#0f172a', marginBottom: '4px' }}>0 TZS</div>
+                    <div className="plan-price-badge">0 TZS</div>
                     <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '20px' }}>{sw ? 'Daima bila malipo' : 'Always free'}</div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, fontSize: '12.5px', color: '#475569' }}>
-                      <div style={{ display: 'flex', gap: '7px', alignItems: 'flex-start' }}>
-                        <span style={{ color: '#10b981', marginTop: '1px', flexShrink: 0 }}><CheckIcon /></span>
-                        {sw ? 'Picha 3 kwa siku' : '3 images/day'} ({picUsed}/3 used)
+                    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+                      <div className="plan-feature-item">
+                        <span style={{ color: '#10b981', marginTop: '1px' }}><CheckIcon /></span>
+                        <span>{sw ? 'Picha 3 kwa siku' : '3 images/day'} ({picUsed}/3 used)</span>
                       </div>
-                      <div style={{ display: 'flex', gap: '7px', alignItems: 'flex-start' }}>
-                        <span style={{ color: '#10b981', marginTop: '1px', flexShrink: 0 }}><CheckIcon /></span>
-                        {sw ? 'Video 1 kwa siku' : '1 video/day'} ({vidUsed}/1 used)
+                      <div className="plan-feature-item">
+                        <span style={{ color: '#10b981', marginTop: '1px' }}><CheckIcon /></span>
+                        <span>{sw ? 'Video 1 kwa siku' : '1 video/day'} ({vidUsed}/1 used)</span>
                       </div>
-                      <div style={{ display: 'flex', gap: '7px', alignItems: 'flex-start' }}>
-                        <span style={{ color: '#10b981', marginTop: '1px', flexShrink: 0 }}><CheckIcon /></span>
-                        {sw ? 'Jibu la kawaida la AI' : 'Standard AI answers'}
+                      <div className="plan-feature-item">
+                        <span style={{ color: '#10b981', marginTop: '1px' }}><CheckIcon /></span>
+                        <span>{sw ? 'Jibu la kawaida la AI' : 'Standard AI answers'}</span>
                       </div>
                     </div>
                     <button disabled style={{
@@ -316,44 +284,40 @@ export default function SettingsModal() {
                   {/* Plus Card */}
                   <div
                     onClick={() => setSelectedPlan('plus')}
+                    className="plan-card plus"
                     style={{
-                      border: selectedPlan === 'plus' ? '2.5px solid #0f172a' : '1px solid #cbd5e1',
-                      borderRadius: '20px', padding: '22px',
-                      background: selectedPlan === 'plus' ? '#ffffff' : '#fafafa',
-                      display: 'flex', flexDirection: 'column',
-                      cursor: 'pointer', position: 'relative',
-                      boxShadow: selectedPlan === 'plus' ? '0 8px 30px rgba(15,23,42,0.1)' : 'none',
-                      transition: 'all 0.2s',
+                      border: selectedPlan === 'plus' ? '2px solid #0ea5e9' : '1px solid #cbd5e1',
+                      boxShadow: selectedPlan === 'plus' ? '0 12px 32px rgba(14, 165, 233, 0.12)' : 'none',
                     }}
                   >
                     <div style={{
                       position: 'absolute', top: '-11px', left: '50%', transform: 'translateX(-50%)',
-                      background: '#0f172a', color: '#fff', fontSize: '10px', fontWeight: '800',
-                      padding: '3px 12px', borderRadius: '10px', letterSpacing: '1px', whiteSpace: 'nowrap',
+                      background: '#0ea5e9', color: '#fff', fontSize: '10px', fontWeight: '800',
+                      padding: '4px 14px', borderRadius: '12px', letterSpacing: '1px', whiteSpace: 'nowrap',
                     }}>
                       POPULAR
                     </div>
-                    <div style={{ fontSize: '13px', fontWeight: '700', color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px' }}>Plus</div>
-                    <div style={{ fontSize: '26px', fontWeight: '900', color: '#0f172a', marginBottom: '4px' }}>
+                    <div style={{ fontSize: '13px', fontWeight: '700', color: '#0ea5e9', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px' }}>Plus</div>
+                    <div className="plan-price-badge">
                       {billingCycle === 'monthly' ? '15,000' : '12,000'} <span style={{ fontSize: '13px', fontWeight: '500', color: '#64748b' }}>TZS</span>
                     </div>
                     <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '20px' }}>
                       {sw ? 'kwa mwezi' : 'per month'}
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, fontSize: '12.5px', color: '#334155' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
                       {plans.plus.features.map((f, i) => (
-                        <div key={i} style={{ display: 'flex', gap: '7px', alignItems: 'flex-start' }}>
-                          <span style={{ color: '#10b981', marginTop: '1px', flexShrink: 0 }}><CheckIcon /></span>
-                          {f}
+                        <div key={i} className="plan-feature-item">
+                          <span style={{ color: '#0ea5e9', marginTop: '1px' }}><CheckIcon /></span>
+                          <span>{f}</span>
                         </div>
                       ))}
                     </div>
                     <div style={{
-                      marginTop: '16px', padding: '8px',
-                      borderRadius: '10px', textAlign: 'center',
-                      background: selectedPlan === 'plus' ? '#0f172a' : '#f1f5f9',
+                      marginTop: '16px', padding: '10px',
+                      borderRadius: '12px', textAlign: 'center',
+                      background: selectedPlan === 'plus' ? '#0ea5e9' : '#f1f5f9',
                       color: selectedPlan === 'plus' ? '#fff' : '#64748b',
-                      fontSize: '12px', fontWeight: '700',
+                      fontSize: '13px', fontWeight: '700', transition: 'all 0.2s'
                     }}>
                       {selectedPlan === 'plus' ? (sw ? 'Umechagua' : 'Selected') : (sw ? 'Chagua' : 'Select')}
                     </div>
@@ -362,37 +326,33 @@ export default function SettingsModal() {
                   {/* Pro Card */}
                   <div
                     onClick={() => setSelectedPlan('pro')}
+                    className="plan-card pro"
                     style={{
-                      border: selectedPlan === 'pro' ? '2.5px solid #7c3aed' : '1px solid #cbd5e1',
-                      borderRadius: '20px', padding: '22px',
-                      background: selectedPlan === 'pro' ? '#fdf4ff' : '#fafafa',
-                      display: 'flex', flexDirection: 'column',
-                      cursor: 'pointer', position: 'relative',
-                      boxShadow: selectedPlan === 'pro' ? '0 8px 30px rgba(124,58,237,0.12)' : 'none',
-                      transition: 'all 0.2s',
+                      border: selectedPlan === 'pro' ? '2px solid #8b5cf6' : '1px solid #cbd5e1',
+                      boxShadow: selectedPlan === 'pro' ? '0 12px 32px rgba(139, 92, 246, 0.12)' : 'none',
                     }}
                   >
-                    <div style={{ fontSize: '13px', fontWeight: '700', color: '#7c3aed', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px' }}>Pro</div>
-                    <div style={{ fontSize: '26px', fontWeight: '900', color: '#0f172a', marginBottom: '4px' }}>
+                    <div style={{ fontSize: '13px', fontWeight: '700', color: '#8b5cf6', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px' }}>Pro</div>
+                    <div className="plan-price-badge">
                       {billingCycle === 'monthly' ? '35,000' : '28,000'} <span style={{ fontSize: '13px', fontWeight: '500', color: '#64748b' }}>TZS</span>
                     </div>
                     <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '20px' }}>
                       {sw ? 'kwa mwezi' : 'per month'}
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, fontSize: '12.5px', color: '#334155' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
                       {plans.pro.features.map((f, i) => (
-                        <div key={i} style={{ display: 'flex', gap: '7px', alignItems: 'flex-start' }}>
-                          <span style={{ color: '#7c3aed', marginTop: '1px', flexShrink: 0 }}><CheckIcon /></span>
-                          {f}
+                        <div key={i} className="plan-feature-item">
+                          <span style={{ color: '#8b5cf6', marginTop: '1px' }}><CheckIcon /></span>
+                          <span>{f}</span>
                         </div>
                       ))}
                     </div>
                     <div style={{
-                      marginTop: '16px', padding: '8px',
-                      borderRadius: '10px', textAlign: 'center',
-                      background: selectedPlan === 'pro' ? '#7c3aed' : '#f1f5f9',
+                      marginTop: '16px', padding: '10px',
+                      borderRadius: '12px', textAlign: 'center',
+                      background: selectedPlan === 'pro' ? '#8b5cf6' : '#f1f5f9',
                       color: selectedPlan === 'pro' ? '#fff' : '#64748b',
-                      fontSize: '12px', fontWeight: '700',
+                      fontSize: '13px', fontWeight: '700', transition: 'all 0.2s'
                     }}>
                       {selectedPlan === 'pro' ? (sw ? 'Umechagua' : 'Selected') : (sw ? 'Chagua' : 'Select')}
                     </div>
