@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
       let streamedAny = false
 
       if (apiKey) {
-        const models = ['llama-3.2-3b-preview', 'llama3-8b-8192', 'gemma2-9b-it']
+        const models = ['llama-3.1-8b-instant', 'llama3-8b-8192', 'gemma2-9b-it', 'llama-3.3-70b-versatile']
         const systemPrompt = getModeSystemPrompt(mode)
 
         for (const model of models) {

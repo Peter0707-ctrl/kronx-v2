@@ -33,7 +33,7 @@ export async function GET() {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'llama-3.2-3b-preview',
+        model: 'llama-3.1-8b-instant',
         messages: [
           { role: 'user', content: 'In one sentence, what is the importance of the food chain?' }
         ],
@@ -48,7 +48,7 @@ export async function GET() {
       const answer = data.choices?.[0]?.message?.content?.trim()
       result.groq_test = {
         status: 'SUCCESS ✅',
-        model: 'llama-3.2-3b-preview',
+        model: 'llama-3.1-8b-instant',
         answer: answer || 'No text returned',
       }
     } else {

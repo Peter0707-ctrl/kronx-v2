@@ -55,7 +55,7 @@ async function callGroq(message: string, mode: string): Promise<string | null> {
   const apiKey = process.env.GROQ_API_KEY
   if (!apiKey) return null
 
-  const models = ['llama-3.2-3b-preview', 'llama3-8b-8192', 'gemma2-9b-it']
+  const models = ['llama-3.1-8b-instant', 'llama3-8b-8192', 'gemma2-9b-it', 'llama-3.3-70b-versatile']
 
   for (const model of models) {
     try {
