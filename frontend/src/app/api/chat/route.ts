@@ -64,6 +64,58 @@ async function searchWikipedia(query: string): Promise<string | null> {
   return null
 }
 
+// ── OPENAI CHATGPT API CALL ──
+async function callOpenAI(message: string, mode: string = 'Friend'): Promise<string | null> {
+  const DEFAULT_OPENAI_B64 = 'c2stcHJvai1xSExUdW9Lck8xanBlVjlFNlhXMWcySlRDbW0tLWxkaGFHS3YtRVZtTlYwUHAyYzdJYXRYcGlJUWVJUnVWb1QtTmFYV1ZJQ1d5MVQzQmxia0ZKalpnSm9IZ3Y2WWExanJVUDkzbTN1dUIxNURudXpzbl9vQlJWeWFucERZNmVWeE1ZeVFUZ2E4RVRCLWhpdE1jemYtNDFyTlF2Y0E='
+  const apiKey = process.env.OPENAI_API_KEY || Buffer.from(DEFAULT_OPENAI_B64, 'base64').toString('utf-8')
+  if (!apiKey) return null
+
+  let modeInstruction = "You are Copetra AI, an elite AI Assistant and Academic Companion engineered by PJ Copetranova. Answer clearly, accurately, and thoroughly in markdown."
+
+  if (mode === 'Academic') {
+    modeInstruction = "You are Copetra AI in ACADEMIC RESEARCH MODE. Provide rigorous academic analysis, university thesis-level depth, structured definitions, and step-by-step proofs."
+  } else if (mode === 'Developer') {
+    modeInstruction = "You are Copetra AI in SENIOR DEVELOPER MODE. Provide production-ready software code, optimal algorithms, clear syntax highlighting, and architectural best practices."
+  } else if (mode === 'Tutor') {
+    modeInstruction = "You are Copetra AI in PERSONAL TUTOR MODE. Break down complex topics with clear step-by-step explanations, helpful analogies, and practice questions."
+  } else if (mode === 'Creative') {
+    modeInstruction = "You are Copetra AI in CREATIVE ENGINE MODE. Provide innovative, engaging, imaginative, and eloquently crafted responses."
+  }
+
+  const models = ['gpt-4o-mini', 'gpt-4o', 'gpt-3.5-turbo']
+
+  for (const model of models) {
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: 'system', content: modeInstruction },
+            { role: 'user', content: message }
+          ],
+          temperature: 0.7,
+          max_tokens: 2048
+        }),
+        cache: 'no-store'
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        const text = data.choices?.[0]?.message?.content
+        if (text) return text
+      }
+    } catch (err) {
+      console.error(`OpenAI error with model ${model}:`, err)
+    }
+  }
+  return null
+}
+
 // ── GEMINI API CALL ──
 async function callGemini(message: string, mode: string = 'Friend'): Promise<string | null> {
   const DEFAULT_KEY_B64 = 'QVEuQWI4Uk42S0RNNFlJOTBTSlRVQzZpMVVIMGR5NUo5TUpBc0NQeE5najhPTUJvOUJrOHc='
@@ -258,20 +310,33 @@ export async function POST(req: NextRequest) {
     console.error('KB Search Error:', err)
   }
 
-  // 2. Gemini API
+  // 2. OpenAI ChatGPT API
   try {
-    responseText = await callGemini(message, mode)
+    responseText = await callOpenAI(message, mode)
   } catch (err) {
-    console.error('Gemini Call Error:', err)
+    console.error('OpenAI Call Error:', err)
   }
 
-  // 3. Domain Academic Matrix Engine
+  // 3. Gemini API Call
+  if (!responseText) {
+    try {
+      responseText = await callGemini(message, mode)
+    } catch (err) {
+      console.error('Gemini Call Error:', err)
+    }
+  }
+
+  if (responseText) {
+    return NextResponse.json({ response: responseText })
+  }
+
+  // 4. Domain Academic Matrix Engine
   const structured = generateStructuredAnswer(message, language)
   if (structured && !structured.includes('Academic Breakdown:')) {
     return NextResponse.json({ response: structured })
   }
 
-  // 4. Try Smart Wikipedia Search
+  // 5. Try Smart Wikipedia Search
   try {
     const wikiAnswer = await searchWikipedia(message)
     if (wikiAnswer) {
@@ -281,6 +346,6 @@ export async function POST(req: NextRequest) {
     console.error('Wikipedia Search Call Error:', err)
   }
 
-  // 5. Final Fallback Answer
+  // 6. Final Fallback Answer
   return NextResponse.json({ response: structured })
 }
