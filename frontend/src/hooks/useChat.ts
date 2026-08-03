@@ -37,8 +37,9 @@ export function useChat() {
         }
         currentState.incrementPictureUsage()
 
-        const userPrompt = text.replace(/(generate|create|an|a|picture|image|photo|draw|tengeneza|picha|of|ya|please|help|me)/gi, '').trim() || 'futuristic masterpiece'
-        const enhancedPrompt = `${userPrompt}, highly detailed photorealistic 8k resolution, cinematic lighting, masterpiece, hyperdetailed, professional photography, octane render`
+        // Don't strip words blindly as it corrupts the prompt (e.g., removing 'a' from 'apple'). FLUX understands natural language perfectly.
+        const userPrompt = text.trim() || 'futuristic masterpiece'
+        const enhancedPrompt = `${userPrompt}, highly detailed photorealistic 8k resolution, cinematic lighting, masterpiece, hyperdetailed, professional photography`
         const encodedPrompt = encodeURIComponent(enhancedPrompt)
         const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=2048&height=2048&model=flux&seed=${Math.floor(Math.random()*100000)}&nologo=true&enhance=true`
 
@@ -65,7 +66,8 @@ export function useChat() {
         }
         currentState.incrementVideoUsage()
 
-        const rawTopic = text.replace(/(generate|create|an|a|video|make|tengeneza|of|ya)/gi, '').trim() || 'cinematic animation'
+        // Don't strip words blindly
+        const rawTopic = text.trim() || 'cinematic animation'
         const sampleVideo = 'https://assets.mixkit.co/videos/preview/mixkit-futuristic-robotic-arm-operating-42861-large.mp4'
 
         const videoMarkdown = `Here is your AI generated video for **"${rawTopic}"**:\n\n<video controls autoplay loop muted style="width: 100%; max-width: 512px; border-radius: 16px; border: 1px solid #bae6fd; box-shadow: 0 8px 24px rgba(2, 132, 199, 0.15);\"><source src="${sampleVideo}" type="video/mp4" />Your browser does not support video tag.</video>`
