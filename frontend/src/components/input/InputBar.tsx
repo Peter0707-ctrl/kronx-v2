@@ -232,6 +232,9 @@ export default function InputBar({ onSend }: Props) {
       <div style={{ textAlign: 'center', marginTop: '10px', fontSize: '11px', fontWeight: '700', color: '#64748b', letterSpacing: '1px', fontFamily: "Calibri, 'Calibri Light', sans-serif" }}>
         POWERED BY <span style={{ color: '#0284c7', fontWeight: '800' }}>PJ COPETRANOVA</span>
       </div>
+      <div style={{ textAlign: 'center', marginTop: '4px', fontSize: '10px', color: '#94a3b8', fontFamily: "Calibri, 'Calibri Light', sans-serif" }}>
+        AI can make mistakes. Please verify important information.
+      </div>
     </div>
   )
 }

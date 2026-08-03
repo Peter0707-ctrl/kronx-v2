@@ -24,7 +24,7 @@ const REAL_USERS: (AdminUserRecord & { plan: UserPlan })[] = [
 export default function AdminDashboard() {
   const { language, setActiveView, user, updateUserRole, systemDisabled, toggleSystemKillSwitch } = useKronxStore()
   const [telemetry, setTelemetry] = useState<SystemTelemetry | null>(null)
-  const [usersList, setUsersList] = useState<(AdminUserRecord & { plan: UserPlan })[]>(REAL_USERS)
+  const [usersList, setUsersList] = useState<(AdminUserRecord & { plan: UserPlan })[]>([])
   const [userSearchQuery, setUserSearchQuery] = useState('')
   const [activeTab, setActiveTab] = useState<'users' | 'revenue' | 'telemetry' | 'tuning'>('users')
   const [tempSetting, setTempSetting] = useState(0.4)
@@ -47,6 +47,12 @@ export default function AdminDashboard() {
       .then(res => res.json())
       .then(data => setTelemetry(data))
       .catch(err => console.warn('[Admin telemetry fetch fail]', err))
+
+    // Fetch live users list from backend
+    fetch('/api/users')
+      .then(res => res.json())
+      .then(data => setUsersList(data))
+      .catch(err => console.warn('[Users fetch fail]', err))
   }, [])
 
   const handleToggleRole = (userId: string) => {

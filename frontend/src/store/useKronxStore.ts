@@ -1,8 +1,7 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { persist, createJSONStorage } from 'zustand/middleware'
 import { v4 as uuid } from 'uuid'
 import { ActiveView, Conversation, KronxMode, Language, Message, UserGoal, UserProfile, UserRole } from '@/types'
-
 
 interface KronxStore {
   activeConversationId: string | null
@@ -31,7 +30,7 @@ interface KronxStore {
   loginUser: (user: UserProfile) => void
   logoutUser: () => void
   updateUserRole: (role: UserRole) => void
-  upgradeSubscription: (plan: 'free' | 'premium') => void
+  upgradeSubscription: (plan: 'free' | 'plus' | 'premium') => void
   generateApiKey: () => string
   canGeneratePicture: () => boolean
   canGenerateVideo: () => boolean
@@ -41,7 +40,6 @@ interface KronxStore {
   incrementChatUsage: () => void
   systemDisabled: boolean
   toggleSystemKillSwitch: (disabled: boolean) => void
-
 
   addMessage: (content: string, role: 'user' | 'ai') => Message
   updateLastAiMessage: (chunk: string) => void
@@ -69,35 +67,23 @@ const DEFAULT_GOALS: UserGoal[] = [
   { id: 'g-3', title: 'Build modern Next.js AI companion app', category: 'personal', completed: true, createdAt: new Date().toISOString() },
 ]
 
-const DEFAULT_USER: UserProfile = {
-  id: 'u-1',
-  name: 'User',
-  email: 'user@kronx.ai',
-  avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=John',
-  role: 'user',
-  plan: 'free',
-  picturesUsedToday: 0,
-  videosUsedToday: 0,
-  chatsUsedToday: 0,
-  provider: 'email',
-  createdAt: new Date().toISOString(),
-}
+export const useKronxStore = create<KronxStore>()(
+  persist(
+    (set, get) => ({
+      activeConversationId: null,
+      conversations: [],
+      mode: 'Friend',
+      language: 'en',
+      isStreaming: false,
+      activeView: 'chat',
+      goals: DEFAULT_GOALS,
+      user: null, // FORCE LOGIN FOR NEW USERS
+      authModalOpen: false,
+      settingsModalOpen: false,
+      sidebarOpen: true,
 
-export const useKronxStore = create<KronxStore>()((set, get) => ({
-  activeConversationId: null,
-  conversations: [],
-  mode: 'Friend',
-  language: 'en',
-  isStreaming: false,
-  activeView: 'chat',
-  goals: DEFAULT_GOALS,
-  user: DEFAULT_USER,
-  authModalOpen: false,
-  settingsModalOpen: false,
-  sidebarOpen: true,
-  setSettingsModalOpen: (settingsModalOpen: boolean) => set({ settingsModalOpen }),
-  toggleSidebar: () => set(s => ({ sidebarOpen: !s.sidebarOpen })),
-
+      setSettingsModalOpen: (settingsModalOpen: boolean) => set({ settingsModalOpen }),
+      toggleSidebar: () => set(s => ({ sidebarOpen: !s.sidebarOpen })),
 
       newConversation: () => {
         const conv: Conversation = {
@@ -134,10 +120,20 @@ export const useKronxStore = create<KronxStore>()((set, get) => ({
           ),
         })),
 
-
       setUser: (user) => set({ user }),
       setAuthModalOpen: (authModalOpen) => set({ authModalOpen }),
-      loginUser: (user) => set({ user, activeView: 'chat', authModalOpen: false }),
+      
+      loginUser: (user) => {
+        // Automatically save new user to our admin users JSON endpoint
+        fetch('/api/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(user)
+        }).catch(e => console.warn('Could not register user to DB:', e));
+
+        set({ user, activeView: 'chat', authModalOpen: false })
+      },
+
       logoutUser: () => set({ user: null, activeView: 'landing' }),
       updateUserRole: (role) =>
         set(s => ({
@@ -187,7 +183,6 @@ export const useKronxStore = create<KronxStore>()((set, get) => ({
           let currentId = s.activeConversationId
           let convs = [...s.conversations]
 
-          // Auto-heal: Ensure active conversation exists
           let targetConv = convs.find(c => c.id === currentId)
           if (!targetConv) {
             targetConv = {
@@ -372,7 +367,14 @@ export const useKronxStore = create<KronxStore>()((set, get) => ({
       activeMessages: () => {
         return get().activeConversation()?.messages ?? []
       },
-    })
+    }),
+    {
+      name: 'kronx-storage', // name of the item in the storage (must be unique)
+      storage: createJSONStorage(() => typeof window !== 'undefined' ? localStorage : {
+        getItem: () => null,
+        setItem: () => {},
+        removeItem: () => {}
+      }),
+    }
+  )
 )
-
-

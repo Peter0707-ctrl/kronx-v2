@@ -1485,5 +1485,89 @@
       "importance": 1.0,
       "created_at": "2026-08-01T17:46:51.603588"
     }
+  ],
+  "test-verification-session": [
+    {
+      "id": "test-verification-session_0",
+      "content": "Q: Habari Kronx! Niambie jina lako na kazi yako kuu kama AI Operating System ya Tanzania. | A: **Muhtasari na Msaada wa Masomo wa Kronx AI (Somo: Habari Kronx! Niambie jina lako na kazi yako kuu ",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-02T19:49:39.539669"
+    },
+    {
+      "id": "test-verification-session_1",
+      "content": "Q: Habari Kronx! Niambie jina lako na kazi yako kuu kama AI Operating System ya Tanzania. | A: **Jibu la PJKRONX AI na Mchanganuo wa Masomo (Somo: Habari Kronx! Niambie jina lako na kazi yako kuu",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-02T19:50:17.255340"
+    }
+  ],
+  "test-session": [
+    {
+      "id": "test-session_0",
+      "content": "Q: Habari Kronx! Niambie kazi yako kama AI ya Tanzania. | A: **Jibu la PJKRONX AI na Mchanganuo wa Masomo (Somo: Habari Kronx! Niambie kazi yako kama AI ya Tanza",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-02T19:50:37.880302"
+    }
+  ],
+  "test": [
+    {
+      "id": "test_0",
+      "content": "Q: who is president of tanzania | A: **President of Tanzania (2025):**\n\nThe current President of the United Republic of Tanzania is **Sam",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-02T20:23:41.844548"
+    },
+    {
+      "id": "test_1",
+      "content": "Q: who is president of tanzania | A: **President of Tanzania (2025):**\n\nThe current President of the United Republic of Tanzania is **Sam",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-02T20:24:14.298182"
+    }
+  ],
+  "test2": [
+    {
+      "id": "test2_0",
+      "content": "Q: what is python programming | A: **Programming Assistance: what is python programming**\n\nHere's the structured approach to solve this",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-02T20:24:01.817286"
+    }
+  ],
+  "live-test": [
+    {
+      "id": "live-test_0",
+      "content": "Q: who is president of tanzania | A: **President of Tanzania (2025):**\n\nThe current President of the United Republic of Tanzania is **Sam",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-02T20:25:43.046550"
+    }
+  ],
+  "final-test": [
+    {
+      "id": "final-test_0",
+      "content": "Q: who is president of tanzania | A: **President of Tanzania (2025):**\n\nThe current President of the United Republic of Tanzania is **Sam",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-02T20:26:57.540293"
+    },
+    {
+      "id": "final-test_1",
+      "content": "Q: who is president of tanzania and its cabinet | A: **President of Tanzania (2025):**\n\nThe current President of the United Republic of Tanzania is **Sam",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-03T01:34:30.684447"
+    }
+  ],
+  "test-general": [
+    {
+      "id": "test-general_0",
+      "content": "Q: explain quantum computing in simple terms | A: As your academic tutor, I will break down quantum computing step-by-step. Let us demystify this comp",
+      "type": "short_term",
+      "importance": 1.0,
+      "created_at": "2026-08-03T01:34:57.203440"
+    }
   ]
 }
