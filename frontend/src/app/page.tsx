@@ -21,14 +21,6 @@ export default function Home() {
 
   useEffect(() => {
     setMounted(true)
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.clear()
-        sessionStorage.clear()
-      } catch (e) {
-        // Ignore iframe storage access restrictions
-      }
-    }
   }, [])
 
   const handleSend = useCallback(

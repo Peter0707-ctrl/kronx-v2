@@ -20,7 +20,7 @@
 
 body, html {
   width: 100vw;
-  height: 100vh;
+  height: 100dvh;
   margin: 0;
   padding: 0;
   font-family: "Calibri", "Calibri Light", sans-serif;
@@ -36,7 +36,7 @@ h1, h2, h3, h4, h5, h6, p, span, button, input, textarea {
 .shell {
   display: flex;
   width: 100vw;
-  height: 100vh;
+  height: 100dvh;
   overflow: hidden;
   background: var(--primary-bg);
 }
@@ -55,14 +55,14 @@ h1, h2, h3, h4, h5, h6, p, span, button, input, textarea {
 .sidebar.closed {
   transform: translateX(-100%);
   position: absolute;
-  height: 100%;
+  height: 100dvh;
 }
 
 .main-panel {
   flex: 1;
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100dvh;
   position: relative;
   transition: margin-left 0.3s ease;
   background: var(--primary-bg);
@@ -291,4 +291,28 @@ h1, h2, h3, h4, h5, h6, p, span, button, input, textarea {
   padding: 14px 12px;
   border-bottom: 1px solid #e2e8f0;
   font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: absolute;
+    height: 100dvh;
+    left: 0;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.5);
+  }
+  .sidebar.closed {
+    transform: translateX(-100%);
+    box-shadow: none;
+  }
+  .chat-area {
+    padding: 16px 12px;
+  }
+  .bubble {
+    max-width: 95%;
+  }
+  .main-panel {
+    width: 100vw;
+  }
 }
