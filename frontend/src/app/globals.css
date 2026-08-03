@@ -316,3 +316,13 @@ h1, h2, h3, h4, h5, h6, p, span, button, input, textarea {
     width: 100vw;
   }
 }
+
+.mobile-sidebar-close {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .mobile-sidebar-close {
+    display: flex !important;
+  }
+}

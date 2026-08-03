@@ -12,12 +12,19 @@ export default function Sidebar() {
     clearAllConversations,
     setSettingsModalOpen,
     setActiveView,
-    user
+    user,
+    toggleSidebar
   } = useKronxStore()
 
   const [searchQuery, setSearchQuery] = useState('')
 
   if (!sidebarOpen) return null
+
+  const handleMobileClose = () => {
+    if (window.innerWidth <= 768) {
+      toggleSidebar()
+    }
+  }
 
   const filteredConvs = conversations.filter(c =>
     c.title.toLowerCase().includes(searchQuery.toLowerCase().trim())
@@ -25,16 +32,31 @@ export default function Sidebar() {
 
   return (
     <aside style={{ width: '240px', background: '#f8fafc', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', flexShrink: 0, zIndex: 10, height: '100vh', fontFamily: "Calibri, 'Calibri Light', sans-serif" }}>
-      {/* Top New Chat Action */}
-      <div style={{ padding: '16px 16px 8px 16px' }}>
+      {/* Top New Chat Action & Mobile Close */}
+      <div style={{ padding: '16px 16px 8px 16px', display: 'flex', gap: '8px', alignItems: 'center' }}>
         <button
-          onClick={newConversation}
-          style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', background: '#ffffff', border: '1px solid #cbd5e1', color: '#0f172a', fontWeight: '700', fontSize: '13.5px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }}
+          onClick={() => {
+            newConversation()
+            handleMobileClose()
+          }}
+          style={{ flex: 1, padding: '10px 14px', borderRadius: '10px', background: '#ffffff', border: '1px solid #cbd5e1', color: '#0f172a', fontWeight: '700', fontSize: '13.5px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }}
         >
           <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
             <path d="M12 5v14M5 12h14" />
           </svg>
           New Chat
+        </button>
+
+        {/* Mobile Close Button - Only visible on small screens (handled via inline logic for simplicity, or just always show an X) */}
+        <button
+          onClick={toggleSidebar}
+          className="mobile-sidebar-close"
+          style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'transparent', border: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b' }}
+        >
+          <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
         </button>
       </div>
 
@@ -77,7 +99,10 @@ export default function Sidebar() {
           <div
             key={conv.id}
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 10px', borderRadius: '8px', background: conv.id === activeConversationId ? '#e2e8f0' : 'transparent', marginBottom: '4px', cursor: 'pointer' }}
-            onClick={() => selectConversation(conv.id)}
+            onClick={() => {
+              selectConversation(conv.id)
+              handleMobileClose()
+            }}
           >
             <span style={{ fontSize: '13px', fontWeight: '600', color: conv.id === activeConversationId ? '#0f172a' : '#475569', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>
               {conv.title}
@@ -108,7 +133,10 @@ export default function Sidebar() {
         )}
 
         <button
-          onClick={() => setSettingsModalOpen(true)}
+          onClick={() => {
+            setSettingsModalOpen(true)
+            handleMobileClose()
+          }}
           style={{ width: '100%', padding: '10px 12px', borderRadius: '12px', background: '#ffffff', border: '1px solid #cbd5e1', color: '#0f172a', fontWeight: '700', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
         >
           <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: '#0284c7', color: '#fff', fontWeight: '800', fontSize: '11px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
