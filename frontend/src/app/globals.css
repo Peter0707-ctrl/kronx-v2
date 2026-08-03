@@ -424,9 +424,10 @@ h1, h2, h3, h4, h5, h6, p, span, button, input, textarea {
   .auth-modal-container {
     flex-direction: column;
     width: 95%;
-    max-height: 90vh;
+    max-height: 82dvh;
     overflow-y: auto;
     border-radius: 20px;
+    padding-bottom: 20px;
   }
   .auth-brand-panel {
     padding: 32px 24px;
@@ -474,10 +475,11 @@ h1, h2, h3, h4, h5, h6, p, span, button, input, textarea {
 .settings-modal-container {
   width: 100%;
   max-width: 900px;
-  max-height: 90vh;
+  max-height: 85dvh;
   overflow-y: auto;
   background: #ffffff;
   border-radius: 28px;
+  padding-bottom: 20px;
   border: 1px solid rgba(226, 232, 240, 0.8);
   box-shadow: 0 32px 80px rgba(0,0,0,0.18);
   scrollbar-width: thin;
