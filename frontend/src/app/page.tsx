@@ -22,11 +22,11 @@ export default function Home() {
   useEffect(() => {
     setMounted(true)
     if (typeof window !== 'undefined') {
-      const v = localStorage.getItem('copetra_v')
-      if (v !== '12.0') {
+      try {
         localStorage.clear()
-        localStorage.setItem('copetra_v', '12.0')
-        window.location.reload()
+        sessionStorage.clear()
+      } catch (e) {
+        // Ignore iframe storage access restrictions
       }
     }
   }, [])

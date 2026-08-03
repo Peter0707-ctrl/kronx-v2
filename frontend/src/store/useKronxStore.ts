@@ -83,22 +83,20 @@ const DEFAULT_USER: UserProfile = {
   createdAt: new Date().toISOString(),
 }
 
-export const useKronxStore = create<KronxStore>()(
-  persist(
-    (set, get) => ({
-      activeConversationId: null,
-      conversations: [],
-      mode: 'Friend',
-      language: 'en',
-      isStreaming: false,
-      activeView: 'chat',
-      goals: DEFAULT_GOALS,
-      user: DEFAULT_USER,
-      authModalOpen: false,
-      settingsModalOpen: false,
-      sidebarOpen: true,
-      setSettingsModalOpen: (settingsModalOpen: boolean) => set({ settingsModalOpen }),
-      toggleSidebar: () => set(s => ({ sidebarOpen: !s.sidebarOpen })),
+export const useKronxStore = create<KronxStore>()((set, get) => ({
+  activeConversationId: null,
+  conversations: [],
+  mode: 'Friend',
+  language: 'en',
+  isStreaming: false,
+  activeView: 'chat',
+  goals: DEFAULT_GOALS,
+  user: DEFAULT_USER,
+  authModalOpen: false,
+  settingsModalOpen: false,
+  sidebarOpen: true,
+  setSettingsModalOpen: (settingsModalOpen: boolean) => set({ settingsModalOpen }),
+  toggleSidebar: () => set(s => ({ sidebarOpen: !s.sidebarOpen })),
 
 
       newConversation: () => {
@@ -374,25 +372,7 @@ export const useKronxStore = create<KronxStore>()(
       activeMessages: () => {
         return get().activeConversation()?.messages ?? []
       },
-    }),
-    {
-      name: 'kronx-store',
-      version: 3,
-      migrate: (persistedState: any, version: number) => {
-        return (persistedState || {}) as KronxStore
-      },
-      partialize: (s) => ({
-        conversations: s.conversations.slice(0, 20),
-        mode: s.mode,
-        language: s.language,
-        activeConversationId: s.activeConversationId,
-        goals: s.goals,
-        activeView: s.activeView,
-        user: s.user,
-        systemDisabled: s.systemDisabled,
-      }),
-    }
-  )
+    })
 )
 
 
