@@ -85,7 +85,7 @@ export default function SettingsModal() {
     }
   }
 
-  const [activeTab, setActiveTab] = useState<'upgrade' | 'account'>('upgrade')
+  const [activeTab, setActiveTab] = useState<'menu' | 'upgrade' | 'account' | 'support'>('menu')
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
   const [selectedPlan, setSelectedPlan] = useState<'plus' | 'pro'>('plus')
   const [contactSent, setContactSent] = useState(false)
@@ -206,22 +206,96 @@ export default function SettingsModal() {
           >✕</button>
         </div>
 
-        {/* Tab Bar */}
-        <div className="settings-tabs">
-          {['upgrade', 'account', 'support'].map(tab => (
+          {activeTab !== 'menu' && (
             <button
-              key={tab}
-              className={`settings-tab-btn ${activeTab === tab ? 'active' : ''}`}
-              onClick={() => setActiveTab(tab as any)}
+              onClick={() => setActiveTab('menu')}
+              style={{
+                background: 'rgba(255,255,255,0.15)', border: 'none',
+                color: '#ffffff', padding: '6px 12px', borderRadius: '12px',
+                fontWeight: '700', fontSize: '12px', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: '6px',
+                marginTop: '12px', position: 'relative', zIndex: 1
+              }}
             >
-              {tab === 'upgrade' ? (sw ? 'Bei' : 'Pricing') : 
-               tab === 'account' ? (sw ? 'Akaunti' : 'Account') : 
-               (sw ? 'Msaada' : 'Support')}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+              </svg>
+              {sw ? 'Rudi Kwenye Menyu' : 'Back to Menu'}
             </button>
-          ))}
+          )}
         </div>
 
         <div className="settings-content">
+          {activeTab === 'menu' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <button
+                onClick={() => setActiveTab('upgrade')}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  background: '#f8fafc', padding: '16px 20px', borderRadius: '16px',
+                  border: '1px solid #e2e8f0', cursor: 'pointer', textAlign: 'left',
+                  transition: 'background 0.2s', width: '100%'
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = '#f1f5f9')}
+                onMouseLeave={e => (e.currentTarget.style.background = '#f8fafc')}
+              >
+                <div>
+                  <div style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', marginBottom: '4px' }}>
+                    {sw ? 'Mipango & Usajili' : 'Subscription Plans'}
+                  </div>
+                  <div style={{ fontSize: '13px', color: '#64748b' }}>
+                    {sw ? 'Tazama na ununue vifurushi vya Copetra' : 'View and purchase Copetra plans'}
+                  </div>
+                </div>
+                <div style={{ color: '#0ea5e9' }}>➔</div>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('account')}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  background: '#f8fafc', padding: '16px 20px', borderRadius: '16px',
+                  border: '1px solid #e2e8f0', cursor: 'pointer', textAlign: 'left',
+                  transition: 'background 0.2s', width: '100%'
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = '#f1f5f9')}
+                onMouseLeave={e => (e.currentTarget.style.background = '#f8fafc')}
+              >
+                <div>
+                  <div style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', marginBottom: '4px' }}>
+                    {sw ? 'Akaunti Yangu' : 'My Account'}
+                  </div>
+                  <div style={{ fontSize: '13px', color: '#64748b' }}>
+                    {sw ? 'Badili picha ya wasifu, toka kwenye akaunti' : 'Change profile picture, sign out'}
+                  </div>
+                </div>
+                <div style={{ color: '#0ea5e9' }}>➔</div>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('support')}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  background: '#f8fafc', padding: '16px 20px', borderRadius: '16px',
+                  border: '1px solid #e2e8f0', cursor: 'pointer', textAlign: 'left',
+                  transition: 'background 0.2s', width: '100%'
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = '#f1f5f9')}
+                onMouseLeave={e => (e.currentTarget.style.background = '#f8fafc')}
+              >
+                <div>
+                  <div style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', marginBottom: '4px' }}>
+                    {sw ? 'Andika Maoni (Review)' : 'Write a Review'}
+                  </div>
+                  <div style={{ fontSize: '13px', color: '#64748b' }}>
+                    {sw ? 'Tuambie nini kiboreshwe na mapendekezo yako' : 'Tell us what should be updated or improved'}
+                  </div>
+                </div>
+                <div style={{ color: '#0ea5e9' }}>➔</div>
+              </button>
+            </div>
+          )}
 
           {/* ═══════════════════════════════════════════
               TAB 1: PLANS & PRICING
@@ -696,12 +770,12 @@ export default function SettingsModal() {
                 border: '1px solid #bae6fd'
               }}>
                 <h3 style={{ margin: '0 0 8px 0', color: '#0c4a6e', fontSize: '18px', fontWeight: '800' }}>
-                  {sw ? 'Tusaidie Kuboresha Copetra AI' : 'Help Us Improve Copetra AI'}
+                  {sw ? 'Andika Maoni au Mapendekezo' : 'Write a Review or Feedback'}
                 </h3>
                 <p style={{ margin: 0, color: '#0369a1', fontSize: '13px', lineHeight: '1.6' }}>
                   {sw 
-                    ? 'Una wazo la kipengele kipya? Umekutana na tatizo? Tunataka kusikia kutoka kwako moja kwa moja! Ujumbe wako utatumwa kwa Admin kwa ajili ya kufanyiwa kazi haraka.'
-                    : 'Have an idea for a new feature? Found a bug? We want to hear from you directly! Your message will be securely sent to Admin for immediate review.'}
+                    ? 'Tafadhali tuambie nini kifanyiwe kazi au kiboreshwe! Ujumbe wako utatumwa kwa Admin kwa ajili ya kufanyiwa kazi haraka.'
+                    : 'Tell us what should be updated or improved! Your message will be securely sent to Admin for immediate review.'}
                 </p>
               </div>
 
