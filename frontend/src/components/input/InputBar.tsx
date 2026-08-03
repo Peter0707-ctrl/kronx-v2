@@ -159,6 +159,7 @@ export default function InputBar({ onSend }: Props) {
           onInput={handleInput}
           onKeyDown={handleKey}
           onFocus={() => window.dispatchEvent(new Event('hide-suggestions'))}
+          onClick={() => window.dispatchEvent(new Event('hide-suggestions'))}
           style={{
             flex: 1,
             border: 'none',
