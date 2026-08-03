@@ -156,7 +156,7 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
               <input
                 type="text"
                 className="auth-input"
-                placeholder="John Mwangi"
+                placeholder="Enter your full name"
                 value={name}
                 onChange={e => setName(e.target.value)}
                 required
@@ -169,7 +169,7 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
             <input
               type="email"
               className="auth-input"
-              placeholder="user@example.com"
+              placeholder="Enter your email address"
               value={email}
               onChange={e => setEmail(e.target.value)}
               required
