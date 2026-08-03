@@ -80,7 +80,7 @@ export const useKronxStore = create<KronxStore>()(
       user: null, // FORCE LOGIN FOR NEW USERS
       authModalOpen: false,
       settingsModalOpen: false,
-      sidebarOpen: true,
+      sidebarOpen: false,
 
       setSettingsModalOpen: (settingsModalOpen: boolean) => set({ settingsModalOpen }),
       toggleSidebar: () => set(s => ({ sidebarOpen: !s.sidebarOpen })),
