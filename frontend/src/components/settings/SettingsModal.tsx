@@ -214,9 +214,9 @@ export default function SettingsModal() {
               className={`settings-tab-btn ${activeTab === tab ? 'active' : ''}`}
               onClick={() => setActiveTab(tab as any)}
             >
-              {tab === 'upgrade' ? (sw ? 'Mipango & Bei' : 'Plans & Pricing') : 
-               tab === 'account' ? (sw ? 'Akaunti Yangu' : 'My Account') : 
-               (sw ? 'Msaada & Maoni' : 'Support & Feedback')}
+              {tab === 'upgrade' ? (sw ? 'Bei' : 'Pricing') : 
+               tab === 'account' ? (sw ? 'Akaunti' : 'Account') : 
+               (sw ? 'Msaada' : 'Support')}
             </button>
           ))}
         </div>
@@ -520,8 +520,8 @@ export default function SettingsModal() {
                     >
                       <WhatsAppIcon />
                       {sw
-                        ? `Wasiliana na Admin — Omba ${activePlan.name}`
-                        : `Contact Admin — Subscribe to ${activePlan.name}`}
+                        ? `Jiunge kupitia WhatsApp`
+                        : `Subscribe via WhatsApp`}
                     </button>
                   )}
 
@@ -680,7 +680,7 @@ export default function SettingsModal() {
                 onMouseEnter={e => (e.currentTarget.style.background = '#fee2e2')}
                 onMouseLeave={e => (e.currentTarget.style.background = '#fef2f2')}
               >
-                {sw ? 'Toka kwenye Akaunti' : 'Sign out of Kronx Account'}
+                {sw ? 'Toka Nje' : 'Sign Out'}
               </button>
             </div>
           )}
