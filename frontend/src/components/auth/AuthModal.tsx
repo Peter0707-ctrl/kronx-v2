@@ -20,20 +20,7 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
   if (!isPage && !authModalOpen) return null
 
   const handleGoogleLogin = () => {
-    const googleUser: UserProfile = {
-      id: 'g-' + Date.now(),
-      name: 'User Account',
-      email: 'user@kronx.ai',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex',
-      role: 'user',
-      plan: 'free',
-      picturesUsedToday: 0,
-      videosUsedToday: 0,
-      chatsUsedToday: 0,
-      provider: 'google',
-      createdAt: new Date().toISOString(),
-    }
-    loginUser(googleUser)
+    alert("Google Login is currently disabled. Please create an account using your email.")
   }
 
   // Zero-Knowledge Encrypted Security Verification (SHA-256 Hashes)
@@ -142,14 +129,16 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
 
       {/* RIGHT SIDE: AUTHENTICATION FORM */}
       <div style={{ flex: 1, padding: '40px 36px', background: '#ffffff', position: 'relative' }}>
-        <button
-          className="auth-close-btn"
-          onClick={() => setAuthModalOpen(false)}
-          title="Back to Home Page"
-          style={{ top: '16px', right: '16px', background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', fontWeight: '700', color: '#0f172a' }}
-        >
-          ✕
-        </button>
+        {!isPage && (
+          <button
+            className="auth-close-btn"
+            onClick={() => setAuthModalOpen(false)}
+            title="Close"
+            style={{ position: 'absolute', top: '16px', right: '16px', background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', fontWeight: '700', color: '#0f172a' }}
+          >
+            ✕
+          </button>
+        )}
 
         <div className="auth-header" style={{ marginBottom: '20px' }}>
           <h2 style={{ fontSize: '22px', fontWeight: '800', margin: '0 0 4px 0', color: '#0f172a' }}>
@@ -180,51 +169,7 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
           </button>
         </div>
 
-        {/* Google OAuth Button */}
-        <button className="google-btn" onClick={handleGoogleLogin}>
-          <svg width={18} height={18} viewBox="0 0 24 24">
-            <path
-              fill="#4285F4"
-              d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
-            />
-            <path
-              fill="#34A853"
-              d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.27v3.15C3.25 21.3 7.31 24 12 24z"
-            />
-            <path
-              fill="#FBBC05"
-              d="M5.28 14.24c-.25-.72-.38-1.49-.38-2.24s.13-1.52.38-2.24V6.61H1.27C.46 8.23 0 10.06 0 12s.46 3.77 1.27 5.39l4.01-3.15z"
-            />
-            <path
-              fill="#EA4335"
-              d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.7 1.27 6.61l4.01 3.15c.95-2.85 3.6-4.96 6.72-4.96z"
-            />
-          </svg>
-          <span>Continue with Google</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={handleGoogleLogin}
-          style={{
-            width: '100%',
-            padding: '10px',
-            marginTop: '8px',
-            borderRadius: '12px',
-            border: '1px solid #cbd5e1',
-            background: '#f8fafc',
-            color: '#0f172a',
-            fontWeight: '700',
-            fontSize: '13.5px',
-            cursor: 'pointer'
-          }}
-        >
-          ⚡ Try Free as Guest (Instant Access)
-        </button>
-
-        <div className="auth-divider">
-          <span>or continue with email</span>
-        </div>
+        {/* Removed Fake Google & Guest Buttons to force real registration */}
 
         {/* Email Auth Form */}
         <form onSubmit={handleSubmit} className="auth-form">
