@@ -69,9 +69,15 @@ async function webSearch(query: string): Promise<string | null> {
 // ── GEMINI API CALL ──
 async function callGemini(message: string, mode: string = 'Friend'): Promise<string | null> {
   const apiKey = process.env.GEMINI_API_KEY
-  if (!apiKey || apiKey === 'YOUR_GEMINI_API_KEY_HERE') return null
+  if (!apiKey) return null
 
-  const models = ['gemini-2.0-flash-lite', 'gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-3.5-flash']
+  // Models with verified active quota (gemini-flash-latest, gemini-3.5-flash-lite, etc.)
+  const models = [
+    'gemini-flash-latest',
+    'gemini-3.5-flash-lite',
+    'gemini-3.1-flash-lite',
+    'gemini-flash-lite-latest'
+  ]
 
   let modeInstruction = "You are Copetra AI, an elite AI Assistant and Academic Companion engineered by PJ Copetranova. Answer clearly, accurately, and thoroughly in markdown."
 
