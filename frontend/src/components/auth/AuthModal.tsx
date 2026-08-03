@@ -60,34 +60,12 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
 
   const content = (
     <div
-      className="auth-modal"
+      className="auth-modal auth-modal-container"
       onClick={e => e.stopPropagation()}
-      style={{
-        display: 'flex',
-        flexDirection: 'row',
-        maxWidth: '920px',
-        width: '100%',
-        padding: 0,
-        overflow: 'hidden',
-        borderRadius: '28px',
-        boxShadow: '0 25px 60px rgba(0,0,0,0.18)',
-        background: '#ffffff'
-      }}
     >
       {/* LEFT SIDE: KRONX AI INTRODUCTORY BRAND PANEL */}
-      <div
-        style={{
-          flex: 1,
-          background: '#0f172a',
-          color: '#ffffff',
-          padding: '40px 32px',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          fontFamily: "Calibri, 'Calibri Light', sans-serif"
-        }}
-      >
-        <div>
+      <div className="auth-brand-panel">
+        <div className="auth-brand-content">
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '28px' }}>
             <div style={{ width: '44px', height: '44px', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.2)' }}>
               <img src="/kronx_logo.jpg" alt="Kronx Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -102,7 +80,7 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
             Copetra AI is an advanced AI study companion created by PJ Copetranova to empower students with step-by-step academic explanations, homework guidance, research thesis writing, and programming.
           </p>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '14px' }}>
+          <div className="auth-brand-features" style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span style={{ background: 'rgba(255,255,255,0.1)', padding: '4px 8px', borderRadius: '8px', fontWeight: '800', color: '#38bdf8' }}>•</span>
               <span>Step-by-step academic explanation & homework help</span>
@@ -118,17 +96,16 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span style={{ background: 'rgba(255,255,255,0.1)', padding: '4px 8px', borderRadius: '8px', fontWeight: '800', color: '#38bdf8' }}>•</span>
               <span>Developer API Keys for Premium Subscribers</span>
-            </div>
+          </div>
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '16px', marginTop: '28px', fontSize: '12px', color: '#64748b', letterSpacing: '0.5px' }}>
+            POWERED BY PJ COPETRANOVA
           </div>
         </div>
-
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '16px', marginTop: '28px', fontSize: '12px', color: '#64748b', letterSpacing: '0.5px' }}>
-          POWERED BY PJ COPETRANOVA
-        </div>
+      </div>
       </div>
 
       {/* RIGHT SIDE: AUTHENTICATION FORM */}
-      <div style={{ flex: 1, padding: '40px 36px', background: '#ffffff', position: 'relative' }}>
+      <div className="auth-form-panel">
         {!isPage && (
           <button
             className="auth-close-btn"
