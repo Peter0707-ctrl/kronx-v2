@@ -376,6 +376,21 @@ export const useKronxStore = create<KronxStore>()(
     }),
     {
       name: 'kronx-store',
+      version: 2,
+      migrate: (persistedState: any, version: number) => {
+        if (version < 2 || !persistedState) {
+          return {
+            conversations: [],
+            activeConversationId: null,
+            mode: 'Friend',
+            language: 'en',
+            activeView: 'chat',
+            user: DEFAULT_USER,
+            systemDisabled: false,
+          }
+        }
+        return persistedState
+      },
       partialize: (s) => ({
         conversations: s.conversations.slice(0, 20),
         mode: s.mode,
