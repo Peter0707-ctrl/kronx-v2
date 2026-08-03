@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 const USERS_FILE = path.join(os.tmpdir(), 'kronx_users.json')
 
-// Default admin
+// Default admin and initial mock users
 const DEFAULT_USERS = [
   {
     id: 'u-admin-master',
@@ -18,6 +18,36 @@ const DEFAULT_USERS = [
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Admin',
     lastActive: 'Active Now',
     conversationCount: 1
+  },
+  {
+    id: 'u-1',
+    name: 'John Mwangi',
+    email: 'john.mwangi@kronx.ai',
+    role: 'admin',
+    plan: 'pro',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=John',
+    lastActive: 'Leo 13:42',
+    conversationCount: 14
+  },
+  {
+    id: 'u-2',
+    name: 'Amina Hassan',
+    email: 'amina.hassan@gmail.com',
+    role: 'user',
+    plan: 'free',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Amina',
+    lastActive: 'Jana 18:20',
+    conversationCount: 6
+  },
+  {
+    id: 'u-3',
+    name: 'Emmanuel Kimaro',
+    email: 'e.kimaro@tech.tz',
+    role: 'user',
+    plan: 'plus',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Emmanuel',
+    lastActive: 'Juzi 09:15',
+    conversationCount: 9
   }
 ]
 
