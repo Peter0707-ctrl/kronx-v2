@@ -265,11 +265,13 @@ export async function POST(req: NextRequest) {
     console.error('Gemini Call Error:', err)
   }
 
-  if (responseText) {
-    return NextResponse.json({ response: responseText })
+  // 3. Domain Academic Matrix Engine
+  const structured = generateStructuredAnswer(message, language)
+  if (structured && !structured.includes('Academic Breakdown:')) {
+    return NextResponse.json({ response: structured })
   }
 
-  // 3. Try Smart Wikipedia Search
+  // 4. Try Smart Wikipedia Search
   try {
     const wikiAnswer = await searchWikipedia(message)
     if (wikiAnswer) {
@@ -279,7 +281,6 @@ export async function POST(req: NextRequest) {
     console.error('Wikipedia Search Call Error:', err)
   }
 
-  // 4. Structured Fallback Answer
-  const fallback = generateStructuredAnswer(message, language)
-  return NextResponse.json({ response: fallback })
+  // 5. Final Fallback Answer
+  return NextResponse.json({ response: structured })
 }
