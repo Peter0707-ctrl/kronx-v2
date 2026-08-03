@@ -6,7 +6,7 @@ import { AdminUserRecord, SystemTelemetry } from '@/types'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || ''
 
-type UserPlan = 'free' | 'plus' | 'pro'
+type UserPlan = 'free' | 'plus' | 'premium' | 'pro'
 
 const REAL_USERS: (AdminUserRecord & { plan: UserPlan })[] = [
   {
@@ -14,7 +14,7 @@ const REAL_USERS: (AdminUserRecord & { plan: UserPlan })[] = [
     name: 'Admin at pjcopetranovax',
     email: 'pj0040280@gmail.com',
     role: 'admin',
-    plan: 'premium',
+    plan: 'plus',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Admin',
     lastActive: 'Active Now',
     conversationCount: 1
@@ -37,9 +37,27 @@ export default function AdminDashboard() {
   }
   const sw = language === 'sw'
 
-  const handleUpgradePlan = (userId: string, plan: UserPlan) => {
-    setUsersList(prev => prev.map(u => u.id === userId ? { ...u, plan } : u))
-    showToast(`User plan updated to ${plan.toUpperCase()}`)
+  const handleUpgradePlan = async (userId: string, newPlan: 'free' | 'plus' | 'premium' | 'pro') => {
+    const updatedUsers = usersList.map(u => u.id === userId ? { ...u, plan: newPlan } : u)
+    setUsersList(updatedUsers)
+    const userToUpdate = updatedUsers.find(u => u.id === userId)
+    if (userToUpdate) {
+      await fetch('/api/users', { method: 'POST', body: JSON.stringify(userToUpdate) })
+    }
+  }
+
+  const handleToggleDeveloper = async (userId: string) => {
+    const updatedUsers = usersList.map(u => {
+      if (u.id === userId) {
+        return { ...u, isDeveloper: !u.isDeveloper }
+      }
+      return u
+    })
+    setUsersList(updatedUsers)
+    const userToUpdate = updatedUsers.find(u => u.id === userId)
+    if (userToUpdate) {
+      await fetch('/api/users', { method: 'POST', body: JSON.stringify(userToUpdate) })
+    }
   }
 
   useEffect(() => {
@@ -242,6 +260,12 @@ export default function AdminDashboard() {
                               ✦ {sw ? 'Ongeza Pro' : 'Grant Pro'}
                             </button>
                           )}
+                          <button
+                            onClick={() => handleToggleDeveloper(u.id)}
+                            style={{ background: u.isDeveloper ? '#0f172a' : '#f8fafc', color: u.isDeveloper ? '#38bdf8' : '#64748b', border: '1px solid #cbd5e1', padding: '5px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}
+                          >
+                            {u.isDeveloper ? '👨‍💻 Dev: ON' : '👨‍💻 Dev: OFF'}
+                          </button>
                           <button
                             onClick={() => {
                               if (confirm(`Remove user ${u.name}?`)) {

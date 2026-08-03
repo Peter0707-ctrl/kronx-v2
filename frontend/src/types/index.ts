@@ -6,7 +6,7 @@ export type ActiveView = 'landing' | 'chat' | 'dashboard' | 'admin'
 
 export type UserRole = 'user' | 'admin'
 
-export type SubscriptionPlan = 'free' | 'plus' | 'premium'
+export type SubscriptionPlan = 'free' | 'plus' | 'premium' | 'pro'
 
 export interface UserProfile {
   id: string
@@ -16,6 +16,8 @@ export interface UserProfile {
   role: UserRole
   plan: SubscriptionPlan
   apiKey?: string
+  isDeveloper?: boolean
+  callbackUrl?: string
   picturesUsedToday: number
   videosUsedToday: number
   chatsUsedToday: number
@@ -98,5 +100,7 @@ export interface AdminUserRecord {
   avatar: string
   lastActive: string
   conversationCount: number
+  isDeveloper?: boolean
+  plan?: SubscriptionPlan
 }
 

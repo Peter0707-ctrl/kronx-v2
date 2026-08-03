@@ -33,6 +33,7 @@ interface KronxStore {
   updateUserAvatar: (avatarUrl: string) => void
   upgradeSubscription: (plan: 'free' | 'plus' | 'premium') => void
   generateApiKey: () => string
+  updateCallbackUrl: (url: string) => void
   canGeneratePicture: () => boolean
   canGenerateVideo: () => boolean
   canSendMessage: () => boolean
@@ -156,6 +157,11 @@ export const useKronxStore = create<KronxStore>()(
           user: s.user ? { ...s.user, apiKey: key } : null
         }))
         return key
+      },
+      updateCallbackUrl: (url: string) => {
+        set(s => ({
+          user: s.user ? { ...s.user, callbackUrl: url } : null
+        }))
       },
       systemDisabled: false,
       toggleSystemKillSwitch: (disabled) => set({ systemDisabled: disabled }),

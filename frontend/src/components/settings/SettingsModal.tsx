@@ -85,10 +85,12 @@ export default function SettingsModal() {
     }
   }
 
-  const [activeTab, setActiveTab] = useState<'menu' | 'upgrade' | 'account' | 'support'>('menu')
+  const [activeTab, setActiveTab] = useState<'menu'|'upgrade'|'account'|'support'|'developer'>('menu')
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
   const [selectedPlan, setSelectedPlan] = useState<'plus' | 'pro'>('plus')
   const [contactSent, setContactSent] = useState(false)
+  const [feedbackType, setFeedbackType] = useState<'bug' | 'feature' | 'other'>('feature')
+  const [feedbackText, setFeedbackText] = useState('')
 
   if (!settingsModalOpen) return null
 
@@ -143,8 +145,6 @@ export default function SettingsModal() {
     setTimeout(() => setContactSent(false), 5000)
   }
 
-  const [feedbackType, setFeedbackType] = useState<'bug' | 'feature' | 'other'>('feature')
-  const [feedbackText, setFeedbackText] = useState('')
   const handleSendFeedback = () => {
     if (!feedbackText.trim()) return
     const text = encodeURIComponent(
@@ -171,32 +171,39 @@ export default function SettingsModal() {
         className="settings-modal-container"
         onClick={e => e.stopPropagation()}
       >
-        {/* Gradient Header */}
         <div className="settings-header">
-          <div style={{ position: 'relative', zIndex: 1 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-              <div style={{
-                background: 'rgba(255,255,255,0.15)',
-                borderRadius: '10px', padding: '6px 12px',
-                fontSize: '11px', fontWeight: '700', color: '#94d2ff',
-                letterSpacing: '1px', textTransform: 'uppercase'
-              }}>
-                COPETRA SUBSCRIPTION
-              </div>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {activeTab !== 'menu' && (
+              <button
+                onClick={() => setActiveTab('menu')}
+                style={{
+                  background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff',
+                  width: '36px', height: '36px', borderRadius: '10px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', fontSize: '18px'
+                }}
+              >
+                ←
+              </button>
+            )}
+            <div>
+              <h2 className="settings-title">
+                {activeTab === 'menu' ? (sw ? 'Mipangilio' : 'Settings') :
+                 activeTab === 'upgrade' ? (sw ? 'Mipango na Bei' : 'Plans & Pricing') :
+                 activeTab === 'account' ? (sw ? 'Akaunti Yangu' : 'My Account') :
+                 activeTab === 'support' ? (sw ? 'Andika Maoni (Review)' : 'Write a Review') :
+                 activeTab === 'developer' ? 'Developer & API' : ''}
+              </h2>
+              <p className="settings-subtitle">
+                {sw ? 'Dhibiti akaunti yako na mapendeleo' : 'Manage your account and preferences'}
+              </p>
             </div>
-            <h2 style={{ fontSize: '22px', fontWeight: '800', color: '#ffffff', margin: '4px 0 0 0' }}>
-              {sw ? 'Chagua Mpango Wako' : 'Choose Your Plan'}
-            </h2>
-            <p style={{ fontSize: '13px', color: '#94a3b8', margin: '4px 0 0 0' }}>
-              {sw
-                ? 'Lipa kupitia simu yako — Admin atakuongezea subscription baada ya malipo'
-                : 'Pay via mobile money — Admin will activate your subscription after payment'}
-            </p>
           </div>
           <button
+            className="settings-close-btn"
             onClick={() => setSettingsModalOpen(false)}
             style={{
-              width: '36px', height: '36px', borderRadius: '50%',
+              width: '40px', height: '40px', borderRadius: '12px',
               border: '1px solid rgba(255,255,255,0.2)',
               background: 'rgba(255,255,255,0.1)',
               color: '#ffffff', cursor: 'pointer',
@@ -204,26 +211,6 @@ export default function SettingsModal() {
               position: 'relative', zIndex: 1
             }}
           >✕</button>
-        </div>
-
-          {activeTab !== 'menu' && (
-            <button
-              onClick={() => setActiveTab('menu')}
-              style={{
-                background: 'rgba(255,255,255,0.15)', border: 'none',
-                color: '#ffffff', padding: '6px 12px', borderRadius: '12px',
-                fontWeight: '700', fontSize: '12px', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', gap: '6px',
-                marginTop: '12px', position: 'relative', zIndex: 1
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="19" y1="12" x2="5" y2="12"></line>
-                <polyline points="12 19 5 12 12 5"></polyline>
-              </svg>
-              {sw ? 'Rudi Kwenye Menyu' : 'Back to Menu'}
-            </button>
-          )}
         </div>
 
         <div className="settings-content">
@@ -294,6 +281,30 @@ export default function SettingsModal() {
                 </div>
                 <div style={{ color: '#0ea5e9' }}>➔</div>
               </button>
+
+              {user?.isDeveloper && (
+                <button
+                  onClick={() => setActiveTab('developer')}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    background: '#f8fafc', padding: '16px 20px', borderRadius: '16px',
+                    border: '1px solid #e2e8f0', cursor: 'pointer', textAlign: 'left',
+                    transition: 'background 0.2s', width: '100%'
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = '#f1f5f9')}
+                  onMouseLeave={e => (e.currentTarget.style.background = '#f8fafc')}
+                >
+                  <div>
+                    <div style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', marginBottom: '4px' }}>
+                      Developer API & Integrations
+                    </div>
+                    <div style={{ fontSize: '13px', color: '#64748b' }}>
+                      {sw ? 'Dhibiti API key na Webhooks' : 'Manage your API keys and Webhooks'}
+                    </div>
+                  </div>
+                  <div style={{ color: '#0ea5e9' }}>➔</div>
+                </button>
+              )}
             </div>
           )}
 
@@ -770,12 +781,12 @@ export default function SettingsModal() {
                 border: '1px solid #bae6fd'
               }}>
                 <h3 style={{ margin: '0 0 8px 0', color: '#0c4a6e', fontSize: '18px', fontWeight: '800' }}>
-                  {sw ? 'Andika Maoni au Mapendekezo' : 'Write a Review or Feedback'}
+                  {sw ? 'Tusaidie Kuboresha Copetra AI' : 'Help Us Improve Copetra AI'}
                 </h3>
                 <p style={{ margin: 0, color: '#0369a1', fontSize: '13px', lineHeight: '1.6' }}>
                   {sw 
-                    ? 'Tafadhali tuambie nini kifanyiwe kazi au kiboreshwe! Ujumbe wako utatumwa kwa Admin kwa ajili ya kufanyiwa kazi haraka.'
-                    : 'Tell us what should be updated or improved! Your message will be securely sent to Admin for immediate review.'}
+                    ? 'Una wazo la kipengele kipya? Umekutana na tatizo? Tunataka kusikia kutoka kwako moja kwa moja! Ujumbe wako utatumwa kwa Admin kwa ajili ya kufanyiwa kazi haraka.'
+                    : 'Have an idea for a new feature? Found a bug? We want to hear from you directly! Your message will be securely sent to Admin for immediate review.'}
                 </p>
               </div>
 
@@ -854,6 +865,103 @@ export default function SettingsModal() {
                 >
                   {sw ? 'Tuma Ujumbe kwa Admin' : 'Send Message to Admin'}
                 </button>
+              </div>
+            </div>
+          )}
+
+          {/* ═══════════════════════════════════════════
+              TAB 4: DEVELOPER & API INTEGRATION
+          ═══════════════════════════════════════════ */}
+          {activeTab === 'developer' && user?.isDeveloper && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div style={{
+                background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+                borderRadius: '20px', padding: '24px',
+                border: '1px solid #bae6fd'
+              }}>
+                <h3 style={{ margin: '0 0 8px 0', color: '#0c4a6e', fontSize: '18px', fontWeight: '800' }}>
+                  {sw ? 'PJKRONX Developer Gateway' : 'PJKRONX Developer Gateway'}
+                </h3>
+                <p style={{ margin: 0, color: '#0369a1', fontSize: '13px', lineHeight: '1.6' }}>
+                  {sw 
+                    ? 'Tumia API zetu kuziunganisha na mifumo yako mingine. Tunatumia Bearer Token authentication na asynchronous webhooks.'
+                    : 'Integrate PJKRONX into your own systems using our Developer API. We use Bearer Token authentication and asynchronous webhooks.'}
+                </p>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#0f172a', marginBottom: '8px' }}>
+                  {sw ? 'Ufunguo wa API (API Key)' : 'Your API Key'}
+                </label>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <input
+                    type="text"
+                    readOnly
+                    value={user?.apiKey || '••••••••••••••••••••••••••••'}
+                    style={{
+                      flex: 1, padding: '14px', borderRadius: '12px',
+                      border: '1px solid #cbd5e1', background: '#f8fafc',
+                      color: '#475569', fontSize: '14px', fontFamily: 'monospace'
+                    }}
+                  />
+                  <button
+                    onClick={async () => {
+                      const { generateApiKey } = useKronxStore.getState()
+                      const key = generateApiKey()
+                      const updatedUser = { ...user, apiKey: key }
+                      await fetch('/api/users', { method: 'POST', body: JSON.stringify(updatedUser) })
+                    }}
+                    style={{
+                      padding: '0 20px', borderRadius: '12px',
+                      background: '#0ea5e9', color: '#fff', border: 'none',
+                      fontWeight: '700', cursor: 'pointer', transition: '0.2s'
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = '#0284c7'}
+                    onMouseLeave={e => e.currentTarget.style.background = '#0ea5e9'}
+                  >
+                    {sw ? 'Tengeneza Mpya' : 'Generate'}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#0f172a', marginBottom: '8px' }}>
+                  {sw ? 'URL ya Kurudisha Majibu (Callback URL)' : 'Callback URL (Webhook)'}
+                </label>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <input
+                    type="url"
+                    placeholder="https://your-system.com/api/webhook"
+                    value={user?.callbackUrl || ''}
+                    onChange={(e) => useKronxStore.getState().updateCallbackUrl(e.target.value)}
+                    style={{
+                      flex: 1, padding: '14px', borderRadius: '12px',
+                      border: '1px solid #cbd5e1', background: '#fff',
+                      color: '#0f172a', fontSize: '14px'
+                    }}
+                  />
+                  <button
+                    onClick={async () => {
+                      const updatedUser = { ...user }
+                      await fetch('/api/users', { method: 'POST', body: JSON.stringify(updatedUser) })
+                      alert(sw ? 'Callback URL imehifadhiwa!' : 'Callback URL saved!')
+                    }}
+                    style={{
+                      padding: '0 20px', borderRadius: '12px',
+                      background: '#10b981', color: '#fff', border: 'none',
+                      fontWeight: '700', cursor: 'pointer', transition: '0.2s'
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = '#059669'}
+                    onMouseLeave={e => e.currentTarget.style.background = '#10b981'}
+                  >
+                    {sw ? 'Hifadhi' : 'Save'}
+                  </button>
+                </div>
+                <p style={{ fontSize: '12px', color: '#64748b', marginTop: '8px' }}>
+                  {sw 
+                    ? 'Tutatumia URL hii kurudisha majibu ya AI yako (POST request).'
+                    : 'We will POST asynchronous AI responses to this URL.'}
+                </p>
               </div>
             </div>
           )}
