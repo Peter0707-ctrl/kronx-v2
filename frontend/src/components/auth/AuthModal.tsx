@@ -55,6 +55,20 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
       provider: 'email',
       createdAt: new Date().toISOString(),
     }
+
+    if (tab === 'register') {
+      // Create user but don't log them in yet
+      fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(user)
+      }).catch(e => console.warn('Could not register user to DB:', e));
+      
+      alert(sw ? "Usajili umekamilika! Tafadhali ingia." : "Registration successful! Please sign in.")
+      setTab('login')
+      return
+    }
+
     loginUser(user)
   }
 
@@ -119,7 +133,7 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
 
         <div className="auth-header" style={{ marginBottom: '20px' }}>
           <h2 style={{ fontSize: '22px', fontWeight: '800', margin: '0 0 4px 0', color: '#0f172a' }}>
-            {tab === 'login' ? 'Welcome Back' : 'Create Account'}
+            {tab === 'login' ? 'Welcome Back' : 'Register Account'}
           </h2>
           <p style={{ fontSize: '13.5px', color: '#64748b', margin: 0 }}>
             {tab === 'login' ? 'Sign in to access your Copetra AI workspace' : 'Register to get started with Copetra AI'}
@@ -127,12 +141,12 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
         </div>
 
         {/* Tab Selector: Login vs Register */}
-        <div className="auth-tabs" style={{ display: 'flex', background: '#f1f5f9', padding: '4px', borderRadius: '12px', marginBottom: '20px' }}>
+        <div className="auth-tabs" style={{ display: 'flex', background: '#f1f5f9', padding: '4px', borderRadius: '12px', marginBottom: '20px', gap: '4px' }}>
           <button
             type="button"
             className={`auth-tab-btn ${tab === 'login' ? 'tab-active' : ''}`}
             onClick={() => setTab('login')}
-            style={{ flex: 1, padding: '8px 12px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '13px', background: tab === 'login' ? '#ffffff' : 'transparent', color: tab === 'login' ? '#0f172a' : '#64748b', boxShadow: tab === 'login' ? '0 2px 6px rgba(0,0,0,0.05)' : 'none' }}
+            style={{ flex: 1, padding: '8px 4px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '12.5px', background: tab === 'login' ? '#ffffff' : 'transparent', color: tab === 'login' ? '#0f172a' : '#64748b', boxShadow: tab === 'login' ? '0 2px 6px rgba(0,0,0,0.05)' : 'none', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
           >
             Sign In
           </button>
@@ -140,9 +154,9 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
             type="button"
             className={`auth-tab-btn ${tab === 'register' ? 'tab-active' : ''}`}
             onClick={() => setTab('register')}
-            style={{ flex: 1, padding: '8px 12px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '13px', background: tab === 'register' ? '#ffffff' : 'transparent', color: tab === 'register' ? '#0f172a' : '#64748b', boxShadow: tab === 'register' ? '0 2px 6px rgba(0,0,0,0.05)' : 'none' }}
+            style={{ flex: 1, padding: '8px 4px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: '700', fontSize: '12.5px', background: tab === 'register' ? '#ffffff' : 'transparent', color: tab === 'register' ? '#0f172a' : '#64748b', boxShadow: tab === 'register' ? '0 2px 6px rgba(0,0,0,0.05)' : 'none', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
           >
-            Create Account
+            Register
           </button>
         </div>
 
@@ -214,7 +228,7 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
           </div>
 
           <button type="submit" className="auth-submit-btn">
-            {tab === 'login' ? 'Sign In' : 'Create Account'}
+            {tab === 'login' ? 'Sign In' : 'Register'}
           </button>
         </form>
 
