@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useKronxStore } from '@/store/useKronxStore'
 
 // Payment provider logos (SVG inline for zero dependency)
@@ -68,7 +68,22 @@ export default function SettingsModal() {
     user,
     logoutUser,
     language,
+    updateUserAvatar,
   } = useKronxStore()
+
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        if (typeof reader.result === 'string') {
+          updateUserAvatar(reader.result)
+        }
+      }
+      reader.readAsDataURL(file)
+    }
+  }
 
   const [activeTab, setActiveTab] = useState<'upgrade' | 'account'>('upgrade')
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
@@ -533,14 +548,44 @@ export default function SettingsModal() {
                 display: 'flex', alignItems: 'center', gap: '18px',
                 boxShadow: '0 8px 24px rgba(15,23,42,0.15)',
               }}>
-                <div style={{
-                  width: '64px', height: '64px', borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #38bdf8, #0ea5e9)',
-                  color: '#0f172a', fontWeight: '900', fontSize: '22px',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  flexShrink: 0, boxShadow: '0 4px 16px rgba(56,189,248,0.3)',
-                }}>
-                  {user?.name ? user.name.substring(0, 2).toUpperCase() : 'PJ'}
+                <div 
+                  onClick={() => fileInputRef.current?.click()}
+                  style={{
+                    width: '64px', height: '64px', borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #38bdf8, #0ea5e9)',
+                    color: '#0f172a', fontWeight: '900', fontSize: '22px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0, boxShadow: '0 4px 16px rgba(56,189,248,0.3)',
+                    cursor: 'pointer', overflow: 'hidden', position: 'relative'
+                  }}
+                  title={sw ? "Badilisha picha ya wasifu" : "Change profile picture"}
+                >
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    style={{ display: 'none' }} 
+                    accept="image/*" 
+                    onChange={handleAvatarChange} 
+                  />
+                  {user?.avatar ? (
+                    <img src={user.avatar} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    user?.name ? user.name.substring(0, 2).toUpperCase() : 'PJ'
+                  )}
+                  
+                  {/* Hover overlay for 'Edit' */}
+                  <div style={{
+                    position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    opacity: 0, transition: 'opacity 0.2s'
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+                  onMouseLeave={e => e.currentTarget.style.opacity = '0'}
+                  >
+                    <span style={{ color: '#fff', fontSize: '10px', fontWeight: 'bold', letterSpacing: '1px' }}>
+                      {sw ? 'BADILI' : 'EDIT'}
+                    </span>
+                  </div>
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>

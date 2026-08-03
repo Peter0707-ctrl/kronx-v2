@@ -177,7 +177,21 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
           </div>
 
           <div className="auth-field">
-            <label>Password</label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+              <label style={{ margin: 0 }}>Password</label>
+              {tab === 'login' && (
+                <a 
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    window.open(`https://wa.me/255673190931?text=${encodeURIComponent('Habari Admin, nimesahau nenosiri (password) la akaunti yangu ya Copetra AI. Naomba msaada wa kureset.')}`, '_blank');
+                  }}
+                  style={{ fontSize: '12.5px', color: '#0ea5e9', textDecoration: 'none', fontWeight: '700' }}
+                >
+                  Forgot Password?
+                </a>
+              )}
+            </div>
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
               <input
                 type={showPassword ? 'text' : 'password'}

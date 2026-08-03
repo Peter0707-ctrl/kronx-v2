@@ -30,6 +30,7 @@ interface KronxStore {
   loginUser: (user: UserProfile) => void
   logoutUser: () => void
   updateUserRole: (role: UserRole) => void
+  updateUserAvatar: (avatarUrl: string) => void
   upgradeSubscription: (plan: 'free' | 'plus' | 'premium') => void
   generateApiKey: () => string
   canGeneratePicture: () => boolean
@@ -138,6 +139,10 @@ export const useKronxStore = create<KronxStore>()(
       updateUserRole: (role) =>
         set(s => ({
           user: s.user ? { ...s.user, role } : null,
+        })),
+      updateUserAvatar: (avatarUrl) =>
+        set(s => ({
+          user: s.user ? { ...s.user, avatar: avatarUrl } : null,
         })),
       upgradeSubscription: (plan) =>
         set(s => {
