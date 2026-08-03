@@ -6,7 +6,7 @@ export type ActiveView = 'landing' | 'chat' | 'dashboard' | 'admin'
 
 export type UserRole = 'user' | 'admin'
 
-export type SubscriptionPlan = 'free' | 'premium'
+export type SubscriptionPlan = 'free' | 'plus' | 'premium'
 
 export interface UserProfile {
   id: string
