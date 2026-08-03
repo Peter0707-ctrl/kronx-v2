@@ -4,13 +4,14 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 const GREETINGS: Record<string, string> = {
-  "hello": `Hello! 👋 Welcome to **Copetra AI**, your AI Assistant engineered by PJ Copetranova. How can I help you today?`,
-  "hi": `Hi there! 👋 I am **Copetra AI**. What can I help you with?`,
+  "hello": `Hello! 👋 Welcome to **Copetra AI**!\n\nI'm your AI Assistant and Academic Companion, engineered by PJ Copetranova and powered by **Llama 3.3 (70B)**. I can help you with:\n\n- 📚 Academic research & analysis\n- 💻 Software development & coding\n- 🧮 Mathematics & science problems\n- ✍️ Essay & thesis writing\n- 🌍 General knowledge questions\n\nWhat would you like to explore today?`,
+  "hi": `Hi there! 👋 I am **Copetra AI**, powered by Llama 3.3 (70B).\n\nWhat can I help you with today?`,
   "hey": `Hey! 👋 Welcome to **Copetra AI**! How can I assist?`,
-  "habari": `Habari! 👋 Karibu **Copetra AI**! Ninaweza kukusaidia nini?`,
-  "mambo": `Poa! 👋 Karibu **Copetra AI**!`,
+  "habari": `Habari! 👋 Karibu **Copetra AI**!\n\nNinaweza kukusaidia katika masomo, programu, na utafiti. Una swali gani leo?`,
+  "mambo": `Poa sana! 👋 Karibu **Copetra AI**! Una swali gani?`,
   "jambo": `Jambo! 👋 Karibu **Copetra AI**!`,
-  "who are you": `I am **Copetra AI**, an elite AI Assistant and Academic Companion engineered by PJ Copetranova, powered by **Llama 3.2** via Groq.`,
+  "who are you": `I am **Copetra AI** 🤖 — an elite AI Assistant engineered by **PJ Copetranova**, powered by **Llama 3.3 (70B)** on Groq's GPU infrastructure.\n\nHow can I help you today?`,
+  "wewe ni nani": `Mimi ni **Copetra AI** 🤖 — msaidizi wa AI aliyebuniwa na **PJ Copetranova**, nikitumia **Llama 3.3 (70B)**.`,
 }
 
 function searchInstant(query: string): string | null {
@@ -23,26 +24,93 @@ function searchInstant(query: string): string | null {
 }
 
 function getModeSystemPrompt(mode: string): string {
+  const base = `You are Copetra AI, an elite AI Assistant and Academic Companion engineered by PJ Copetranova. You are powered by Llama 3.3 (70B).
+
+CRITICAL RULES:
+- ALWAYS give thorough, accurate, well-structured answers
+- NEVER say "I cannot", "As an AI", or give vague responses
+- Use markdown formatting: **bold**, headers (###), bullet points, numbered lists
+- If asked about a topic, provide deep, detailed knowledge
+- If asked in Swahili, respond fully in Swahili
+- If asked in English, respond in English
+- Always end complex answers with a summary or key takeaway`
+
   switch (mode) {
     case 'Academic':
-      return 'You are Copetra AI in ACADEMIC RESEARCH MODE. Provide rigorous academic analysis with structured headings, definitions, and step-by-step explanations. Use markdown formatting.'
+      return `${base}
+
+MODE: ACADEMIC RESEARCH
+- Write at university thesis level with rigorous analysis
+- Structure: Introduction → Core Concepts → Analysis → Examples → Conclusion
+- Include relevant theories, frameworks, and academic perspectives
+- Use proper terminology and comprehensive coverage`
+
     case 'Developer':
-      return 'You are Copetra AI in SENIOR DEVELOPER MODE. Provide production-ready code with best practices and clear explanations.'
+      return `${base}
+
+MODE: SENIOR SOFTWARE DEVELOPER
+- Provide complete, production-ready, working code
+- Always include: code explanation, usage examples, edge cases
+- Follow best practices, clean code, and SOLID principles
+- Include error handling in all code examples`
+
     case 'Tutor':
-      return 'You are Copetra AI in PERSONAL TUTOR MODE. Explain topics clearly with analogies, examples, and practice questions.'
+      return `${base}
+
+MODE: PERSONAL TUTOR
+- Break down complex topics into simple, digestible steps
+- Use real-world analogies and relatable examples
+- Address common misconceptions proactively
+- Use encouraging, supportive language`
+
     case 'Creative':
-      return 'You are Copetra AI in CREATIVE MODE. Provide imaginative, engaging, and eloquent responses.'
+      return `${base}
+
+MODE: CREATIVE ENGINE
+- Be imaginative, innovative, and engaging
+- Use vivid language, metaphors, and storytelling`
+
     default:
-      return 'You are Copetra AI, an elite AI Assistant and Academic Companion engineered by PJ Copetranova. Answer clearly, accurately and thoroughly using markdown formatting with headings and bullet points.'
+      return `${base}
+
+MODE: GENERAL ASSISTANT
+- Answer directly and comprehensively
+- Provide context, examples, and explanations
+- Match depth of answer to complexity of the question`
   }
+}
+
+type HistoryMessage = { role: 'user' | 'ai' | 'assistant'; content: string }
+
+function buildGroqMessages(
+  message: string,
+  mode: string,
+  history: HistoryMessage[] = []
+): { role: string; content: string }[] {
+  const messages: { role: string; content: string }[] = [
+    { role: 'system', content: getModeSystemPrompt(mode) }
+  ]
+  const recentHistory = history.slice(-6)
+  for (const h of recentHistory) {
+    if (h.role === 'user') {
+      messages.push({ role: 'user', content: h.content })
+    } else if ((h.role === 'ai' || h.role === 'assistant') && h.content) {
+      messages.push({ role: 'assistant', content: h.content })
+    }
+  }
+  messages.push({ role: 'user', content: message })
+  return messages
 }
 
 export async function POST(req: NextRequest) {
   let message = '', mode = 'Friend'
+  let history: HistoryMessage[] = []
+
   try {
     const body = await req.json().catch(() => ({}))
     message = body.message || ''
     mode = body.mode || 'Friend'
+    history = body.history || []
   } catch { }
 
   if (!message) message = 'Hello'
@@ -51,7 +119,6 @@ export async function POST(req: NextRequest) {
 
   const stream = new ReadableStream({
     async start(controller) {
-      // Keep-alive immediately
       controller.enqueue(encoder.encode(': pjkronx-stream-open\n\n'))
 
       // 1. Instant greetings
@@ -64,19 +131,25 @@ export async function POST(req: NextRequest) {
         return
       }
 
-      // 2. Groq streaming — Llama 3.2 on GPU
+      // 2. Groq streaming — Llama 3.3 70B primary
       const apiKey = process.env.GROQ_API_KEY
       let streamedAny = false
 
       if (apiKey) {
-        const models = ['llama-3.1-8b-instant', 'llama3-8b-8192', 'gemma2-9b-it', 'llama-3.3-70b-versatile']
-        const systemPrompt = getModeSystemPrompt(mode)
+        const models = [
+          'llama-3.3-70b-versatile',  // Best quality
+          'llama-3.1-8b-instant',      // Fast fallback
+          'gemma2-9b-it',              // Alternative
+        ]
+
+        const groqMessages = buildGroqMessages(message, mode, history)
 
         for (const model of models) {
           if (streamedAny) break
           try {
             const abortCtrl = new AbortController()
-            setTimeout(() => abortCtrl.abort(), 25000)
+            const timeoutMs = model.includes('70b') ? 30000 : 20000
+            setTimeout(() => abortCtrl.abort(), timeoutMs)
 
             const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
               method: 'POST',
@@ -86,12 +159,10 @@ export async function POST(req: NextRequest) {
               },
               body: JSON.stringify({
                 model,
-                messages: [
-                  { role: 'system', content: systemPrompt },
-                  { role: 'user', content: message },
-                ],
-                max_tokens: 1024,
+                messages: groqMessages,
+                max_tokens: 2048,
                 temperature: 0.7,
+                top_p: 0.9,
                 stream: true,
               }),
               signal: abortCtrl.signal,
@@ -163,7 +234,7 @@ export async function POST(req: NextRequest) {
       }
 
       if (!streamedAny) {
-        const msg = `**Copetra AI** — Please add your GROQ_API_KEY in Railway environment variables to enable AI responses.`.replace(/\n/g, '\\n')
+        const msg = `**Copetra AI** is experiencing a temporary issue. Please try again in a moment.`.replace(/\n/g, '\\n')
         controller.enqueue(encoder.encode(`data: ${msg}\n\n`))
       }
 
