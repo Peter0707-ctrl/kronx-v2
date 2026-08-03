@@ -138,11 +138,15 @@ export default function MessageBubble({ message, isStreaming, onRegenerate, onEd
           <>
             {message.content ? (
               <MarkdownRenderer content={message.content} isAi={isAi} />
-            ) : (
+            ) : isStreaming ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 0', color: '#0284c7', fontWeight: '700', fontSize: '14px' }}>
                 <div style={{ width: '16px', height: '16px', borderRadius: '50%', border: '2.5px solid #0284c7', borderTopColor: 'transparent', animation: 'copetraSpin 0.8s linear infinite' }} />
                 <span>Copetra AI is generating your response...</span>
                 <style>{`@keyframes copetraSpin { to { transform: rotate(360deg); } }`}</style>
+              </div>
+            ) : (
+              <div style={{ color: '#94a3b8', fontSize: '13px', fontStyle: 'italic', padding: '4px 0' }}>
+                Response pending. Please resend your question.
               </div>
             )}{isStreaming && isAi && message.content && (
               <span className="cursor-blink" aria-hidden="true">▌</span>
