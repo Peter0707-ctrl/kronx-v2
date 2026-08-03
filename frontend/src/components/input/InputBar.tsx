@@ -106,7 +106,17 @@ export default function InputBar({ onSend }: Props) {
           onChange={(e) => {
             const file = e.target.files?.[0]
             if (file) {
-              setValue(prev => `${prev} [Attached File: ${file.name}] `)
+              const reader = new FileReader()
+              reader.onload = (event) => {
+                const textContent = event.target?.result as string
+                if (textContent) {
+                  const snippet = textContent.slice(0, 3000)
+                  setValue(prev => `${prev}\n\n[Attached File: ${file.name}]\n\`\`\`\n${snippet}\n\`\`\`\n`)
+                } else {
+                  setValue(prev => `${prev} [Attached File: ${file.name}] `)
+                }
+              }
+              reader.readAsText(file)
             }
           }}
         />
@@ -135,7 +145,7 @@ export default function InputBar({ onSend }: Props) {
           ref={taRef}
           value={value}
           rows={1}
-          placeholder={isStreaming ? "Kronx is generating response..." : "Ask anything"}
+          placeholder={isStreaming ? "Copetra AI is generating response..." : "Ask anything"}
           onChange={e => setValue(e.target.value)}
           onInput={handleInput}
           onKeyDown={handleKey}

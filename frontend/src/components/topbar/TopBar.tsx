@@ -9,7 +9,13 @@ export default function TopBar() {
   const [brandMenuOpen, setBrandMenuOpen] = useState(false)
   const [pinned, setPinned] = useState(false)
   const [copiedKey, setCopiedKey] = useState(false)
+  const [topToast, setTopToast] = useState<string | null>(null)
   const brandMenuRef = useRef<HTMLDivElement>(null)
+
+  const showTopToast = (msg: string) => {
+    setTopToast(msg)
+    setTimeout(() => setTopToast(null), 3000)
+  }
 
   const isPremium = user?.plan === 'premium' || user?.role === 'admin'
   const isAdmin = user?.role === 'admin'
@@ -34,7 +40,12 @@ export default function TopBar() {
   }
 
   return (
-    <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', background: 'transparent', position: 'relative' }}>
+    <header className="topbar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', background: 'transparent', position: 'relative' }}>
+      {topToast && (
+        <div style={{ position: 'absolute', top: '50px', left: '50%', transform: 'translateX(-50%)', background: '#0f172a', color: '#38bdf8', padding: '10px 18px', borderRadius: '12px', zIndex: 9999, boxShadow: '0 8px 24px rgba(0,0,0,0.2)', fontWeight: '700', fontSize: '13px', border: '1px solid #38bdf8' }}>
+          ⚡ {topToast}
+        </div>
+      )}
       {/* Left Area: Sidebar Toggle & Admin Console Button */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         <button
@@ -156,7 +167,7 @@ export default function TopBar() {
                       <button
                         onClick={() => {
                           const newKey = generateApiKey()
-                          alert(`API Key Generated Successfully: ${newKey}`)
+                          showTopToast(`API Key Generated Successfully: ${newKey}`)
                         }}
                         style={{ width: '100%', padding: '12px 14px', borderRadius: '14px', background: '#0284c7', color: '#ffffff', border: 'none', fontWeight: '800', fontSize: '13.5px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(2, 132, 199, 0.2)' }}
                       >
@@ -166,7 +177,7 @@ export default function TopBar() {
                   ) : (
                     <div>
                       <p style={{ fontSize: '13px', color: '#475569', margin: '0 0 10px 0', lineHeight: '1.4' }}>
-                        Your active Premium API Key grants full access to Kronx LLM models and FLUX 8K image generation endpoints:
+                        Your active Premium API Key grants full access to Copetra LLM models and FLUX 8K image generation endpoints:
                       </p>
                       <div style={{ background: '#0f172a', borderRadius: '12px', padding: '12px 14px', color: '#38bdf8', fontFamily: 'monospace', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
                         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '230px' }}>
@@ -186,7 +197,7 @@ export default function TopBar() {
                       <button
                         onClick={() => {
                           const newKey = generateApiKey()
-                          alert(`New API Key Generated: ${newKey}`)
+                          showTopToast(`New API Key Generated: ${newKey}`)
                         }}
                         style={{ width: '100%', padding: '10px', borderRadius: '12px', background: '#f1f5f9', border: '1px solid #cbd5e1', color: '#0f172a', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}
                       >
@@ -261,7 +272,7 @@ export default function TopBar() {
             <button
               onClick={() => {
                 setMenuOpen(false)
-                alert('No media files uploaded in current session.')
+                showTopToast('No media files uploaded in current session.')
               }}
               style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '10px 12px', borderRadius: '10px', border: 'none', background: 'transparent', color: '#0f172a', fontSize: '13.5px', fontWeight: '600', cursor: 'pointer', textAlign: 'left' }}
               onMouseOver={e => (e.currentTarget.style.background = '#f1f5f9')}

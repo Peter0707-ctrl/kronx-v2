@@ -29,13 +29,17 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<'users' | 'revenue' | 'telemetry' | 'tuning'>('users')
   const [tempSetting, setTempSetting] = useState(0.4)
   const [maxTokensSetting, setMaxTokensSetting] = useState(1024)
-  const [subscriptionUpdated, setSubscriptionUpdated] = useState<string | null>(null)
+  const [toastMsg, setToastMsg] = useState<string | null>(null)
+
+  const showToast = (msg: string) => {
+    setToastMsg(msg)
+    setTimeout(() => setToastMsg(null), 3500)
+  }
   const sw = language === 'sw'
 
   const handleUpgradePlan = (userId: string, plan: UserPlan) => {
     setUsersList(prev => prev.map(u => u.id === userId ? { ...u, plan } : u))
-    setSubscriptionUpdated(userId)
-    setTimeout(() => setSubscriptionUpdated(null), 3000)
+    showToast(`User plan updated to ${plan.toUpperCase()}`)
   }
 
   useEffect(() => {
@@ -61,7 +65,12 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="admin-container">
+    <div className="admin-container" style={{ position: 'relative' }}>
+      {toastMsg && (
+        <div style={{ position: 'fixed', top: '20px', right: '20px', background: '#0f172a', color: '#38bdf8', padding: '12px 20px', borderRadius: '12px', zIndex: 9999, boxShadow: '0 8px 24px rgba(0,0,0,0.25)', fontWeight: '700', fontSize: '13.5px', border: '1px solid #38bdf8' }}>
+          ⚡ {toastMsg}
+        </div>
+      )}
       {/* Admin Header */}
       <div className="admin-header" style={{ marginBottom: '20px' }}>
         <div>
@@ -151,17 +160,6 @@ export default function AdminDashboard() {
               + Add New User
             </button>
           </div>
-
-          {subscriptionUpdated && (
-            <div style={{
-              background: 'linear-gradient(135deg, #064e3b, #065f46)',
-              color: '#6ee7b7', borderRadius: '12px', padding: '12px 16px',
-              fontSize: '13.5px', fontWeight: '700', marginBottom: '14px',
-              display: 'flex', alignItems: 'center', gap: '8px',
-            }}>
-              ✓ {sw ? 'Subscription imebadilishwa kwa mafanikio!' : 'Subscription updated successfully!'}
-            </div>
-          )}
 
           <div className="table-wrapper">
             <table className="admin-table">
@@ -366,7 +364,7 @@ export default function AdminDashboard() {
                   Google Deepmind Priority Reasoning & Academic Tutor Engine
                 </div>
                 <button
-                  onClick={() => alert('Gemini 3.5 Flash Engine Status: Active & Operational')}
+                  onClick={() => showToast('Gemini 3.5 Flash Engine Status: Active & Operational')}
                   style={{ width: '100%', padding: '8px', borderRadius: '10px', background: '#0f172a', color: '#fff', border: 'none', fontWeight: '700', fontSize: '12.5px', cursor: 'pointer' }}
                 >
                   Inspect Live Connection
@@ -385,7 +383,7 @@ export default function AdminDashboard() {
                   2048x2048 Photorealistic Image Generation Pipeline
                 </div>
                 <button
-                  onClick={() => alert('FLUX 8K Image Engine Status: Active & Operational')}
+                  onClick={() => showToast('FLUX 8K Image Engine Status: Active & Operational')}
                   style={{ width: '100%', padding: '8px', borderRadius: '10px', background: '#0f172a', color: '#fff', border: 'none', fontWeight: '700', fontSize: '12.5px', cursor: 'pointer' }}
                 >
                   Inspect Live Pipeline
@@ -406,7 +404,7 @@ export default function AdminDashboard() {
                 </p>
               </div>
               <button
-                onClick={() => alert('Auto-Fix Engine Triggered: All system API routes and CORS policies verified and repaired!')}
+                onClick={() => showToast('Auto-Fix Engine Triggered: All system API routes and CORS policies verified and repaired!')}
                 style={{ padding: '10px 18px', borderRadius: '12px', background: '#10b981', color: '#ffffff', border: 'none', fontWeight: '800', fontSize: '13px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)' }}
               >
                 ⚡ Run Auto-Fix System Repair
