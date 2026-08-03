@@ -18,10 +18,23 @@ const GREETINGS = [
 
 export default function WelcomeScreen({ onSend }: Props) {
   const [greeting, setGreeting] = useState('Ready when you are.')
+  const [showSuggestions, setShowSuggestions] = useState(true)
 
   useEffect(() => {
     const randomIndex = Math.floor(Math.random() * GREETINGS.length)
     setGreeting(GREETINGS[randomIndex])
+
+    const timer = setTimeout(() => {
+      setShowSuggestions(false)
+    }, 3000)
+
+    const hideHandler = () => setShowSuggestions(false)
+    window.addEventListener('hide-suggestions', hideHandler)
+
+    return () => {
+      clearTimeout(timer)
+      window.removeEventListener('hide-suggestions', hideHandler)
+    }
   }, [])
 
   const suggestions = [
@@ -76,11 +89,19 @@ export default function WelcomeScreen({ onSend }: Props) {
       </h1>
 
       {/* Suggested Actions List */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', maxWidth: '420px', marginTop: '20px' }}>
+      <div style={{ 
+        display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', maxWidth: '420px', marginTop: '20px',
+        opacity: showSuggestions ? 1 : 0,
+        pointerEvents: showSuggestions ? 'auto' : 'none',
+        transition: 'opacity 0.5s ease',
+      }}>
         {suggestions.map((s, idx) => (
           <button
             key={idx}
-            onClick={() => onSend(s.prompt)}
+            onClick={() => {
+              if (!showSuggestions) return
+              onSend(s.prompt)
+            }}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -92,12 +113,12 @@ export default function WelcomeScreen({ onSend }: Props) {
               color: '#475569',
               fontSize: '15px',
               fontWeight: '500',
-              cursor: 'pointer',
+              cursor: showSuggestions ? 'pointer' : 'default',
               textAlign: 'left',
               transition: 'background 0.15s ease'
             }}
-            onMouseOver={e => (e.currentTarget.style.background = '#f1f5f9')}
-            onMouseOut={e => (e.currentTarget.style.background = 'transparent')}
+            onMouseOver={e => showSuggestions && (e.currentTarget.style.background = '#f1f5f9')}
+            onMouseOut={e => showSuggestions && (e.currentTarget.style.background = 'transparent')}
           >
             <span style={{ color: '#64748b', display: 'flex', alignItems: 'center' }}>
               {s.icon}
