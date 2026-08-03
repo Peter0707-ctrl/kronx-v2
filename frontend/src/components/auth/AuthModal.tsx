@@ -44,7 +44,7 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
 
     const user: UserProfile = {
       id: isMasterAdmin ? 'u-admin-master' : 'u-' + Date.now(),
-      name: isMasterAdmin ? 'Peter Joseph Msira' : (name.trim() || email.split('@')[0]),
+      name: isMasterAdmin ? 'Admin at pjcopetranovax' : (name.trim() || email.split('@')[0]),
       email: email.trim(),
       avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name || email)}`,
       role: isMasterAdmin ? 'admin' : 'user',

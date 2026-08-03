@@ -11,11 +11,11 @@ type UserPlan = 'free' | 'plus' | 'pro'
 const REAL_USERS: (AdminUserRecord & { plan: UserPlan })[] = [
   {
     id: 'u-admin-master',
-    name: 'Peter Joseph Msira (Master Admin)',
+    name: 'Admin at pjcopetranovax',
     email: 'pj0040280@gmail.com',
     role: 'admin',
-    plan: 'pro',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Peter',
+    plan: 'premium',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Admin',
     lastActive: 'Active Now',
     conversationCount: 1
   }
