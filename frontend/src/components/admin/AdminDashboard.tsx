@@ -358,8 +358,12 @@ export default function AdminDashboard() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
             <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '16px' }}>
               <div style={{ fontSize: '12px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase' }}>Total Revenue (August 2026)</div>
-              <div style={{ fontSize: '24px', fontWeight: '900', color: '#10b981', marginTop: '4px' }}>150,000 TZS</div>
-              <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>10 Active Plus Subscriptions</div>
+              <div style={{ fontSize: '24px', fontWeight: '900', color: '#10b981', marginTop: '4px' }}>
+                {((usersList.filter(u => u.plan === 'plus').length * 15000) + (usersList.filter(u => u.plan === 'pro' || u.plan === 'premium').length * 30000)).toLocaleString()} TZS
+              </div>
+              <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
+                {usersList.filter(u => u.plan === 'plus' || u.plan === 'pro' || u.plan === 'premium').length} Active Paid Subscriptions ({usersList.filter(u => u.plan === 'plus').length} Plus, {usersList.filter(u => u.plan === 'pro' || u.plan === 'premium').length} Pro)
+              </div>
             </div>
             <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '16px' }}>
               <div style={{ fontSize: '12px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase' }}>Target Monthly Growth</div>
@@ -382,10 +386,10 @@ export default function AdminDashboard() {
               <tbody>
                 <tr>
                   <td>August 2026</td>
-                  <td>Live Payments (Mix by Yas)</td>
+                  <td>{usersList.filter(u => u.plan === 'plus' || u.plan === 'pro' || u.plan === 'premium').length} Live Payments (Mix by Yas)</td>
                   <td>Lipa Namba 45342017</td>
-                  <td><strong>0 TZS (Live)</strong></td>
-                  <td><span style={{ background: '#10b981', color: '#fff', padding: '3px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: '800' }}>Active Live Monitoring</span></td>
+                  <td><strong>{((usersList.filter(u => u.plan === 'plus').length * 15000) + (usersList.filter(u => u.plan === 'pro' || u.plan === 'premium').length * 30000)).toLocaleString()} TZS</strong></td>
+                  <td><span style={{ background: '#10b981', color: '#fff', padding: '3px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: '800' }}>Active Live Audit</span></td>
                 </tr>
               </tbody>
             </table>
