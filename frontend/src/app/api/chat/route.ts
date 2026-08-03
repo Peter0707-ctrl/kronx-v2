@@ -158,7 +158,44 @@ Organic material (organic matter) consists of carbon-based compounds derived fro
 *Copetra AI — Academic Companion & Intelligence Engine*`
   }
 
-  // 2. Mathematics & Problem Solving
+  // 2. Computer Science, Masters & Tech Careers
+  if (lower.includes('computer') || lower.includes('science') || lower.includes('master') || lower.includes('degree') || lower.includes('software') || lower.includes('programming') || lower.includes('tech') || lower.includes('ai') || lower.includes('code')) {
+    return `### 🎓 Real-World Importance & Value of a Master's in Computer Science
+
+**1. Strategic Overview:**
+A Master's degree in Computer Science (MSCS) bridges foundational software engineering with advanced research, high-level system architecture, and specialized emerging technologies. In today's tech-driven global economy, it transforms general programmers into specialized technical leaders.
+
+---
+
+### 2. Core Real-World Advantages
+
+1. **High-Value Specialization (AI, ML & Security):**
+   - General bachelor's programs cover broad fundamentals, whereas a Master's provides deep mastery in **Artificial Intelligence, Machine Learning algorithms, Distributed Cloud Computing, Cybersecurity, and Quantum Information Systems**.
+
+2. **Advanced System Architecture vs Basic Coding:**
+   - Instead of writing standard CRUD applications, MSCS graduates design **fault-tolerant microservices, high-throughput database engines, and real-time distributed systems** handling millions of concurrent operations per second.
+
+3. **Career Elevation & Compensation Multiplier:**
+   - **Leadership Positions:** Unlocks elite senior roles such as *Staff Software Engineer, Principal Architect, AI Research Scientist, Machine Learning Director, and Chief Technology Officer (CTO)*.
+   - **Salary Premium:** Industry data shows MSCS graduates command 20% to 35% higher starting salaries ($115,000 – $185,000+ base) compared to bachelor's degree holders.
+
+4. **Research & Intellectual Property Development:**
+   - Trains students to analyze peer-reviewed IEEE/ACM papers, design novel algorithms, contribute to open-source infrastructure, and draft patentable software inventions.
+
+5. **Global Mobility & Competitive Edge:**
+   - Highly valued by top multinational tech giants (Google, Microsoft, Meta, Apple) and serves as a key criterion for high-skilled technical visas and global tech leadership programs.
+
+---
+
+### 3. Conclusion & Strategic Recommendation
+- **Pursue an MSCS if:** You aim to specialize in AI/ML, lead complex enterprise engineering systems, publish cutting-edge research, or transition into high-paying executive technical roles.
+
+---
+
+*Copetra AI — Academic Companion & Intelligence Engine*`
+  }
+
+  // 3. Mathematics & Problem Solving
   if (lower.includes('math') || lower.includes('solve') || lower.includes('calculus') || lower.includes('equation') || lower.includes('problem')) {
     return `### 📐 Copetra AI Mathematical Problem Solving Framework
 
@@ -183,7 +220,7 @@ Organic material (organic matter) consists of carbon-based compounds derived fro
 *Copetra AI — Academic Companion & Intelligence Engine*`
   }
 
-  // 3. Default Academic Overview
+  // 4. Default Academic Overview
   if (language === 'sw') {
     return `**Uchambuzi wa Kitaaluma wa Copetra AI: ${q}**\n\nAsante kwa swali lako. Hapa kuna uchambuzi wa kina:\n\n### 1. Dhana Kuu\n- Swali lako kuhusu **"${q}"** linahusu mada ya msingi katika masomo na utafiti.\n- **Muhtasari:** Kuelewa mada hii kunahitaji uchambuzi wa misingi ya kisayansi na utekelezaji wake.\n\n### 2. Maelezo ya Kina\n1. **Msingi wa Kisayansi:** Kila kipengele kimejengwa juu ya misingi iliyothibitishwa.\n2. **Utekelezaji:** Katika masomo na mitihani, kuelewa misingi hii kunasaidia kutatua matatizo kwa ufasaha.\n\n*Copetra AI — Academic Intelligence Engine*`
   }
