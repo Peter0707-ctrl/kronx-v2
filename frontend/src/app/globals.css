@@ -321,8 +321,23 @@ h1, h2, h3, h4, h5, h6, p, span, button, input, textarea {
   display: none !important;
 }
 
+.sidebar-overlay {
+  display: none;
+}
+
 @media (max-width: 768px) {
   .mobile-sidebar-close {
     display: flex !important;
+  }
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100dvh;
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 999;
   }
 }

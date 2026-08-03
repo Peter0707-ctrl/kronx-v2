@@ -31,7 +31,9 @@ export default function Sidebar() {
   )
 
   return (
-    <aside style={{ width: '240px', background: '#f8fafc', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', flexShrink: 0, zIndex: 10, height: '100vh', fontFamily: "Calibri, 'Calibri Light', sans-serif" }}>
+    <>
+      <div className="sidebar-overlay" onClick={toggleSidebar}></div>
+      <aside className="sidebar" style={{ width: '280px', background: '#f8fafc', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', flexShrink: 0, zIndex: 1000, fontFamily: "Calibri, 'Calibri Light', sans-serif" }}>
       {/* Top New Chat Action & Mobile Close */}
       <div style={{ padding: '16px 16px 8px 16px', display: 'flex', gap: '8px', alignItems: 'center' }}>
         <button
@@ -146,5 +148,6 @@ export default function Sidebar() {
         </button>
       </div>
     </aside>
+    </>
   )
 }
