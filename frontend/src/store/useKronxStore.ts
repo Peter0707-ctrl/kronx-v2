@@ -226,23 +226,23 @@ export const useKronxStore = create<KronxStore>()(
 
       updateLastAiMessage: (chunk) => {
         set(s => {
-          let currentId = s.activeConversationId
           let convs = [...s.conversations]
-          let targetConv = convs.find(c => c.id === currentId)
-
-          if (!targetConv && convs.length > 0) {
-            targetConv = convs[0]
-            currentId = targetConv.id
-          }
-
-          if (!targetConv) return s
+          let currentId = s.activeConversationId || (convs.length > 0 ? convs[0].id : null)
+          if (!currentId) return s
 
           const updatedConvs = convs.map(c => {
             if (c.id !== currentId) return c
             const msgs = [...c.messages]
-            const last = msgs[msgs.length - 1]
-            if (last && last.role === 'ai') {
-              msgs[msgs.length - 1] = { ...last, content: last.content + chunk }
+            let lastAiIdx = -1
+            for (let i = msgs.length - 1; i >= 0; i--) {
+              if (msgs[i].role === 'ai') {
+                lastAiIdx = i
+                break
+              }
+            }
+
+            if (lastAiIdx !== -1) {
+              msgs[lastAiIdx] = { ...msgs[lastAiIdx], content: msgs[lastAiIdx].content + chunk }
             } else {
               msgs.push({
                 id: uuid(),
@@ -261,22 +261,23 @@ export const useKronxStore = create<KronxStore>()(
 
       replaceLastAiMessage: (content) =>
         set(s => {
-          let currentId = s.activeConversationId
           let convs = [...s.conversations]
-          let targetConv = convs.find(c => c.id === currentId)
-
-          if (!targetConv && convs.length > 0) {
-            targetConv = convs[0]
-            currentId = targetConv.id
-          }
-
-          if (!targetConv) return s
+          let currentId = s.activeConversationId || (convs.length > 0 ? convs[0].id : null)
+          if (!currentId) return s
 
           const updatedConvs = convs.map(c => {
             if (c.id !== currentId) return c
             const msgs = [...c.messages]
-            if (msgs.length > 0 && msgs[msgs.length - 1].role === 'ai') {
-              msgs[msgs.length - 1] = { ...msgs[msgs.length - 1], content }
+            let lastAiIdx = -1
+            for (let i = msgs.length - 1; i >= 0; i--) {
+              if (msgs[i].role === 'ai') {
+                lastAiIdx = i
+                break
+              }
+            }
+
+            if (lastAiIdx !== -1) {
+              msgs[lastAiIdx] = { ...msgs[lastAiIdx], content }
             } else {
               msgs.push({
                 id: uuid(),
