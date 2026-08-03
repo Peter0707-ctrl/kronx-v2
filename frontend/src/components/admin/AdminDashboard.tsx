@@ -117,6 +117,57 @@ export default function AdminDashboard() {
         </button>
       </div>
 
+      {/* Metric Cards Banner - Real-Time User Counter */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+        <div style={{ background: '#ffffff', borderRadius: '16px', padding: '18px 20px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
+          <div style={{ fontSize: '12px', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            {sw ? 'Jumla ya Watumiaji' : 'Total Registered Users'}
+          </div>
+          <div style={{ fontSize: '28px', fontWeight: '900', color: '#0f172a', marginTop: '6px' }}>
+            {usersList.length}
+          </div>
+          <div style={{ fontSize: '11.5px', color: '#10b981', fontWeight: '700', marginTop: '4px' }}>
+            ✓ Live PostgreSQL Database
+          </div>
+        </div>
+
+        <div style={{ background: '#ffffff', borderRadius: '16px', padding: '18px 20px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
+          <div style={{ fontSize: '12px', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            {sw ? 'Watumiaji wa Boresho' : 'Paid Subscribers (PLUS/PRO)'}
+          </div>
+          <div style={{ fontSize: '28px', fontWeight: '900', color: '#0284c7', marginTop: '6px' }}>
+            {usersList.filter(u => u.plan === 'plus' || u.plan === 'pro' || u.plan === 'premium').length}
+          </div>
+          <div style={{ fontSize: '11.5px', color: '#64748b', fontWeight: '600', marginTop: '4px' }}>
+            Active Subscriptions
+          </div>
+        </div>
+
+        <div style={{ background: '#ffffff', borderRadius: '16px', padding: '18px 20px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
+          <div style={{ fontSize: '12px', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            {sw ? 'Maafisa Admin' : 'Admin Accounts'}
+          </div>
+          <div style={{ fontSize: '28px', fontWeight: '900', color: '#8b5cf6', marginTop: '6px' }}>
+            {usersList.filter(u => u.role === 'admin').length}
+          </div>
+          <div style={{ fontSize: '11.5px', color: '#64748b', fontWeight: '600', marginTop: '4px' }}>
+            System Administrators
+          </div>
+        </div>
+
+        <div style={{ background: '#ffffff', borderRadius: '16px', padding: '18px 20px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
+          <div style={{ fontSize: '12px', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            {sw ? 'Developer API Access' : 'Developer Key Holders'}
+          </div>
+          <div style={{ fontSize: '28px', fontWeight: '900', color: '#f59e0b', marginTop: '6px' }}>
+            {usersList.filter(u => u.isDeveloper).length}
+          </div>
+          <div style={{ fontSize: '11.5px', color: '#64748b', fontWeight: '600', marginTop: '4px' }}>
+            API Gateway Authorized
+          </div>
+        </div>
+      </div>
+
       {/* Admin Tab Navigation Buttons */}
       <div style={{ display: 'flex', gap: '10px', marginBottom: '24px', flexWrap: 'wrap' }}>
         <button
