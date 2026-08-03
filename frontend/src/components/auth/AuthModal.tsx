@@ -69,6 +69,34 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
       return
     }
 
+    if (tab === 'login') {
+      try {
+        const res = await fetch('/api/users')
+        if (res.ok) {
+          const allUsers = await res.json()
+          const existingUser = allUsers.find((u: any) => u.email.toLowerCase() === email.trim().toLowerCase())
+          
+          if (!existingUser && !isMasterAdmin) {
+            alert(sw ? "Akaunti haipatikani. Tafadhali jisajili." : "Account not found in the system. Please register first.")
+            setTab('register')
+            return
+          }
+          
+          if (existingUser) {
+            // Preserve their existing DB role and plan to prevent demotion!
+            user.role = existingUser.role || existingUser.isDeveloper ? 'admin' : user.role
+            if (existingUser.role) user.role = existingUser.role
+            if (existingUser.plan) user.plan = existingUser.plan
+            if (existingUser.id) user.id = existingUser.id
+            if (existingUser.name) user.name = existingUser.name
+            if (existingUser.avatar) user.avatar = existingUser.avatar
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch users during login:", err)
+      }
+    }
+
     loginUser(user)
   }
 
