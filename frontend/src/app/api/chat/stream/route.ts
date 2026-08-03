@@ -37,68 +37,66 @@ CRITICAL RULES:
 
   switch (mode) {
     case 'Academic':
-      return `${base}
-
-MODE: ACADEMIC RESEARCH
-- Write at university thesis level with rigorous analysis
-- Structure: Introduction → Core Concepts → Analysis → Examples → Conclusion
-- Include relevant theories, frameworks, and academic perspectives
-- Use proper terminology and comprehensive coverage`
-
+      return `${base}\n\nMODE: ACADEMIC RESEARCH\n- Write at university thesis level with rigorous analysis\n- Structure: Introduction → Core Concepts → Analysis → Examples → Conclusion\n- Include relevant theories, frameworks, and academic perspectives\n- Use proper terminology and comprehensive coverage`
     case 'Developer':
-      return `${base}
-
-MODE: SENIOR SOFTWARE DEVELOPER
-- Provide complete, production-ready, working code
-- Always include: code explanation, usage examples, edge cases
-- Follow best practices, clean code, and SOLID principles
-- Include error handling in all code examples`
-
+      return `${base}\n\nMODE: SENIOR SOFTWARE DEVELOPER\n- Provide complete, production-ready, working code\n- Always include: code explanation, usage examples, edge cases\n- Follow best practices, clean code, and SOLID principles\n- Include error handling in all code examples`
     case 'Tutor':
-      return `${base}
-
-MODE: PERSONAL TUTOR
-- Break down complex topics into simple, digestible steps
-- Use real-world analogies and relatable examples
-- Address common misconceptions proactively
-- Use encouraging, supportive language`
-
+      return `${base}\n\nMODE: PERSONAL TUTOR\n- Break down complex topics into simple, digestible steps\n- Use real-world analogies and relatable examples\n- Address common misconceptions proactively\n- Use encouraging, supportive language`
     case 'Creative':
-      return `${base}
-
-MODE: CREATIVE ENGINE
-- Be imaginative, innovative, and engaging
-- Use vivid language, metaphors, and storytelling`
-
+      return `${base}\n\nMODE: CREATIVE ENGINE\n- Be imaginative, innovative, and engaging\n- Use vivid language, metaphors, and storytelling`
     default:
-      return `${base}
-
-MODE: GENERAL ASSISTANT
-- Answer directly and comprehensively
-- Provide context, examples, and explanations
-- Match depth of answer to complexity of the question`
+      return `${base}\n\nMODE: GENERAL ASSISTANT\n- Answer directly and comprehensively\n- Provide context, examples, and explanations\n- Match depth of answer to complexity of the question`
   }
 }
 
 type HistoryMessage = { role: 'user' | 'ai' | 'assistant'; content: string }
 
+function parseMessageContent(text: string): any {
+  const imageRegex = /\[IMAGE: (data:image\/[a-zA-Z]+;base64,[^\]]+)\]/g
+  const images: string[] = []
+  let cleanText = text
+
+  let match
+  while ((match = imageRegex.exec(text)) !== null) {
+    images.push(match[1])
+    cleanText = cleanText.replace(match[0], '').trim()
+  }
+
+  if (images.length === 0) {
+    return text
+  }
+
+  const contentArray: any[] = []
+  if (cleanText) {
+    contentArray.push({ type: 'text', text: cleanText })
+  } else {
+    contentArray.push({ type: 'text', text: 'Please analyze this image.' })
+  }
+
+  for (const img of images) {
+    contentArray.push({ type: 'image_url', image_url: { url: img } })
+  }
+
+  return contentArray
+}
+
 function buildGroqMessages(
   message: string,
   mode: string,
   history: HistoryMessage[] = []
-): { role: string; content: string }[] {
-  const messages: { role: string; content: string }[] = [
+): { role: string; content: any }[] {
+  const messages: { role: string; content: any }[] = [
     { role: 'system', content: getModeSystemPrompt(mode) }
   ]
   const recentHistory = history.slice(-6)
   for (const h of recentHistory) {
     if (h.role === 'user') {
-      messages.push({ role: 'user', content: h.content })
+      messages.push({ role: 'user', content: parseMessageContent(h.content) })
     } else if ((h.role === 'ai' || h.role === 'assistant') && h.content) {
       messages.push({ role: 'assistant', content: h.content })
     }
   }
-  messages.push({ role: 'user', content: message })
+  messages.push({ role: 'user', content: parseMessageContent(message) })
   return messages
 }
 
@@ -121,7 +119,6 @@ export async function POST(req: NextRequest) {
     async start(controller) {
       controller.enqueue(encoder.encode(': pjkronx-stream-open\n\n'))
 
-      // 1. Instant greetings
       const instant = searchInstant(message)
       if (instant) {
         const clean = instant.replace(/\r/g, '').replace(/\n/g, '\\n')
@@ -131,24 +128,24 @@ export async function POST(req: NextRequest) {
         return
       }
 
-      // 2. Groq streaming — Llama 3.3 70B primary
       const apiKey = process.env.GROQ_API_KEY
       let streamedAny = false
 
       if (apiKey) {
-        const models = [
-          'llama-3.3-70b-versatile',  // Best quality
-          'llama-3.1-8b-instant',      // Fast fallback
-          'gemma2-9b-it',              // Alternative
-        ]
-
         const groqMessages = buildGroqMessages(message, mode, history)
+        
+        // If any message has an array content (which means it contains an image), force the Vision model
+        const hasVision = groqMessages.some(m => Array.isArray(m.content))
+        
+        const models = hasVision 
+          ? ['llama-3.2-90b-vision-preview', 'llama-3.2-11b-vision-preview']
+          : ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'gemma2-9b-it']
 
         for (const model of models) {
           if (streamedAny) break
           try {
             const abortCtrl = new AbortController()
-            const timeoutMs = model.includes('70b') ? 30000 : 20000
+            const timeoutMs = model.includes('70b') || model.includes('90b') ? 30000 : 20000
             setTimeout(() => abortCtrl.abort(), timeoutMs)
 
             const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -204,7 +201,6 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // 3. Wikipedia fallback
       if (!streamedAny) {
         try {
           const searchRes = await fetch(

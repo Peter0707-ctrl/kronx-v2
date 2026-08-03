@@ -108,15 +108,24 @@ export default function InputBar({ onSend }: Props) {
             if (file) {
               const reader = new FileReader()
               reader.onload = (event) => {
-                const textContent = event.target?.result as string
-                if (textContent) {
-                  const snippet = textContent.slice(0, 3000)
+                const result = event.target?.result as string
+                if (file.type.startsWith('image/')) {
+                  // Attach base64 image data URL so the backend can parse it for Vision model
+                  setValue(prev => `${prev}\n\n[IMAGE: ${result}]\n`)
+                } else if (file.type === 'text/plain' || file.name.endsWith('.txt') || file.name.endsWith('.md')) {
+                  const snippet = result.slice(0, 3000)
                   setValue(prev => `${prev}\n\n[Attached File: ${file.name}]\n\`\`\`\n${snippet}\n\`\`\`\n`)
                 } else {
-                  setValue(prev => `${prev} [Attached File: ${file.name}] `)
+                  alert("PDF and Word document parsing requires backend extraction. Please upload Text (.txt) or Images for direct AI analysis right now.")
                 }
               }
-              reader.readAsText(file)
+              if (file.type.startsWith('image/')) {
+                reader.readAsDataURL(file)
+              } else if (file.type === 'text/plain' || file.name.endsWith('.txt') || file.name.endsWith('.md')) {
+                reader.readAsText(file)
+              } else {
+                alert("For the best analysis, please upload Images (.png/.jpg) or Text (.txt) files.")
+              }
             }
           }}
         />
@@ -132,7 +141,7 @@ export default function InputBar({ onSend }: Props) {
             alignItems: 'center',
             justifyContent: 'center'
           }}
-          title="Upload document or file (PDF, Word, Excel, Images)"
+          title="Upload Image or Text File"
         >
           <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
             <line x1="12" y1="5" x2="12" y2="19" />

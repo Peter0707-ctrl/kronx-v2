@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { Message } from '@/types'
-import { useKronxStore } from '@/store/useKronxStore'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 interface Props {
   message: Message
@@ -66,6 +67,9 @@ export default function MessageBubble({ message, isStreaming, onRegenerate, onEd
       onEditAndResend(message.id, editText.trim())
     }
   }
+
+  // Check if content has an image preview string to remove it from UI display
+  const displayContent = message.content.replace(/\[IMAGE: data:image\/[a-zA-Z]+;base64,.*?\]/g, '[Attached Image]')
 
   return (
     <div className={`msg-row ${isAi ? 'msg-ai' : 'msg-user'}`}>
@@ -137,7 +141,49 @@ export default function MessageBubble({ message, isStreaming, onRegenerate, onEd
         ) : (
           <>
             {message.content ? (
-              <MarkdownRenderer content={message.content} isAi={isAi} />
+              <div className="markdown-body" style={{ color: '#000000', fontSize: '14.5px', lineHeight: '1.75' }}>
+                <ReactMarkdown 
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    h1: ({node, ...props}) => <h1 style={{fontSize: '18px', fontWeight: '800', margin: '16px 0 8px'}} {...props} />,
+                    h2: ({node, ...props}) => <h2 style={{fontSize: '16px', fontWeight: '700', margin: '16px 0 8px', borderBottom: '1px solid #cbd5e1', paddingBottom: '4px'}} {...props} />,
+                    h3: ({node, ...props}) => <h3 style={{fontSize: '14.5px', fontWeight: '700', margin: '12px 0 6px'}} {...props} />,
+                    p: ({node, ...props}) => <p style={{marginBottom: '6px'}} {...props} />,
+                    ul: ({node, ...props}) => <ul style={{paddingLeft: '20px', margin: '6px 0 10px', listStyleType: 'disc'}} {...props} />,
+                    ol: ({node, ...props}) => <ol style={{paddingLeft: '22px', margin: '6px 0 10px'}} {...props} />,
+                    li: ({node, ...props}) => <li style={{marginBottom: '5px'}} {...props} />,
+                    blockquote: ({node, ...props}) => <blockquote style={{borderLeft: '3px solid #0284c7', paddingLeft: '12px', margin: '8px 0', fontStyle: 'italic', fontSize: '14px'}} {...props} />,
+                    code: ({node, inline, className, children, ...props}: any) => {
+                      const match = /language-(\w+)/.exec(className || '')
+                      return !inline ? (
+                        <div style={{ margin: '14px 0', border: '1px solid #1e293b', borderRadius: '12px', overflow: 'hidden' }}>
+                          <div style={{ background: '#0f172a', padding: '8px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #1e293b' }}>
+                            <span style={{ fontSize: '11px', color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '700', fontFamily: 'monospace' }}>{match ? match[1] : 'code'}</span>
+                            <button onClick={() => navigator.clipboard.writeText(String(children))} style={{ background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)', color: '#ffffff', fontSize: '11px', fontWeight: '600', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer' }}>Copy code</button>
+                          </div>
+                          <pre style={{ background: '#090d16', padding: '16px', overflowX: 'auto', margin: '0', fontSize: '13px', fontFamily: 'Consolas, Monaco, monospace', color: '#f8fafc' }}>
+                            <code style={{ color: '#38bdf8' }} {...props}>{children}</code>
+                          </pre>
+                        </div>
+                      ) : (
+                        <code style={{ background: 'rgba(124,110,247,0.12)', color: '#7c6ef7', padding: '2px 7px', borderRadius: '5px', fontFamily: 'monospace', fontSize: '12px' }} {...props}>
+                          {children}
+                        </code>
+                      )
+                    },
+                    img: ({node, src, alt, ...props}) => (
+                      <span style={{ display: 'inline-block', margin: '14px 0', position: 'relative', maxWidth: '512px', width: '100%' }}>
+                        <img src={src} alt={alt} style={{ width: '100%', maxWidth: '512px', height: 'auto', borderRadius: '16px', border: '1px solid #bae6fd', boxShadow: '0 8px 24px rgba(2, 132, 199, 0.12)', display: 'block' }} />
+                        <a href={src} target="_blank" rel="noopener noreferrer" style={{ position: 'absolute', bottom: '12px', right: '12px', background: 'rgba(15, 23, 42, 0.85)', color: '#ffffff', padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px', backdropFilter: 'blur(8px)', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)' }}>
+                          <span>Download Image</span>
+                        </a>
+                      </span>
+                    )
+                  }}
+                >
+                  {displayContent}
+                </ReactMarkdown>
+              </div>
             ) : isStreaming ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 0', color: '#0284c7', fontWeight: '700', fontSize: '14px' }}>
                 <div style={{ width: '16px', height: '16px', borderRadius: '50%', border: '2.5px solid #0284c7', borderTopColor: 'transparent', animation: 'copetraSpin 0.8s linear infinite' }} />
@@ -157,7 +203,6 @@ export default function MessageBubble({ message, isStreaming, onRegenerate, onEd
         {/* 4 Action Buttons Bar on AI responses */}
         {isAi && message.content && !isStreaming && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '12px', position: 'relative' }}>
-            {/* Button 1: Copy */}
             <button
               onClick={handleCopy}
               title={copied ? 'Copied!' : 'Copy response'}
@@ -175,7 +220,6 @@ export default function MessageBubble({ message, isStreaming, onRegenerate, onEd
               )}
             </button>
 
-            {/* Button 2: Good Response (Thumbs up) */}
             <button
               onClick={handleGoodResponse}
               title="Good response"
@@ -186,7 +230,6 @@ export default function MessageBubble({ message, isStreaming, onRegenerate, onEd
               </svg>
             </button>
 
-            {/* Button 3: Bad Response (Thumbs down -> triggers alternative response) */}
             <button
               onClick={handleBadResponse}
               title="Bad response (Generate alternative)"
@@ -197,22 +240,6 @@ export default function MessageBubble({ message, isStreaming, onRegenerate, onEd
               </svg>
             </button>
 
-            {/* Button 4: Share / Export */}
-            <button
-              title="Share response"
-              onClick={() => handleCopy()}
-              style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
-            >
-              <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                <circle cx="18" cy="5" r="3" />
-                <circle cx="6" cy="12" r="3" />
-                <circle cx="18" cy="19" r="3" />
-                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-              </svg>
-            </button>
-
-            {/* Button 5: Regenerate / Retry */}
             <button
               onClick={onRegenerate}
               title="Regenerate response"
@@ -224,7 +251,6 @@ export default function MessageBubble({ message, isStreaming, onRegenerate, onEd
               </svg>
             </button>
 
-            {/* Button 6: Three dots (...) for Read aloud */}
             <button
               onClick={() => setMoreMenuOpen(!moreMenuOpen)}
               title="More actions"
@@ -237,7 +263,6 @@ export default function MessageBubble({ message, isStreaming, onRegenerate, onEd
               </svg>
             </button>
 
-            {/* Read aloud popup modal matching screenshot */}
             {moreMenuOpen && (
               <div
                 style={{
@@ -277,374 +302,5 @@ export default function MessageBubble({ message, isStreaming, onRegenerate, onEd
         )}
       </div>
     </div>
-  )
-}
-
-
-function cleanContent(content: string): string {
-  return content
-    .replace(/^#+\s*$/gm, '')
-    .replace(/^code\s*$/gm, '')
-    .replace(/^`{3}(\w*)\n/gm, '\n```$1\n')
-    .replace(/```(\w+)/g, '\n```$1\n')
-    .replace(/(?<!\w)```(?!\w)/g, '\n```\n')
-    .replace(/##\s/g, '\n## ')
-    .replace(/###\s/g, '\n### ')
-    .replace(/\n{3,}/g, '\n\n')
-    .replace(/\[?(Error|Notice|System|Gemini|API key|Quota|Model|gemini-[\w.-]+)\]?/gi, '')
-    .replace(/\(Note:[^)]*\)/gi, '')
-    .trim()
-}
-
-function MarkdownRenderer({ content, isAi }: { content: string; isAi: boolean }) {
-  const cleaned = cleanContent(content)
-  const lines = cleaned.split('\n')
-  const elements: React.ReactNode[] = []
-  let i = 0
-
-  while (i < lines.length) {
-    const line = lines[i]
-
-    // ── Code block ──
-    if (line.trimStart().startsWith('```')) {
-      const lang = line.trim().slice(3).trim() || 'code'
-      const codeLines: string[] = []
-      i++
-      while (i < lines.length && !lines[i].trimStart().startsWith('```')) {
-        codeLines.push(lines[i])
-        i++
-      }
-      const rawCode = codeLines.join('\n')
-      elements.push(
-        <div key={`code-${i}`} style={{ margin: '14px 0', border: '1px solid #1e293b', borderRadius: '12px', overflow: 'hidden' }}>
-          <div style={{
-            background: '#0f172a',
-            padding: '8px 16px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            borderBottom: '1px solid #1e293b',
-          }}>
-            <span style={{
-              fontSize: '11px',
-              color: '#38bdf8',
-              textTransform: 'uppercase',
-              letterSpacing: '1px',
-              fontWeight: '700',
-              fontFamily: 'monospace'
-            }}>{lang}</span>
-            <button
-              onClick={() => navigator.clipboard.writeText(rawCode)}
-              style={{
-                background: 'rgba(255, 255, 255, 0.1)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                color: '#ffffff',
-                fontSize: '11px',
-                fontWeight: '600',
-                padding: '4px 10px',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontFamily: "Calibri, 'Calibri Light', sans-serif"
-              }}
-            >
-              Copy code
-            </button>
-          </div>
-          <pre style={{
-            background: '#090d16',
-            padding: '16px',
-            overflowX: 'auto',
-            margin: '0',
-            fontSize: '13px',
-            fontFamily: 'Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace',
-            lineHeight: '1.7',
-            color: '#f8fafc',
-            whiteSpace: 'pre',
-            userSelect: 'text'
-          }}>
-            <code style={{ fontFamily: 'Consolas, Monaco, monospace', color: '#38bdf8' }}>{rawCode}</code>
-          </pre>
-        </div>
-      )
-      i++
-      continue
-    }
-
-    // ── H1 ──
-    if (line.startsWith('# ') && !line.startsWith('## ')) {
-      elements.push(
-        <h1 key={`h1-${i}`} style={{
-          fontSize: '18px',
-          fontWeight: '800',
-          margin: '16px 0 8px',
-          color: '#000000',
-          lineHeight: '1.4'
-        }}>
-          {renderInline(line.slice(2))}
-        </h1>
-      )
-      i++
-      continue
-    }
-
-    // ── H2 ──
-    if (line.startsWith('## ') && !line.startsWith('### ')) {
-      elements.push(
-        <h2 key={`h2-${i}`} style={{
-          fontSize: '16px',
-          fontWeight: '700',
-          margin: '16px 0 8px',
-          color: '#000000',
-          lineHeight: '1.4',
-          paddingBottom: '4px',
-          borderBottom: '1px solid #cbd5e1'
-        }}>
-          {renderInline(line.slice(3))}
-        </h2>
-      )
-      i++
-      continue
-    }
-
-    // ── H3 ──
-    if (line.startsWith('### ')) {
-      elements.push(
-        <h3 key={`h3-${i}`} style={{
-          fontSize: '14.5px',
-          fontWeight: '700',
-          margin: '12px 0 6px',
-          color: '#000000'
-        }}>
-          {renderInline(line.slice(4))}
-        </h3>
-      )
-      i++
-      continue
-    }
-
-    // ── Bullet list ──
-    if (
-      line.startsWith('• ') ||
-      line.startsWith('- ') ||
-      line.startsWith('* ')
-    ) {
-      const listItems: string[] = []
-      while (
-        i < lines.length &&
-        (lines[i].startsWith('• ') ||
-          lines[i].startsWith('- ') ||
-          lines[i].startsWith('* '))
-      ) {
-        listItems.push(lines[i].slice(2))
-        i++
-      }
-      elements.push(
-        <ul key={`ul-${i}`} style={{
-          paddingLeft: '20px',
-          margin: '6px 0 10px',
-          listStyleType: 'disc'
-        }}>
-          {listItems.map((item, idx) => (
-            <li key={idx} style={{
-              marginBottom: '5px',
-              fontSize: '14.5px',
-              lineHeight: '1.65',
-              color: '#000000'
-            }}>
-              {renderInline(item)}
-            </li>
-          ))}
-        </ul>
-      )
-      continue
-    }
-
-    // ── Numbered list ──
-    if (/^\d+\.\s/.test(line)) {
-      const listItems: string[] = []
-      while (i < lines.length && /^\d+\.\s/.test(lines[i])) {
-        listItems.push(lines[i].replace(/^\d+\.\s/, ''))
-        i++
-      }
-      elements.push(
-        <ol key={`ol-${i}`} style={{
-          paddingLeft: '22px',
-          margin: '6px 0 10px'
-        }}>
-          {listItems.map((item, idx) => (
-            <li key={idx} style={{
-              marginBottom: '5px',
-              fontSize: '14.5px',
-              lineHeight: '1.65',
-              color: '#000000'
-            }}>
-              {renderInline(item)}
-            </li>
-          ))}
-        </ol>
-      )
-      continue
-    }
-
-    // ── Blockquote ──
-    if (line.startsWith('> ')) {
-      elements.push(
-        <blockquote key={`bq-${i}`} style={{
-          borderLeft: '3px solid #0284c7',
-          paddingLeft: '12px',
-          margin: '8px 0',
-          color: '#000000',
-          fontStyle: 'italic',
-          fontSize: '14px'
-        }}>
-          {renderInline(line.slice(2))}
-        </blockquote>
-      )
-      i++
-      continue
-    }
-
-    // ── HR ──
-    if (line.trim() === '---' || line.trim() === '***') {
-      elements.push(
-        <hr key={`hr-${i}`} style={{
-          border: 'none',
-          borderTop: '1px solid #cbd5e1',
-          margin: '12px 0'
-        }} />
-      )
-      i++
-      continue
-    }
-
-    // ── Empty line ──
-    if (line.trim() === '') {
-      elements.push(
-        <div key={`sp-${i}`} style={{ height: '6px' }} />
-      )
-      i++
-      continue
-    }
-
-    // ── Normal paragraph ──
-    elements.push(
-      <p key={`p-${i}`} style={{
-        marginBottom: '6px',
-        lineHeight: '1.75',
-        fontSize: '14.5px',
-        color: '#000000'
-      }}>
-        {renderInline(line)}
-      </p>
-    )
-    i++
-  }
-
-  return <div style={{ width: '100%' }}>{elements}</div>
-}
-
-function renderInline(text: string): React.ReactNode[] {
-  const parts = text.split(/(!\[[^\]]*\]\([^)]+\)|\*\*[^*]+\*\*|`[^`]+`|\*[^*]+\*|~~[^~]+~~)/)
-  return parts.map((part, i) => {
-    if (part.startsWith('![') && part.includes('](') && part.endsWith(')')) {
-      const altMatch = part.match(/^!\[([^\]]*)\]/)
-      const urlMatch = part.match(/\(([^)]+)\)$/)
-      const alt = altMatch ? altMatch[1] : 'Image'
-      const url = urlMatch ? urlMatch[1] : ''
-      return (
-        <span key={i} style={{ display: 'inline-block', margin: '14px 0', position: 'relative', maxWidth: '512px', width: '100%' }}>
-          <img
-            src={url}
-            alt={alt}
-            style={{ width: '100%', maxWidth: '512px', height: 'auto', borderRadius: '16px', border: '1px solid #bae6fd', boxShadow: '0 8px 24px rgba(2, 132, 199, 0.12)', display: 'block' }}
-          />
-          <a
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
-            download="kronx_ai_image.png"
-            style={{
-              position: 'absolute',
-              bottom: '12px',
-              right: '12px',
-              background: 'rgba(15, 23, 42, 0.85)',
-              color: '#ffffff',
-              padding: '6px 14px',
-              borderRadius: '20px',
-              fontSize: '12px',
-              fontWeight: '700',
-              textDecoration: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              backdropFilter: 'blur(8px)',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
-              fontFamily: "Calibri, 'Calibri Light', sans-serif"
-            }}
-          >
-            <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" y1="15" x2="12" y2="3" />
-            </svg>
-            <span>Download High Quality</span>
-          </a>
-        </span>
-      )
-    }
-    if (part.startsWith('**') && part.endsWith('**')) {
-      return (
-        <strong key={i} style={{ fontWeight: '600' }}>
-          {part.slice(2, -2)}
-        </strong>
-      )
-    }
-    if (part.startsWith('~~') && part.endsWith('~~')) {
-      return <del key={i}>{part.slice(2, -2)}</del>
-    }
-    if (
-      part.startsWith('*') &&
-      part.endsWith('*') &&
-      part.length > 2
-    ) {
-      return <em key={i}>{part.slice(1, -1)}</em>
-    }
-    if (part.startsWith('`') && part.endsWith('`')) {
-      return (
-        <code key={i} style={{
-          background: 'rgba(124,110,247,0.12)',
-          color: '#7c6ef7',
-          padding: '2px 7px',
-          borderRadius: '5px',
-          fontFamily: 'monospace',
-          fontSize: '12px'
-        }}>
-          {part.slice(1, -1)}
-        </code>
-      )
-    }
-    return <span key={i}>{part}</span>
-  })
-}
-
-function TypingDots() {
-  return (
-    <span className="typing-dots" aria-label="Kronx anaandika">
-      <span /><span /><span />
-    </span>
-  )
-}
-
-function TranslatingIndicator() {
-  return (
-    <span className="translating-indicator" aria-label="Inatafsiri">
-      <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth={2} className="translating-globe">
-        <circle cx="12" cy="12" r="10" />
-        <line x1="2" y1="12" x2="22" y2="12" />
-        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-      </svg>
-      <span className="translating-text">Inatafsiri...</span>
-      <span /><span /><span />
-    </span>
   )
 }
