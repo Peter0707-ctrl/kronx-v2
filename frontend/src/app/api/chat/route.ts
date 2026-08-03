@@ -133,13 +133,7 @@ async function callGemini(message: string, mode: string = 'Friend'): Promise<str
   const apiKey = process.env.GEMINI_API_KEY || Buffer.from(DEFAULT_KEY_B64, 'base64').toString('utf-8')
   if (!apiKey) return null
 
-  // Models with verified active quota (gemini-flash-latest, gemini-3.5-flash-lite, etc.)
-  const models = [
-    'gemini-flash-latest',
-    'gemini-3.5-flash-lite',
-    'gemini-3.1-flash-lite',
-    'gemini-flash-lite-latest'
-  ]
+  const models = ['gemini-flash-latest', 'gemini-1.5-flash', 'gemini-2.5-flash']
 
   let modeInstruction = "You are Copetra AI, an elite AI Assistant and Academic Companion engineered by PJ Copetranova. Answer clearly, accurately, and thoroughly in markdown."
 
@@ -166,13 +160,19 @@ async function callGemini(message: string, mode: string = 'Friend'): Promise<str
 
   for (const model of models) {
     try {
+      const controller = new AbortController()
+      const timer = setTimeout(() => controller.abort(), 4000)
+
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ contents, generationConfig: { maxOutputTokens: 2048, temperature: 0.7 } }),
+        signal: controller.signal,
         cache: 'no-store'
       })
+
+      clearTimeout(timer)
 
       if (response.ok) {
         const data = await response.json()
