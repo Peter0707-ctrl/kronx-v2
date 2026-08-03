@@ -29,16 +29,79 @@ export async function sendMessage(payload: ChatRequest): Promise<string> {
 export async function* streamMessage(
   payload: ChatRequest
 ): AsyncGenerator<string> {
-  // 100% Direct API response from backend route /api/chat
+  let receivedContent = false
+
   try {
-    const text = await sendMessage(payload)
-    yield `\x00REPLACE\x00${text}`
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10000)
+
+    const response = await fetch(`${API_BASE}/api/chat/stream`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    })
+
+    clearTimeout(timeoutId)
+
+    if (!response.ok || !response.body) {
+      const fallbackText = await sendMessage(payload)
+      yield `\x00REPLACE\x00${fallbackText}`
+      return
+    }
+
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder('utf-8')
+    let buffer = ''
+
+    while (true) {
+      const readPromise = reader.read()
+      const timeoutPromise = new Promise<{ done: boolean; value?: Uint8Array }>((_, reject) =>
+        setTimeout(() => reject(new Error('Stream read stall timeout')), 10000)
+      )
+
+      const { done, value } = (await Promise.race([readPromise, timeoutPromise])) as {
+        done: boolean
+        value?: Uint8Array
+      }
+
+      if (done) break
+
+      if (value) {
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+        buffer = lines.pop() ?? ''
+
+        for (const line of lines) {
+          const trimmed = line.trim()
+          if (trimmed.startsWith(':') || !trimmed) continue
+          if (!trimmed.startsWith('data: ')) continue
+
+          const dataStr = trimmed.slice(6)
+          if (dataStr === '[DONE]') return
+
+          const token = dataStr.replace(/\\n/g, '\n')
+          if (token) {
+            receivedContent = true
+            yield token
+          }
+        }
+      }
+    }
+
+    if (!receivedContent) {
+      const fallbackText = await sendMessage(payload)
+      yield `\x00REPLACE\x00${fallbackText}`
+    }
   } catch (err) {
-    console.warn('[Copetra API Retry Triggered]', err)
-    // Automatic 1-second retry against live API
-    await new Promise(r => setTimeout(r, 1000))
-    const retryText = await sendMessage(payload)
-    yield `\x00REPLACE\x00${retryText}`
+    console.warn('[Copetra Real-Time Stream Fallback Triggered]', err)
+    try {
+      const fallbackText = await sendMessage(payload)
+      yield `\x00REPLACE\x00${fallbackText}`
+    } catch (directErr) {
+      console.error('[Copetra Direct Fetch Error]', directErr)
+      yield `\x00REPLACE\x00Connection error. Please try again.`
+    }
   }
 }
 
