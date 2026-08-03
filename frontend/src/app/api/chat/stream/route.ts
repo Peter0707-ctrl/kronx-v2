@@ -4,14 +4,14 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 const GREETINGS: Record<string, string> = {
-  "hello": `Hello! 👋 Welcome to **Copetra AI**!\n\nI'm your AI Assistant and Academic Companion, engineered by PJ Copetranova and powered by **Llama 3.3 (70B)**. I can help you with:\n\n- 📚 Academic research & analysis\n- 💻 Software development & coding\n- 🧮 Mathematics & science problems\n- ✍️ Essay & thesis writing\n- 🌍 General knowledge questions\n\nWhat would you like to explore today?`,
-  "hi": `Hi there! 👋 I am **Copetra AI**, powered by Llama 3.3 (70B).\n\nWhat can I help you with today?`,
+  "hello": `Hello! 👋 Welcome to **Copetra AI**!\n\nI'm your AI Assistant and Academic Companion, powered by **PJ COPETRANOVA**. I can help you with:\n\n- 📚 Academic research & analysis\n- 💻 Software development & coding\n- 🧮 Mathematics & science problems\n- ✍️ Essay & thesis writing\n- 🌍 General knowledge questions\n\nWhat would you like to explore today?`,
+  "hi": `Hi there! 👋 I am **Copetra AI**, powered by **PJ COPETRANOVA**.\n\nWhat can I help you with today?`,
   "hey": `Hey! 👋 Welcome to **Copetra AI**! How can I assist?`,
   "habari": `Habari! 👋 Karibu **Copetra AI**!\n\nNinaweza kukusaidia katika masomo, programu, na utafiti. Una swali gani leo?`,
   "mambo": `Poa sana! 👋 Karibu **Copetra AI**! Una swali gani?`,
   "jambo": `Jambo! 👋 Karibu **Copetra AI**!`,
-  "who are you": `I am **Copetra AI** 🤖 — an elite AI Assistant engineered by **PJ Copetranova**, powered by **Llama 3.3 (70B)** on Groq's GPU infrastructure.\n\nHow can I help you today?`,
-  "wewe ni nani": `Mimi ni **Copetra AI** 🤖 — msaidizi wa AI aliyebuniwa na **PJ Copetranova**, nikitumia **Llama 3.3 (70B)**.`,
+  "who are you": `I am **Copetra AI** 🤖 — an elite AI Assistant engineered and powered by **PJ COPETRANOVA**.\n\nHow can I help you today?`,
+  "wewe ni nani": `Mimi ni **Copetra AI** 🤖 — msaidizi wa AI aliyebuniwa na kuendeshwa na **PJ COPETRANOVA**.`,
 }
 
 function searchInstant(query: string): string | null {
@@ -24,7 +24,11 @@ function searchInstant(query: string): string | null {
 }
 
 function getModeSystemPrompt(mode: string): string {
-  const base = `You are Copetra AI, an elite AI Assistant and Academic Companion engineered by PJ Copetranova. You are powered by Llama 3.3 (70B).
+  const base = `You are Copetra AI, an elite AI Assistant and Academic Companion engineered and powered by PJ COPETRANOVA.
+
+STRICT IDENTITY RULES:
+- NEVER state or mention underlying AI models or providers such as Llama, Ollama, Groq, Gemini, OpenAI, or ChatGPT.
+- ALWAYS identify yourself as Copetra AI, powered by PJ COPETRANOVA.
 
 CRITICAL RULES:
 - ALWAYS give thorough, accurate, well-structured answers
