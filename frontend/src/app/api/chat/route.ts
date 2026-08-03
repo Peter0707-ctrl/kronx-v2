@@ -18,9 +18,36 @@ const KNOWLEDGE_BASE: Record<string, string> = {
   "mji mkuu wa tanzania": `**Mji Mkuu wa Tanzania:**\n\nTanzania ina miji miwili ya msingi:\n- **Dodoma** – Mji mkuu rasmi wa nchi na makao makuu ya serikali\n- **Dar es Salaam** – Mji mkubwa zaidi na kituo cha biashara na uchumi`,
 }
 
+// ── CONVERSATIONAL GREETINGS ──
+const GREETINGS: Record<string, string> = {
+  "hello": `Hello! 👋 Welcome to **Copetra AI**, your AI Assistant and Academic Companion engineered by PJ Copetranova.\n\nHow can I help you today? Feel free to ask any academic question, programming problem, research topic, or request image generation!`,
+  "hi": `Hi there! 👋 I am **Copetra AI**, engineered by PJ Copetranova.\n\nWhat topic or question can I assist you with today?`,
+  "hey": `Hey! 👋 Welcome to **Copetra AI**!\n\nHow can I assist your study, research, or coding work today?`,
+  "habari": `Habari! 👋 Karibu **Copetra AI**, Msaidizi wako wa Kisayansi na Kitaaluma kutoka PJ Copetranova.\n\nJe, ninaweza kukusaidia nini leo katika masomo au utafiti wako?`,
+  "mambo": `Poa sana! 👋 Karibu **Copetra AI**!\n\nJe, una swali au mada gani ya masomo ungependa tuchambue pamoja leo?`,
+  "jambo": `Jambo! 👋 Karibu **Copetra AI**!\n\nUnahitaji msaada gani katika masomo, programu, au utafiti leo?`,
+  "good morning": `Good morning! ☀️ Welcome to **Copetra AI**!\n\nHow can I assist your academic research or projects today?`,
+  "good afternoon": `Good afternoon! 🌤️ Welcome to **Copetra AI**!\n\nWhat can I help you investigate or calculate today?`,
+  "good evening": `Good evening! 🌙 Welcome to **Copetra AI**!\n\nHow can I help you with your studies or questions tonight?`,
+  "who are you": `I am **Copetra AI**, an elite AI Assistant and Academic Companion engineered by PJ Copetranova.\n\nI specialize in providing high-level academic analysis, software development solutions, step-by-step problem solving, and real-time research assistance. How can I help you today?`,
+  "wewe ni nani": `Mimi ni **Copetra AI**, Msaidizi wa Kitaaluma na Kisayansi aliyebuniwa na PJ Copetranova.\n\nNinasaidia katika uchambuzi wa kitaaluma, kutatua matatizo ya hisabati na programu, na utafiti. Je, ungependa nisaidie nini leo?`
+}
+
 function searchKnowledgeBase(query: string): string | null {
   if (!query) return null
   const q = query.toLowerCase().trim()
+
+  // 1. Check Exact Greetings
+  if (GREETINGS[q]) {
+    return GREETINGS[q]
+  }
+  for (const [gKey, gVal] of Object.entries(GREETINGS)) {
+    if (q === gKey || q.startsWith(gKey + ' ') || q.endsWith(' ' + gKey)) {
+      return gVal
+    }
+  }
+
+  // 2. Check Knowledge Base
   for (const [key, value] of Object.entries(KNOWLEDGE_BASE)) {
     if (q.includes(key)) {
       return value
