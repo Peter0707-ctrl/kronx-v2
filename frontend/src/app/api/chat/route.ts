@@ -392,6 +392,68 @@ The topic of **"${q}"** represents a foundational domain of academic research an
 *Copetra AI — Academic Companion & Intelligence Engine*`
 }
 
+// ── OLLAMA LOCAL & REMOTE API CALL ──
+async function callOllama(message: string, mode: string = 'Friend'): Promise<string | null> {
+  const host = process.env.OLLAMA_URL || 'http://127.0.0.1:11434'
+  const hosts = [host, 'http://localhost:11434', 'http://127.0.0.1:11434']
+  const models = ['llama3', 'llama3.2', 'mistral', 'gemma', 'phi3', 'qwen', 'llama2']
+
+  for (const h of Array.from(new Set(hosts))) {
+    for (const m of models) {
+      try {
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 4000)
+        const response = await fetch(`${h}/api/generate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: m,
+            prompt: `[Mode: ${mode}]\n${message}`,
+            stream: false
+          }),
+          signal: controller.signal
+        })
+        clearTimeout(timeoutId)
+        if (response.ok) {
+          const data = await response.json()
+          if (data.response && data.response.trim()) {
+            return data.response.trim()
+          }
+        }
+      } catch (e) {
+        // Silently continue
+      }
+    }
+  }
+  return null
+}
+
+// ── LIVE WIKIPEDIA REST API FETCHER ──
+async function fetchLiveWikipediaSummary(query: string): Promise<string | null> {
+  const keywords = extractKeywords(query)
+  try {
+    const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(keywords)}&format=json`
+    const searchRes = await fetch(searchUrl, { headers: { 'User-Agent': 'Copetra-AI/2.0' }, cache: 'no-store' })
+    if (searchRes.ok) {
+      const searchData = await searchRes.json()
+      if (searchData.query?.search?.length > 0) {
+        const topTitle = searchData.query.search[0].title
+        const summaryUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(topTitle)}`
+        const summaryRes = await fetch(summaryUrl, { headers: { 'User-Agent': 'Copetra-AI/2.0' }, cache: 'no-store' })
+        if (summaryRes.ok) {
+          const summaryData = await summaryRes.json()
+          if (summaryData.extract) {
+            return `### 🌐 Live Knowledge Base: ${topTitle}\n\n${summaryData.extract}\n\n*Source: Live Wikipedia REST API*`
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Live Wikipedia API Error:', err)
+  }
+  return null
+}
+
 export async function POST(req: NextRequest) {
   let message = ''
   let language = 'en'
@@ -412,7 +474,7 @@ export async function POST(req: NextRequest) {
 
   let responseText: string | null = null
 
-  // 1. Check Knowledge Base
+  // 1. Check Exact Conversational Greetings or Knowledge Base
   try {
     const kbAnswer = searchKnowledgeBase(message)
     if (kbAnswer) {
@@ -422,42 +484,47 @@ export async function POST(req: NextRequest) {
     console.error('KB Search Error:', err)
   }
 
-  // 2. OpenAI ChatGPT API
+  // 2. Try Ollama Local/Server API (Ollama Llama 3/Mistral/Gemma)
+  try {
+    responseText = await callOllama(message, mode)
+    if (responseText) {
+      return NextResponse.json({ response: responseText })
+    }
+  } catch (err) {
+    console.error('Ollama Call Error:', err)
+  }
+
+  // 3. OpenAI ChatGPT API
   try {
     responseText = await callOpenAI(message, mode)
+    if (responseText) {
+      return NextResponse.json({ response: responseText })
+    }
   } catch (err) {
     console.error('OpenAI Call Error:', err)
   }
 
-  // 3. Gemini API Call
-  if (!responseText) {
-    try {
-      responseText = await callGemini(message, mode)
-    } catch (err) {
-      console.error('Gemini Call Error:', err)
-    }
-  }
-
-  if (responseText) {
-    return NextResponse.json({ response: responseText })
-  }
-
-  // 4. Domain Academic Matrix Engine (100% Comprehensive Coverage)
-  const structured = generateStructuredAnswer(message, language)
-  if (structured) {
-    return NextResponse.json({ response: structured })
-  }
-
-  // 5. Try Smart Wikipedia Search
+  // 4. Gemini API Call
   try {
-    const wikiAnswer = await searchWikipedia(message)
-    if (wikiAnswer) {
-      return NextResponse.json({ response: wikiAnswer })
+    responseText = await callGemini(message, mode)
+    if (responseText) {
+      return NextResponse.json({ response: responseText })
     }
   } catch (err) {
-    console.error('Wikipedia Search Call Error:', err)
+    console.error('Gemini Call Error:', err)
   }
 
-  // 6. Final Fallback Answer
+  // 5. Try Live Wikipedia REST API
+  try {
+    const liveWiki = await fetchLiveWikipediaSummary(message)
+    if (liveWiki) {
+      return NextResponse.json({ response: liveWiki })
+    }
+  } catch (err) {
+    console.error('Live Wikipedia Call Error:', err)
+  }
+
+  // 6. Domain Academic Matrix Engine Fallback
+  const structured = generateStructuredAnswer(message, language)
   return NextResponse.json({ response: structured })
 }
