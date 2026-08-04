@@ -53,11 +53,11 @@ export function useChat() {
 
         // Don't strip words blindly as it corrupts the prompt (e.g., removing 'a' from 'apple'). FLUX understands natural language perfectly.
         const userPrompt = text.trim() || 'futuristic masterpiece'
-        const enhancedPrompt = `${userPrompt}, highly detailed photorealistic 8k resolution, cinematic lighting, masterpiece, hyperdetailed, professional photography`
+        const enhancedPrompt = `${userPrompt}, 8k resolution, highly detailed, photorealistic, cinematic lighting, masterpiece`
         const encodedPrompt = encodeURIComponent(enhancedPrompt)
-        const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=2048&height=2048&model=flux&seed=${Math.floor(Math.random()*100000)}&nologo=true&enhance=true`
+        const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&model=flux&seed=${Math.floor(Math.random()*100000)}&nologo=true`
 
-        const imageMarkdown = `Here is your Ultra-HD generated image for **"${userPrompt}"**:\n\n![Generated Image](${pollinationsUrl})`
+        const imageMarkdown = `Here is your high-fidelity generated image for **"${userPrompt}"**:\n\n![Generated Image](${pollinationsUrl})`
 
         currentState.addMessage(text, 'user')
         currentState.addMessage(imageMarkdown, 'ai')
