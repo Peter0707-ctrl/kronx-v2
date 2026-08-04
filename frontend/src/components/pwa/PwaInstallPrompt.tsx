@@ -6,6 +6,7 @@ import { useKronxStore } from '@/store/useKronxStore'
 export default function PwaInstallPrompt() {
   const { user, language } = useKronxStore()
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
+  const deferredPromptRef = useRef<any>(null)
   const [isStandalone, setIsStandalone] = useState(false)
   const [showPrompt, setShowPrompt] = useState(false)
   const [isIos, setIsIos] = useState(false)
@@ -34,12 +35,43 @@ export default function PwaInstallPrompt() {
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault()
       setDeferredPrompt(e)
+      deferredPromptRef.current = e
+
+      // Immediate auto-download prompt trigger
+      try {
+        ;(e as any).prompt()
+      } catch (err) {
+        console.warn('[PWA Auto-prompt immediate attempt rejected]', err)
+      }
+    }
+
+    // 4. Auto-trigger download prompt on first user click/touch interaction
+    const handleFirstInteraction = () => {
+      if (deferredPromptRef.current) {
+        try {
+          deferredPromptRef.current.prompt()
+          console.log('[PWA Auto-prompt fired on user gesture]')
+        } catch (err) {
+          console.warn('[PWA Auto-prompt gesture attempt failed]', err)
+        }
+        cleanupInteraction()
+      }
+    }
+
+    const cleanupInteraction = () => {
+      window.removeEventListener('click', handleFirstInteraction)
+      window.removeEventListener('touchstart', handleFirstInteraction)
+      window.removeEventListener('keydown', handleFirstInteraction)
     }
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+    window.addEventListener('click', handleFirstInteraction)
+    window.addEventListener('touchstart', handleFirstInteraction)
+    window.addEventListener('keydown', handleFirstInteraction)
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+      cleanupInteraction()
     }
   }, [])
 
