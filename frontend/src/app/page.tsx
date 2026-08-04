@@ -10,6 +10,7 @@ import AdminDashboard from '@/components/admin/AdminDashboard'
 import LandingPage from '@/components/landing/LandingPage'
 import AuthModal from '@/components/auth/AuthModal'
 import SettingsModal from '@/components/settings/SettingsModal'
+import PwaInstallPrompt from '@/components/pwa/PwaInstallPrompt'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import { useChat } from '@/hooks/useChat'
 import { useKronxStore } from '@/store/useKronxStore'
@@ -114,6 +115,7 @@ export default function Home() {
         </div>
         <AuthModal />
         <SettingsModal />
+        <PwaInstallPrompt />
       </main>
     </ErrorBoundary>
   )

@@ -22,7 +22,7 @@ const REAL_USERS: (AdminUserRecord & { plan: UserPlan })[] = [
 ]
 
 export default function AdminDashboard() {
-  const { language, setActiveView, user, updateUserRole, systemDisabled, toggleSystemKillSwitch } = useKronxStore()
+  const { language, setActiveView, user, updateUserRole, upgradeSubscription, systemDisabled, toggleSystemKillSwitch } = useKronxStore()
   const [telemetry, setTelemetry] = useState<SystemTelemetry | null>(null)
   const [usersList, setUsersList] = useState<(AdminUserRecord & { plan: UserPlan })[]>([])
   const [userSearchQuery, setUserSearchQuery] = useState('')
@@ -42,7 +42,21 @@ export default function AdminDashboard() {
     setUsersList(updatedUsers)
     const userToUpdate = updatedUsers.find(u => u.id === userId)
     if (userToUpdate) {
-      await fetch('/api/users', { method: 'POST', body: JSON.stringify(userToUpdate) })
+      try {
+        const res = await fetch('/api/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(userToUpdate)
+        })
+        if (res.ok) {
+          showToast(sw ? `Mpango umebadilishwa kuwa ${newPlan.toUpperCase()}!` : `Plan updated to ${newPlan.toUpperCase()} successfully!`)
+          if (userToUpdate.id === user?.id) {
+            upgradeSubscription(newPlan as any)
+          }
+        }
+      } catch (e) {
+        console.error('Failed to update user plan:', e)
+      }
     }
   }
 
@@ -56,7 +70,18 @@ export default function AdminDashboard() {
     setUsersList(updatedUsers)
     const userToUpdate = updatedUsers.find(u => u.id === userId)
     if (userToUpdate) {
-      await fetch('/api/users', { method: 'POST', body: JSON.stringify(userToUpdate) })
+      try {
+        const res = await fetch('/api/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(userToUpdate)
+        })
+        if (res.ok) {
+          showToast(sw ? `Hali ya Developer imebadilishwa!` : `Developer Mode status updated!`)
+        }
+      } catch (e) {
+        console.error('Failed to update developer status:', e)
+      }
     }
   }
 
