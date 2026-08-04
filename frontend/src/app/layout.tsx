@@ -5,7 +5,9 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
-  themeColor: '#2563eb',
+  userScalable: false,
+  viewportFit: 'cover',
+  themeColor: '#0f172a',
 }
 
 export const metadata: Metadata = {
@@ -95,7 +97,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="application-name" content="Copetra AI" />
         <meta name="apple-mobile-web-app-title" content="Copetra AI" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="mobile-web-app-capable" content="yes" />
         <script
           type="application/ld+json"
