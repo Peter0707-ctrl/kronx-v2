@@ -61,7 +61,7 @@ export default function InputBar({ onSend }: Props) {
     const fileName = file.name.toLowerCase()
     const reader = new FileReader()
 
-    // 1. IMAGE FILES
+    // 1. IMAGE FILES (PNG, JPG, JPEG, WEBP, GIF)
     if (file.type.startsWith('image/')) {
       reader.onload = (e) => {
         const result = e.target?.result as string
@@ -77,107 +77,146 @@ export default function InputBar({ onSend }: Props) {
       return
     }
 
-    // 2. WORD DOCUMENTS (.docx)
+    // 2. WORD DOCUMENTS (.docx, .doc)
     if (fileName.endsWith('.docx') || fileName.endsWith('.doc')) {
       reader.onload = (e) => {
-        const textResult = e.target?.result as string || ''
-        // Extract text nodes from Word document XML structure <w:t>
-        const matches = textResult.match(/<w:t[^>]*>(.*?)<\/w:t>/g)
-        let extractedText = ''
-        if (matches) {
-          extractedText = matches.map(m => m.replace(/<[^>]+>/g, '')).join(' ')
-        }
-        if (!extractedText || extractedText.length < 10) {
-          // Clean text fallback
-          extractedText = textResult.replace(/[^\x20-\x7E\n\r\t]/g, ' ').replace(/\s+/g, ' ').trim()
+        const buffer = e.target?.result as ArrayBuffer
+        let textResult = ''
+        try {
+          const utf8Decoder = new TextDecoder('utf-8', { fatal: false })
+          const latin1Decoder = new TextDecoder('latin1')
+          const decodedUtf8 = utf8Decoder.decode(buffer)
+          const decodedLatin1 = latin1Decoder.decode(buffer)
+
+          // Extract text nodes from Word XML <w:t> tags
+          const xmlMatches = decodedUtf8.match(/<w:t[^>]*>(.*?)<\/w:t>/g) || decodedLatin1.match(/<w:t[^>]*>(.*?)<\/w:t>/g)
+          if (xmlMatches && xmlMatches.length > 0) {
+            textResult = xmlMatches.map(m => m.replace(/<[^>]+>/g, '').trim()).filter(Boolean).join(' ')
+          }
+
+          if (!textResult || textResult.length < 20) {
+            // Fallback: extract all printable ASCII word words
+            const words = decodedLatin1.match(/[A-Za-z0-9.,?!'"()$%:\-]{2,}/g)
+            if (words) {
+              textResult = words.join(' ')
+            }
+          }
+        } catch (err) {
+          console.warn('[Word Document Extraction Fallback]', err)
         }
 
         setAttachedFile({
           name: file.name,
           type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-          content: extractedText.slice(0, 15000) || `[Word Document '${file.name}' - ${Math.round(file.size / 1024)} KB attached]`,
+          content: textResult.slice(0, 18000) || `[Word Document '${file.name}' - ${Math.round(file.size / 1024)} KB attached]`,
           category: 'word',
         })
       }
-      reader.readAsText(file)
+      reader.readAsArrayBuffer(file)
       return
     }
 
-    // 3. EXCEL SPREADSHEETS (.xlsx, .csv)
+    // 3. EXCEL SPREADSHEETS (.xlsx, .xls, .csv)
     if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls') || fileName.endsWith('.csv')) {
-      reader.onload = (e) => {
-        const textResult = e.target?.result as string || ''
-        let extractedText = textResult
-        if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
-          // Extract cell values from sheet XML tags <v> or <t>
-          const cellMatches = textResult.match(/<(?:v|t)[^>]*>(.*?)<\/(?:v|t)>/g)
-          if (cellMatches) {
-            extractedText = cellMatches.map(m => m.replace(/<[^>]+>/g, '')).join(' | ')
-          } else {
-            extractedText = textResult.replace(/[^\x20-\x7E\n\r\t]/g, ' ').replace(/\s+/g, ' ').trim()
-          }
+      if (fileName.endsWith('.csv')) {
+        reader.onload = (e) => {
+          const csvText = e.target?.result as string || ''
+          setAttachedFile({
+            name: file.name,
+            type: 'text/csv',
+            content: csvText.slice(0, 18000),
+            category: 'excel',
+          })
         }
+        reader.readAsText(file)
+        return
+      }
+
+      reader.onload = (e) => {
+        const buffer = e.target?.result as ArrayBuffer
+        let textResult = ''
+        try {
+          const latin1Decoder = new TextDecoder('latin1')
+          const decoded = latin1Decoder.decode(buffer)
+          const cellMatches = decoded.match(/<(?:v|t)[^>]*>(.*?)<\/(?:v|t)>/g)
+          if (cellMatches && cellMatches.length > 0) {
+            textResult = cellMatches.map(m => m.replace(/<[^>]+>/g, '').trim()).filter(Boolean).join(' | ')
+          } else {
+            const words = decoded.match(/[A-Za-z0-9.,?!'"()$%:\-]{2,}/g)
+            if (words) textResult = words.join(' ')
+          }
+        } catch { }
 
         setAttachedFile({
           name: file.name,
           type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          content: extractedText.slice(0, 15000) || `[Excel Spreadsheet '${file.name}' - ${Math.round(file.size / 1024)} KB attached]`,
+          content: textResult.slice(0, 18000) || `[Excel Spreadsheet '${file.name}' - ${Math.round(file.size / 1024)} KB attached]`,
           category: 'excel',
         })
       }
-      reader.readAsText(file)
+      reader.readAsArrayBuffer(file)
       return
     }
 
-    // 4. POWERPOINT PRESENTATIONS (.pptx)
+    // 4. POWERPOINT PRESENTATIONS (.pptx, .ppt)
     if (fileName.endsWith('.pptx') || fileName.endsWith('.ppt')) {
       reader.onload = (e) => {
-        const textResult = e.target?.result as string || ''
-        const slideMatches = textResult.match(/<a:t[^>]*>(.*?)<\/a:t>/g)
-        let extractedText = ''
-        if (slideMatches) {
-          extractedText = slideMatches.map(m => m.replace(/<[^>]+>/g, '')).join('\n')
-        } else {
-          extractedText = textResult.replace(/[^\x20-\x7E\n\r\t]/g, ' ').replace(/\s+/g, ' ').trim()
-        }
+        const buffer = e.target?.result as ArrayBuffer
+        let textResult = ''
+        try {
+          const utf8Decoder = new TextDecoder('utf-8', { fatal: false })
+          const latin1Decoder = new TextDecoder('latin1')
+          const decoded = utf8Decoder.decode(buffer) || latin1Decoder.decode(buffer)
+          const slideMatches = decoded.match(/<a:t[^>]*>(.*?)<\/a:t>/g)
+          if (slideMatches) {
+            textResult = slideMatches.map(m => m.replace(/<[^>]+>/g, '').trim()).filter(Boolean).join('\n')
+          }
+        } catch { }
 
         setAttachedFile({
           name: file.name,
           type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-          content: extractedText.slice(0, 15000) || `[PowerPoint Presentation '${file.name}' - ${Math.round(file.size / 1024)} KB attached]`,
+          content: textResult.slice(0, 18000) || `[PowerPoint Presentation '${file.name}' - ${Math.round(file.size / 1024)} KB attached]`,
           category: 'powerpoint',
         })
       }
-      reader.readAsText(file)
+      reader.readAsArrayBuffer(file)
       return
     }
 
     // 5. PDF DOCUMENTS (.pdf)
     if (fileName.endsWith('.pdf')) {
       reader.onload = (e) => {
-        const textResult = e.target?.result as string || ''
-        // Extract ASCII text streams from PDF stream objects
-        const streamMatches = textResult.match(/\(([^)]+)\)|BT[\s\S]*?ET/g)
-        let extractedText = ''
-        if (streamMatches) {
-          extractedText = streamMatches
-            .map(m => m.replace(/[()]/g, '').trim())
-            .filter(t => t.length > 2 && !t.startsWith('/') && !t.startsWith('BT'))
-            .join(' ')
-        }
+        const buffer = e.target?.result as ArrayBuffer
+        let textResult = ''
+        try {
+          const latin1Decoder = new TextDecoder('latin1')
+          const decoded = latin1Decoder.decode(buffer)
+          // Extract text inside PDF parenthesis stream objects ( ... )
+          const parenMatches = decoded.match(/\(([^()]{2,})\)/g)
+          if (parenMatches && parenMatches.length > 0) {
+            textResult = parenMatches
+              .map(m => m.slice(1, -1).trim())
+              .filter(t => t.length > 1 && !/^[0-9\/\\_]+$/.test(t))
+              .join(' ')
+          }
 
-        if (!extractedText || extractedText.length < 20) {
-          extractedText = textResult.replace(/[^\x20-\x7E\n\r\t]/g, ' ').replace(/\s+/g, ' ').trim()
-        }
+          if (!textResult || textResult.length < 30) {
+            const words = decoded.match(/[A-Za-z0-9.,?!'"()$%:\-]{3,}/g)
+            if (words) {
+              textResult = words.filter(w => !w.startsWith('/') && !w.startsWith('obj') && !w.startsWith('endobj')).join(' ')
+            }
+          }
+        } catch { }
 
         setAttachedFile({
           name: file.name,
           type: 'application/pdf',
-          content: extractedText.slice(0, 15000) || `[PDF Document '${file.name}' - ${Math.round(file.size / 1024)} KB attached]`,
+          content: textResult.slice(0, 18000) || `[PDF Document '${file.name}' - ${Math.round(file.size / 1024)} KB attached]`,
           category: 'pdf',
         })
       }
-      reader.readAsText(file)
+      reader.readAsArrayBuffer(file)
       return
     }
 
@@ -187,7 +226,7 @@ export default function InputBar({ onSend }: Props) {
       if (typeof textResult !== 'string' || textResult.includes('\0')) {
         textResult = `[Attached File '${file.name}' - ${Math.round(file.size / 1024)} KB]`
       } else {
-        textResult = textResult.slice(0, 15000)
+        textResult = textResult.slice(0, 18000)
       }
 
       const isCode = /\.(py|js|ts|tsx|jsx|html|css|json|sql|java|cpp|c|cs|go|rs|sh)$/i.test(fileName)
