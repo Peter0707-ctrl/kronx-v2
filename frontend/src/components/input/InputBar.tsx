@@ -85,23 +85,34 @@ export default function InputBar({ onSend }: Props) {
         let textResult = ''
         try {
           const zip = await JSZip.loadAsync(buffer)
-          const docXml = await zip.file('word/document.xml')?.async('string')
-          if (docXml) {
-            const matches = docXml.match(/<w:t[^>]*>(.*?)<\/w:t>/g)
-            if (matches && matches.length > 0) {
-              textResult = matches.map(m => m.replace(/<[^>]+>/g, '').trim()).filter(Boolean).join(' ')
+          const docEntryKey = Object.keys(zip.files).find(k => k.toLowerCase().includes('document.xml'))
+          if (docEntryKey) {
+            const docXml = await zip.files[docEntryKey].async('string')
+            if (docXml) {
+              const tMatches = docXml.match(/<w:t[^>]*>([\s\S]*?)<\/w:t>/gi)
+              if (tMatches && tMatches.length > 0) {
+                textResult = tMatches.map(m => m.replace(/<[^>]+>/g, '').trim()).filter(Boolean).join(' ')
+              } else {
+                textResult = docXml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+              }
             }
           }
         } catch (err) {
           console.warn('[JSZip Word Extraction Error]', err)
         }
 
-        if (!textResult || textResult.length < 20) {
+        // Clean up any residual raw zip words if unzipping failed
+        if (!textResult || textResult.includes('[Content_Types].xml') || textResult.startsWith('PK')) {
           try {
             const latin1Decoder = new TextDecoder('latin1')
             const decoded = latin1Decoder.decode(buffer)
+            // Strip out PK header strings and XML tag identifiers
             const words = decoded.match(/[A-Za-z0-9.,?!'"()$%:\-]{3,}/g)
-            if (words) textResult = words.filter(w => !w.startsWith('xml') && !w.startsWith('w:') && !w.startsWith('r:')).join(' ')
+            if (words) {
+              textResult = words
+                .filter(w => !/^(PK|xml|rels|theme|document|Content_Types|word|props|schema)/i.test(w))
+                .join(' ')
+            }
           } catch { }
         }
 
