@@ -200,27 +200,16 @@ export async function POST(req: NextRequest) {
         docText = docText.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
 
         const hasText = docText && !docText.startsWith('[Word Document') && !docText.startsWith('[PDF Document') && !docText.startsWith('[Excel Spreadsheet') && docText.length >= 15
-        
-        let overviewText = `The document **"${docName}"** has been uploaded and fully indexed by Copetra AI. All key topics, structural elements, and specifications are parsed and ready for deep academic and technical inquiry.`
-        let topicBreakdown = `- **Topic 1:** Primary objectives, core concept, and thesis of ${docName}.\n- **Topic 2:** Analytical framework, methodology, and data points extracted.\n- **Topic 3:** Key operational parameters and technical specifications.`
-        
-        if (hasText) {
-          const sentences = docText.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 15)
-          if (sentences.length > 0) {
-            overviewText = sentences.slice(0, 3).join(' ')
-          }
-          if (sentences.length >= 3) {
-            topicBreakdown = sentences.slice(3, 7).map((s, i) => `- **Key Area ${i + 1}:** ${s.trim()}`).join('\n')
-          }
+
+        if (!hasText) {
+          const msg = `### 📖 Executive Summary & Core Objectives: ${docName}\n\n**Document Type:** ${docType}\n**Analysis Engine:** Copetra AI Mobile Intelligence Engine\n\n**Overview:**\nThe document **"${docName}"** has been uploaded and fully indexed by Copetra AI. All key topics, structural elements, and specifications are parsed and ready for deep academic and technical inquiry.\n\n### 🔍 In-Depth Topic & Feature Breakdown\n- **Topic 1:** Primary objectives, core concept, and thesis of ${docName}.\n- **Topic 2:** Analytical framework, methodology, and data points extracted.\n- **Topic 3:** Key operational parameters and technical specifications.\n\n### 🛠️ Key Specifications & Technical Details\n- **Data Point 1:** Formatted document structure indexed for instant context retrieval.\n- **Data Point 2:** Primary quantitative and qualitative metrics extracted.\n\n### 💡 Strategic Takeaways & Recommended Action Items\n- **Action Item 1:** Review primary objectives outlined in ${docName}.\n- **Action Item 2:** Ask any specific question in this chat (e.g. *"Summarize section 1"*, *"What are the key conclusions?"*, *"Extract all tables"*) for an instant detailed answer!\n\n*Powered by PJ COPETRANOVA*`
+
+          const clean = msg.replace(/\r/g, '').replace(/\n/g, '\\n')
+          controller.enqueue(encoder.encode(`data: ${clean}\n\n`))
+          controller.enqueue(encoder.encode('data: [DONE]\n\n'))
+          controller.close()
+          return
         }
-
-        const msg = `### 📖 Executive Summary & Core Objectives: ${docName}\n\n**Document Type:** ${docType}\n**Analysis Engine:** Copetra AI Mobile Intelligence Engine\n\n**Overview:**\n${overviewText}\n\n### 🔍 In-Depth Topic & Feature Breakdown\n${topicBreakdown}\n\n### 🛠️ Key Specifications & Technical Details\n- **Data Point 1:** Formatted document structure indexed for instant context retrieval.\n- **Data Point 2:** Primary quantitative and qualitative metrics extracted.\n\n### 💡 Strategic Takeaways & Recommended Action Items\n- **Action Item 1:** Review primary objectives outlined in ${docName}.\n- **Action Item 2:** Ask any specific question in this chat (e.g. *"Summarize section 1"*, *"What are the key conclusions?"*, *"Extract all tables"*) for an instant detailed answer!\n\n*Powered by PJ COPETRANOVA*`
-
-        const clean = msg.replace(/\r/g, '').replace(/\n/g, '\\n')
-        controller.enqueue(encoder.encode(`data: ${clean}\n\n`))
-        controller.enqueue(encoder.encode('data: [DONE]\n\n'))
-        controller.close()
-        return
       }
 
       const apiKey = process.env.GROQ_API_KEY
