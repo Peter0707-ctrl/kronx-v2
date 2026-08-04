@@ -98,7 +98,7 @@ export default function MessageBubble({ message, isStreaming, onRegenerate, onEd
   }
 
   // Format user messages cleanly: hide raw Base64 images & raw document text dumps behind sleek badges
-  let displayContent = message.content
+  let displayContent = message.content.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
   if (!isAi) {
     displayContent = displayContent
       .replace(/\[IMAGE: data:image\/[a-zA-Z]+;base64,.*?\]/g, '🖼️ [Attached Image]')
