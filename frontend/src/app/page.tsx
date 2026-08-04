@@ -23,6 +23,13 @@ export default function Home() {
   useEffect(() => {
     setMounted(true)
 
+    // Force PWA Service Worker to check for live updates from Railway on launch
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then(registration => {
+        registration.update()
+      }).catch(err => console.warn('[PWA Update Check Error]', err))
+    }
+
     // Sync logged-in user profile & plan directly from PostgreSQL DB (assigned by Admin)
     if (user?.email) {
       fetch('/api/users')

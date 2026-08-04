@@ -5,6 +5,8 @@ const withPWA = withPWAInit({
   disable: process.env.NODE_ENV === 'development',
   register: true,
   skipWaiting: true,
+  reloadOnOnline: true,
+  cacheOnFrontEndNav: false,
 })
 
 /** @type {import('next').NextConfig} */
@@ -12,6 +14,15 @@ const nextConfig = {
   reactStrictMode: true,
   async headers() {
     return [
+      {
+        source: '/sw.js',
+        headers: [
+          { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
+          { key: 'Pragma', value: 'no-cache' },
+          { key: 'Expires', value: '0' },
+          { key: 'Content-Type', value: 'application/javascript; charset=utf-8' },
+        ],
+      },
       {
         source: '/api/:path*',
         headers: [
