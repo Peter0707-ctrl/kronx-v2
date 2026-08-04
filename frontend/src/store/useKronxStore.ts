@@ -136,7 +136,7 @@ export const useKronxStore = create<KronxStore>()(
         set({ user, activeView: 'chat', authModalOpen: false })
       },
 
-      logoutUser: () => set({ user: null, activeView: 'landing' }),
+      logoutUser: () => set({ user: null, activeView: 'landing', conversations: [], activeConversationId: null }),
       updateUserRole: (role) =>
         set(s => ({
           user: s.user ? { ...s.user, role } : null,

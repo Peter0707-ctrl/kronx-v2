@@ -23,6 +23,9 @@ export default function Home() {
   useEffect(() => {
     setMounted(true)
 
+    // Clear previous chat history so every reload/session starts fresh
+    useKronxStore.getState().clearAllConversations()
+
     // Sync logged-in user profile & plan directly from PostgreSQL DB (assigned by Admin)
     if (user?.email) {
       fetch('/api/users')
