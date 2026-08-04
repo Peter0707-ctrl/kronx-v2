@@ -63,8 +63,8 @@ export default function InputBar({ onSend }: Props) {
     const fileName = file.name.toLowerCase()
     const reader = new FileReader()
 
-    // 1. IMAGE FILES (PNG, JPG, JPEG, WEBP, GIF, MOBILE PHOTOS)
-    if (file.type.startsWith('image/')) {
+    // 1. IMAGE FILES (PNG, JPG, JPEG, WEBP, GIF, MOBILE CAMERA/GALLERY)
+    if (file.type.startsWith('image/') || /\.(png|jpe?g|webp|gif|bmp|svg|heic)$/i.test(fileName)) {
       reader.onload = (e) => {
         const rawResult = e.target?.result as string
         const img = new Image()
@@ -100,7 +100,7 @@ export default function InputBar({ onSend }: Props) {
           } else {
             setAttachedFile({
               name: file.name,
-              type: file.type,
+              type: file.type || 'image/jpeg',
               preview: rawResult,
               content: rawResult,
               category: 'image',
@@ -110,7 +110,7 @@ export default function InputBar({ onSend }: Props) {
         img.onerror = () => {
           setAttachedFile({
             name: file.name,
-            type: file.type,
+            type: file.type || 'image/jpeg',
             preview: rawResult,
             content: rawResult,
             category: 'image',
@@ -122,8 +122,9 @@ export default function InputBar({ onSend }: Props) {
       return
     }
 
-    // 2. WORD DOCUMENTS (.docx, .doc)
-    if (fileName.endsWith('.docx') || fileName.endsWith('.doc')) {
+    // 2. WORD DOCUMENTS (.docx, .doc, mobile word mime)
+    const isWord = fileName.endsWith('.docx') || fileName.endsWith('.doc') || file.type.includes('word') || file.type.includes('officedocument.wordprocessingml')
+    if (isWord) {
       reader.onload = async (e) => {
         const buffer = e.target?.result as ArrayBuffer
         let textResult = ''
@@ -159,7 +160,6 @@ export default function InputBar({ onSend }: Props) {
           }
         }
 
-        // Final sanitation to strip out any zip headers if raw buffer was passed
         if (textResult.startsWith('PK') || textResult.includes('[Content_Types].xml')) {
           textResult = textResult.replace(/PK[\s\S]*?\[Content_Types\]\.xml/g, '').replace(/<[^>]+>/g, ' ').trim()
         }
@@ -167,7 +167,7 @@ export default function InputBar({ onSend }: Props) {
         setAttachedFile({
           name: file.name,
           type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-          content: textResult.slice(0, 8000) || `[Word Document '${file.name}' - ${Math.round(file.size / 1024)} KB attached]`,
+          content: textResult.slice(0, 10000) || `[Word Document '${file.name}' - ${Math.round(file.size / 1024)} KB attached. Please analyze topics and instructions.]`,
           category: 'word',
         })
       }
@@ -175,15 +175,16 @@ export default function InputBar({ onSend }: Props) {
       return
     }
 
-    // 3. EXCEL SPREADSHEETS (.xlsx, .xls, .csv)
-    if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls') || fileName.endsWith('.csv')) {
-      if (fileName.endsWith('.csv')) {
+    // 3. EXCEL SPREADSHEETS (.xlsx, .xls, .csv, mobile excel mime)
+    const isExcel = fileName.endsWith('.xlsx') || fileName.endsWith('.xls') || fileName.endsWith('.csv') || file.type.includes('excel') || file.type.includes('spreadsheet') || file.type.includes('csv')
+    if (isExcel) {
+      if (fileName.endsWith('.csv') || file.type.includes('csv')) {
         reader.onload = (e) => {
           const csvText = e.target?.result as string || ''
           setAttachedFile({
             name: file.name,
             type: 'text/csv',
-            content: csvText.slice(0, 7000),
+            content: csvText.slice(0, 9000),
             category: 'excel',
           })
         }
@@ -210,7 +211,7 @@ export default function InputBar({ onSend }: Props) {
         setAttachedFile({
           name: file.name,
           type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          content: textResult.slice(0, 7000) || `[Excel Spreadsheet '${file.name}' - ${Math.round(file.size / 1024)} KB attached]`,
+          content: textResult.slice(0, 9000) || `[Excel Spreadsheet '${file.name}' - ${Math.round(file.size / 1024)} KB attached. Please analyze data columns and tables.]`,
           category: 'excel',
         })
       }
@@ -218,8 +219,9 @@ export default function InputBar({ onSend }: Props) {
       return
     }
 
-    // 4. POWERPOINT PRESENTATIONS (.pptx, .ppt)
-    if (fileName.endsWith('.pptx') || fileName.endsWith('.ppt')) {
+    // 4. POWERPOINT PRESENTATIONS (.pptx, .ppt, mobile ppt mime)
+    const isPPT = fileName.endsWith('.pptx') || fileName.endsWith('.ppt') || file.type.includes('presentation') || file.type.includes('powerpoint')
+    if (isPPT) {
       reader.onload = async (e) => {
         const buffer = e.target?.result as ArrayBuffer
         let textResult = ''
@@ -242,7 +244,7 @@ export default function InputBar({ onSend }: Props) {
         setAttachedFile({
           name: file.name,
           type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-          content: textResult.slice(0, 7000) || `[PowerPoint Presentation '${file.name}' - ${Math.round(file.size / 1024)} KB attached]`,
+          content: textResult.slice(0, 9000) || `[PowerPoint Presentation '${file.name}' - ${Math.round(file.size / 1024)} KB attached. Please analyze slide content and topics.]`,
           category: 'powerpoint',
         })
       }
@@ -250,15 +252,15 @@ export default function InputBar({ onSend }: Props) {
       return
     }
 
-    // 5. PDF DOCUMENTS (.pdf)
-    if (fileName.endsWith('.pdf')) {
+    // 5. PDF DOCUMENTS (.pdf, mobile pdf mime)
+    const isPDF = fileName.endsWith('.pdf') || file.type.includes('pdf')
+    if (isPDF) {
       reader.onload = (e) => {
         const buffer = e.target?.result as ArrayBuffer
         let textResult = ''
         try {
           const latin1Decoder = new TextDecoder('latin1')
           const decoded = latin1Decoder.decode(buffer)
-          // Extract text inside PDF parenthesis stream objects ( ... )
           const parenMatches = decoded.match(/\(([^()]{2,})\)/g)
           if (parenMatches && parenMatches.length > 0) {
             textResult = parenMatches
@@ -278,7 +280,7 @@ export default function InputBar({ onSend }: Props) {
         setAttachedFile({
           name: file.name,
           type: 'application/pdf',
-          content: textResult.slice(0, 6000) || `[PDF Document '${file.name}' - ${Math.round(file.size / 1024)} KB attached]`,
+          content: textResult.slice(0, 8000) || `[PDF Document '${file.name}' - ${Math.round(file.size / 1024)} KB attached. Please analyze all topics, specifications, and questions inside.]`,
           category: 'pdf',
         })
       }
@@ -290,7 +292,7 @@ export default function InputBar({ onSend }: Props) {
     reader.onload = (e) => {
       let textResult = e.target?.result as string || ''
       if (typeof textResult !== 'string' || textResult.includes('\0')) {
-        textResult = `[Attached File '${file.name}' - ${Math.round(file.size / 1024)} KB]`
+        textResult = `[Attached File '${file.name}' - ${Math.round(file.size / 1024)} KB attached. Please provide a detailed analysis.]`
       } else {
         textResult = textResult.slice(0, 18000)
       }
