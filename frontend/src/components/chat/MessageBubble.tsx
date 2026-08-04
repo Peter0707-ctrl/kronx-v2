@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Message } from '@/types'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { useKronxStore } from '@/store/useKronxStore'
 
 interface Props {
   message: Message
@@ -27,12 +28,30 @@ export default function MessageBubble({ message, isStreaming, onRegenerate, onEd
     setTimeout(() => setCopied(false), 2000)
   }
 
+  const getCleanUserQuery = (content: string): string => {
+    const docIdx = content.indexOf('\n\n[')
+    if (docIdx !== -1) return content.substring(0, docIdx).trim()
+    const imgIdx = content.indexOf('\n\n[IMAGE:')
+    if (imgIdx !== -1) return content.substring(0, imgIdx).trim()
+    return content.trim()
+  }
+
   const handleGoodResponse = () => {
     setFeedback(feedback === 'good' ? null : 'good')
   }
 
   const handleBadResponse = () => {
     setFeedback('bad')
+    const currentState = useKronxStore.getState()
+    const msgs = currentState.activeMessages()
+    const aiIdx = msgs.findIndex(m => m.id === message.id)
+    if (aiIdx > 0 && msgs[aiIdx - 1].role === 'user') {
+      const userQuery = getCleanUserQuery(msgs[aiIdx - 1].content)
+      const badSnippet = message.content.slice(0, 120).replace(/\n/g, ' ')
+      const memoryItem = `User disliked response to "${userQuery}". Avoid answering like: "${badSnippet}...". Be more detailed, thorough, follow all instructions, and explain clearly.`
+      currentState.addMemory(memoryItem)
+      console.log('[Copetra Brain Saved Reinforcement Memory]:', memoryItem)
+    }
     if (onRegenerate) {
       onRegenerate()
     }
@@ -64,7 +83,17 @@ export default function MessageBubble({ message, isStreaming, onRegenerate, onEd
     if (!editText.trim()) return
     setIsEditing(false)
     if (onEditAndResend) {
-      onEditAndResend(message.id, editText.trim())
+      let finalContent = editText.trim()
+      const docIdx = message.content.indexOf('\n\n[')
+      if (docIdx !== -1) {
+        finalContent = `${finalContent}\n\n${message.content.substring(docIdx).trim()}`
+      } else {
+        const imgIdx = message.content.indexOf('\n\n[IMAGE:')
+        if (imgIdx !== -1) {
+          finalContent = `${finalContent}\n\n${message.content.substring(imgIdx).trim()}`
+        }
+      }
+      onEditAndResend(message.id, finalContent)
     }
   }
 
@@ -82,7 +111,7 @@ export default function MessageBubble({ message, isStreaming, onRegenerate, onEd
         {!isAi && !isEditing && (
           <button
             onClick={() => {
-              setEditText(message.content)
+              setEditText(getCleanUserQuery(message.content))
               setIsEditing(true)
             }}
             title="Edit prompt"
