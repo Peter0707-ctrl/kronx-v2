@@ -2,6 +2,7 @@
 
 import { useRef, useState, KeyboardEvent } from 'react'
 import JSZip from 'jszip'
+import mammoth from 'mammoth'
 import { useKronxStore } from '@/store/useKronxStore'
 
 interface Props {
@@ -83,43 +84,47 @@ export default function InputBar({ onSend }: Props) {
       reader.onload = async (e) => {
         const buffer = e.target?.result as ArrayBuffer
         let textResult = ''
+
+        // Primary: Use Mammoth for 100% clean Word text extraction
         try {
-          const zip = await JSZip.loadAsync(buffer)
-          const docEntryKey = Object.keys(zip.files).find(k => k.toLowerCase().includes('document.xml'))
-          if (docEntryKey) {
-            const docXml = await zip.files[docEntryKey].async('string')
-            if (docXml) {
-              const tMatches = docXml.match(/<w:t[^>]*>([\s\S]*?)<\/w:t>/gi)
-              if (tMatches && tMatches.length > 0) {
-                textResult = tMatches.map(m => m.replace(/<[^>]+>/g, '').trim()).filter(Boolean).join(' ')
-              } else {
-                textResult = docXml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
-              }
-            }
+          const mRes = await mammoth.extractRawText({ arrayBuffer: buffer })
+          if (mRes && mRes.value) {
+            textResult = mRes.value.trim()
           }
         } catch (err) {
-          console.warn('[JSZip Word Extraction Error]', err)
+          console.warn('[Mammoth Extraction Error]', err)
         }
 
-        // Clean up any residual raw zip words if unzipping failed
-        if (!textResult || textResult.includes('[Content_Types].xml') || textResult.startsWith('PK')) {
+        // Secondary Fallback: Use JSZip unzipper
+        if (!textResult || textResult.length < 15) {
           try {
-            const latin1Decoder = new TextDecoder('latin1')
-            const decoded = latin1Decoder.decode(buffer)
-            // Strip out PK header strings and XML tag identifiers
-            const words = decoded.match(/[A-Za-z0-9.,?!'"()$%:\-]{3,}/g)
-            if (words) {
-              textResult = words
-                .filter(w => !/^(PK|xml|rels|theme|document|Content_Types|word|props|schema)/i.test(w))
-                .join(' ')
+            const zip = await JSZip.loadAsync(buffer)
+            const docEntryKey = Object.keys(zip.files).find(k => k.toLowerCase().includes('document.xml'))
+            if (docEntryKey) {
+              const docXml = await zip.files[docEntryKey].async('string')
+              if (docXml) {
+                const tMatches = docXml.match(/<w:t[^>]*>([\s\S]*?)<\/w:t>/gi)
+                if (tMatches && tMatches.length > 0) {
+                  textResult = tMatches.map(m => m.replace(/<[^>]+>/g, '').trim()).filter(Boolean).join(' ')
+                } else {
+                  textResult = docXml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+                }
+              }
             }
-          } catch { }
+          } catch (err) {
+            console.warn('[JSZip Word Extraction Error]', err)
+          }
+        }
+
+        // Final sanitation to strip out any zip headers if raw buffer was passed
+        if (textResult.startsWith('PK') || textResult.includes('[Content_Types].xml')) {
+          textResult = textResult.replace(/PK[\s\S]*?\[Content_Types\]\.xml/g, '').replace(/<[^>]+>/g, ' ').trim()
         }
 
         setAttachedFile({
           name: file.name,
           type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-          content: textResult.slice(0, 7000) || `[Word Document '${file.name}' - ${Math.round(file.size / 1024)} KB attached]`,
+          content: textResult.slice(0, 8000) || `[Word Document '${file.name}' - ${Math.round(file.size / 1024)} KB attached]`,
           category: 'word',
         })
       }
