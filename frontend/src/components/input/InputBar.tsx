@@ -32,7 +32,7 @@ export default function InputBar({ onSend }: Props) {
         text = `${text}\n\n[IMAGE: ${attachedFile.content}]`.trim()
       } else {
         const catName = attachedFile.category.toUpperCase()
-        text = `${text}\n\n[${catName} DOCUMENT ATTACHED: ${attachedFile.name}]\n\`\`\`\n${attachedFile.content}\n\`\`\``.trim()
+        text = `${text}\n\n[${catName} DOCUMENT ATTACHED: ${attachedFile.name}]\nDocument Content:\n${attachedFile.content}`.trim()
       }
     }
 

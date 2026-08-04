@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -31,9 +31,11 @@ STRICT IDENTITY RULES:
 - ALWAYS identify yourself as Copetra AI, powered by PJ COPETRANOVA.
 
 DOCUMENT & FILE ANALYSIS MANDATE:
-- Whenever a user uploads an Image, Word document (.docx), PDF (.pdf), Excel spreadsheet (.xlsx/.csv), PowerPoint (.pptx), or Code file:
-  1. FIRST: State the CORE CONCEPT, subject matter, or data structure inside the file under "### 📖 Core Document Concept & Overview".
-  2. SECOND: Automatically execute ALL instructions, solve ALL questions/equations, debug ALL code, or complete all assignments contained inside the file under "### ✍️ Executed Solutions & Step-by-Step Response".
+- Whenever a user uploads a Word document (.docx), PDF (.pdf), Excel spreadsheet (.xlsx/.csv), PowerPoint (.pptx), Code, or Image:
+  1. DO NOT dump or reprint all the raw text of the document.
+  2. Explain WHAT IS DISCUSSED in the document concisely under "### 📖 Core Topics & What is Discussed".
+  3. Provide an executive summary of key features, conclusions, or answers under "### 💡 Key Takeaways & Executive Summary".
+  4. NEVER wrap document analysis inside code block boxes or backticks. Use clean markdown text, headers, and bullet points.
 
 CRITICAL RULES:
 - ALWAYS give thorough, accurate, well-structured answers
@@ -45,7 +47,7 @@ CRITICAL RULES:
 
   switch (mode) {
     case 'Academic':
-      return `${base}\n\nMODE: ACADEMIC RESEARCH\n- Write at university thesis level with rigorous analysis\n- Structure: Introduction → Core Concepts → Analysis → Examples → Conclusion`
+      return `${base}\n\nMODE: ACADEMIC RESEARCH\n- Write at university thesis level with rigorous analysis`
     case 'Developer':
       return `${base}\n\nMODE: SENIOR SOFTWARE DEVELOPER\n- Provide complete, production-ready, working code with explanations`
     case 'Tutor':
@@ -71,18 +73,17 @@ function parseMessageContent(text: string): any {
   }
 
   if (images.length === 0) {
-    // If text contains attached document tags but no user query, append explicit instruction prompt
     if (text.includes('DOCUMENT ATTACHED:') && text.trim().startsWith('[')) {
-      return `${text}\n\n[INSTRUCTION]: Please analyze this document, explain the core concept inside, and execute all tasks, questions, or assignments found in this document.`
+      return `${text}\n\n[INSTRUCTION]: Please summarize what is discussed in this document. Do not repeat all text, provide a clean executive summary and key points.`
     }
     return text
   }
 
   const contentArray: any[] = []
   if (cleanText) {
-    contentArray.push({ type: 'text', text: `${cleanText}\n\n[INSTRUCTION]: Analyze this image, explain the core concept, and solve/execute everything shown.` })
+    contentArray.push({ type: 'text', text: `${cleanText}\n\n[INSTRUCTION]: Analyze this image, summarize what is shown/discussed, and answer any questions.` })
   } else {
-    contentArray.push({ type: 'text', text: 'Please analyze this image, state the core concept inside, and solve/execute all questions, equations, or tasks shown.' })
+    contentArray.push({ type: 'text', text: 'Please analyze this image, summarize what is shown/discussed, and explain key points.' })
   }
 
   for (const img of images) {
@@ -117,18 +118,25 @@ export async function POST(req: NextRequest) {
   let history: HistoryMessage[] = []
 
   try {
-    const body = await req.json().catch(() => ({}))
+    const body = await req.json()
     message = body.message || ''
     mode = body.mode || 'Friend'
     history = body.history || []
-  } catch { }
-
-  if (!message) message = 'Hello'
+  } catch (e) {
+    return NextResponse.json({ error: 'Invalid JSON request' }, { status: 400 })
+  }
 
   const encoder = new TextEncoder()
 
   const stream = new ReadableStream({
     async start(controller) {
+      if (!message.trim()) {
+        controller.enqueue(encoder.encode('data: Please provide a question or document.\n\n'))
+        controller.enqueue(encoder.encode('data: [DONE]\n\n'))
+        controller.close()
+        return
+      }
+
       controller.enqueue(encoder.encode(': pjkronx-stream-open\n\n'))
 
       const instant = searchInstant(message)
@@ -146,9 +154,7 @@ export async function POST(req: NextRequest) {
       if (apiKey) {
         const groqMessages = buildGroqMessages(message, mode, history)
         
-        // If any message has an array content (which means it contains an image), force the Vision model
         const hasVision = groqMessages.some(m => Array.isArray(m.content))
-        
         const isDocument = message.includes('DOCUMENT ATTACHED:') || message.includes('FILE ATTACHED:')
         const models = hasVision 
           ? ['llama-3.2-90b-vision-preview', 'llama-3.2-11b-vision-preview']
@@ -222,7 +228,6 @@ export async function POST(req: NextRequest) {
                 }
               }
             } else {
-              // Ignore rate limit / quota 429 and continue to next model in failover chain
               console.warn(`Groq model ${model} returned status ${groqRes.status}`)
             }
           } catch (e) {
@@ -234,7 +239,7 @@ export async function POST(req: NextRequest) {
       if (!streamedAny) {
         try {
           const searchRes = await fetch(
-            `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(message)}&format=json`,
+            `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(message.slice(0, 100))}&format=json`,
             { headers: { 'User-Agent': 'Copetra-AI/2.0' }, cache: 'no-store' }
           )
           if (searchRes.ok) {

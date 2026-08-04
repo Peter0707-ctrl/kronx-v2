@@ -68,8 +68,13 @@ export default function MessageBubble({ message, isStreaming, onRegenerate, onEd
     }
   }
 
-  // Check if content has an image preview string to remove it from UI display
-  const displayContent = message.content.replace(/\[IMAGE: data:image\/[a-zA-Z]+;base64,.*?\]/g, '[Attached Image]')
+  // Format user messages cleanly: hide raw Base64 images & raw document text dumps behind sleek badges
+  let displayContent = message.content
+  if (!isAi) {
+    displayContent = displayContent
+      .replace(/\[IMAGE: data:image\/[a-zA-Z]+;base64,.*?\]/g, '🖼️ [Attached Image]')
+      .replace(/\[(WORD|PDF|EXCEL|POWERPOINT|TEXT|CODE) DOCUMENT ATTACHED:\s*([^\]]+)\][\s\S]*/gi, '📄 [Attached Document: $2]')
+  }
 
   return (
     <div className={`msg-row ${isAi ? 'msg-ai' : 'msg-user'}`}>
