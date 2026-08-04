@@ -16,6 +16,22 @@ const GREETINGS: Record<string, string> = {
 
 function searchInstant(query: string): string | null {
   const q = query.toLowerCase().trim()
+
+  // Brain Memory query handler (Zero API call for personal memory lookups)
+  if (q.includes('what is my name') || q.includes('who am i') || q.includes('jina langu ni nani')) {
+    const nameMatch = query.match(/User Name:\s*([^\n]+)/i)
+    if (nameMatch) {
+      return `Your name is **${nameMatch[1].trim()}**! 🧠\n\nI remember your identity and personal details in my permanent **Copetra AI Brain**!`
+    }
+  }
+
+  if (q.includes('what project') || q.includes('my projects') || q.includes('mradi wangu')) {
+    const projMatch = query.match(/User Project\/Work:\s*([^\n]+)/i)
+    if (projMatch) {
+      return `According to my persistent Brain Memory, you are working on: **${projMatch[1].trim()}**! 🚀\n\nI retain full memory of your project context across all chats!`
+    }
+  }
+
   if (GREETINGS[q]) return GREETINGS[q]
   for (const [k, v] of Object.entries(GREETINGS)) {
     if (q === k || q.startsWith(k + ' ') || q.endsWith(' ' + k)) return v
