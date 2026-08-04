@@ -42,6 +42,8 @@ export interface Conversation {
   createdAt: Date
   updatedAt: Date
   mode: KronxMode
+  isPinned?: boolean
+  isArchived?: boolean
 }
 
 export interface ModeConfig {

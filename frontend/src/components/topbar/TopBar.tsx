@@ -4,20 +4,41 @@ import { useState, useEffect, useRef } from 'react'
 import { useKronxStore } from '@/store/useKronxStore'
 
 export default function TopBar() {
-  const { toggleSidebar, sidebarOpen, setSettingsModalOpen, clearActiveConversationMessages, clearAllConversations, activeConversationId, deleteConversation, user, generateApiKey, setActiveView } = useKronxStore()
+  const {
+    toggleSidebar,
+    sidebarOpen,
+    setSettingsModalOpen,
+    clearActiveConversationMessages,
+    clearAllConversations,
+    activeConversationId,
+    deleteConversation,
+    togglePinConversation,
+    toggleArchiveConversation,
+    conversations,
+    activeMessages,
+    user,
+    generateApiKey,
+    setActiveView,
+    language
+  } = useKronxStore()
+
   const [menuOpen, setMenuOpen] = useState(false)
   const [brandMenuOpen, setBrandMenuOpen] = useState(false)
-  const [pinned, setPinned] = useState(false)
   const [copiedKey, setCopiedKey] = useState(false)
   const [topToast, setTopToast] = useState<string | null>(null)
+  const [viewFilesModalOpen, setViewFilesModalOpen] = useState(false)
   const brandMenuRef = useRef<HTMLDivElement>(null)
+  const sw = language === 'sw'
+
+  const activeConv = conversations.find(c => c.id === activeConversationId)
+  const isPinned = activeConv?.isPinned ?? false
+  const isArchived = activeConv?.isArchived ?? false
 
   const showTopToast = (msg: string) => {
     setTopToast(msg)
     setTimeout(() => setTopToast(null), 3000)
   }
 
-  const isPremium = user?.plan === 'premium' || user?.role === 'admin'
   const isAdmin = user?.role === 'admin'
 
   useEffect(() => {
@@ -39,6 +60,30 @@ export default function TopBar() {
     if (menuOpen) setMenuOpen(false)
   }
 
+  // Extract images and code files from active messages
+  const msgs = activeMessages()
+  const extractedFiles: { type: 'image' | 'code'; content: string; name: string }[] = []
+  msgs.forEach((m) => {
+    if (m.content) {
+      // Find Markdown images ![alt](url) or HTML <img src="...">
+      const imgRegex = /!\[.*?\]\((.*?)\)|<img.*?src=["'](.*?)["']/g
+      let match
+      while ((match = imgRegex.exec(m.content)) !== null) {
+        const url = match[1] || match[2]
+        if (url) {
+          extractedFiles.push({ type: 'image', content: url, name: `Image ${extractedFiles.length + 1}` })
+        }
+      }
+      // Find code blocks ```lang ... ```
+      const codeRegex = /```(\w+)?\n([\s\S]*?)```/g
+      let codeMatch
+      while ((codeMatch = codeRegex.exec(m.content)) !== null) {
+        const lang = codeMatch[1] || 'code'
+        extractedFiles.push({ type: 'code', content: codeMatch[2], name: `Snippet ${extractedFiles.length + 1} (.${lang})` })
+      }
+    }
+  })
+
   return (
     <header className="topbar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', background: 'transparent', position: 'relative' }}>
       {topToast && (
@@ -46,47 +91,86 @@ export default function TopBar() {
           ⚡ {topToast}
         </div>
       )}
+
+      {/* Modal for Viewing Files in Chat */}
+      {viewFilesModalOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: '#ffffff', borderRadius: '24px', width: '100%', maxWidth: '600px', maxHeight: '80vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.3)' }}>
+            <div style={{ padding: '20px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span>📁</span>
+                <span>{sw ? 'Faili na Picha Katika Chat' : 'Files & Media in Current Chat'}</span>
+              </div>
+              <button
+                onClick={() => setViewFilesModalOpen(false)}
+                style={{ background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '28px', height: '28px', cursor: 'pointer', fontWeight: '700' }}
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div style={{ padding: '20px 24px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {extractedFiles.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px 20px', color: '#94a3b8' }}>
+                  <div style={{ fontSize: '32px', marginBottom: '8px' }}>🖼️</div>
+                  <div style={{ fontSize: '14px', fontWeight: '600' }}>
+                    {sw ? 'Hakuna picha au faili zilizo zalishwa katika mazungumzo haya bado.' : 'No images or code files generated in this conversation yet.'}
+                  </div>
+                </div>
+              ) : (
+                extractedFiles.map((f, i) => (
+                  <div key={i} style={{ border: '1px solid #cbd5e1', borderRadius: '14px', padding: '12px', background: '#f8fafc' }}>
+                    <div style={{ fontSize: '12.5px', fontWeight: '700', color: '#0284c7', marginBottom: '8px' }}>{f.name}</div>
+                    {f.type === 'image' ? (
+                      <img src={f.content} alt="Chat media" style={{ maxWidth: '100%', maxHeight: '250px', borderRadius: '8px', objectFit: 'contain' }} />
+                    ) : (
+                      <pre style={{ background: '#0f172a', color: '#f8fafc', padding: '12px', borderRadius: '8px', fontSize: '12px', overflowX: 'auto', margin: 0 }}>
+                        <code>{f.content}</code>
+                      </pre>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Left Area: Sidebar Toggle & Admin Console Button */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         <button
           onClick={toggleSidebar}
-          title={sidebarOpen ? 'Close sidebar' : 'Open sidebar'}
+          aria-label="Toggle Navigation Menu"
           style={{
             background: '#ffffff',
             border: '1px solid #cbd5e1',
-            borderRadius: '10px',
-            width: '36px',
-            height: '36px',
+            borderRadius: '12px',
+            width: '40px',
+            height: '40px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
-            color: '#0f172a',
-            boxShadow: '0 2px 6px rgba(0,0,0,0.04)'
+            boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+            color: '#0f172a'
           }}
         >
-          <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-            <line x1="9" y1="3" x2="9" y2="21" />
+          <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="18" x2="21" y2="18" />
           </svg>
         </button>
 
-        {/* Dedicated Admin Console Button - Exclusively visible to logged in Admin */}
-        {isAdmin && (
+        {/* Master AI Admin Console Access Icon Button (Only for Master Admin) */}
+        {(isAdmin || user?.email === 'pj0040280@gmail.com') && (
           <button
-            onClick={() => {
-              setBrandMenuOpen(false)
-              setMenuOpen(false)
-              setActiveView('admin')
-            }}
-            title="Open Master Admin Console"
+            onClick={() => setActiveView('admin')}
+            title="Master AI Admin Dashboard"
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
               background: '#0f172a',
-              color: '#ffffff',
               border: 'none',
+              color: '#ffffff',
               borderRadius: '10px',
               width: '36px',
               height: '36px',
@@ -133,129 +217,115 @@ export default function TopBar() {
               background: '#ffffff',
               borderRadius: '24px',
               border: '1px solid #cbd5e1',
-              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.18)',
-              padding: '22px',
-              zIndex: 99999,
-              fontFamily: "Calibri, 'Calibri Light', sans-serif",
-              animation: 'fadeIn 0.2s ease-out'
+              boxShadow: '0 20px 50px rgba(0,0,0,0.2)',
+              padding: '20px',
+              zIndex: 9999,
+              animation: 'fadeIn 0.2s ease-out',
+              fontFamily: "Calibri, 'Calibri Light', sans-serif"
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', borderBottom: '1px solid #f1f5f9', paddingBottom: '12px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a' }}>🔑 Kronx Developer API Key</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
+              <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#0284c7', color: '#fff', fontWeight: '900', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>
+                ⚡
               </div>
-              <button
-                onClick={() => setBrandMenuOpen(false)}
-                style={{ width: '28px', height: '28px', borderRadius: '50%', border: 'none', background: '#f1f5f9', color: '#64748b', cursor: 'pointer', fontWeight: '700' }}
-              >
-                ✕
-              </button>
+              <div>
+                <div style={{ fontSize: '15px', fontWeight: '800', color: '#0f172a' }}>Copetra Developer Suite</div>
+                <div style={{ fontSize: '11.5px', color: '#64748b' }}>Live API Key & Gateway Integration</div>
+              </div>
             </div>
 
-              {isPremium ? (
-                <div>
-                  {!user?.apiKey ? (
-                    <div style={{ textAlign: 'center', padding: '6px 0' }}>
-                      <p style={{ fontSize: '13.5px', color: '#475569', margin: '0 0 14px 0', lineHeight: '1.5' }}>
-                        As a <strong>Kronx Plus Subscriber</strong>, you are eligible for developer API access. Click below to apply and generate your live key automatically:
-                      </p>
-                      <button
-                        onClick={() => {
-                          const newKey = generateApiKey()
-                          showTopToast(`API Key Generated Successfully: ${newKey}`)
-                        }}
-                        style={{ width: '100%', padding: '12px 14px', borderRadius: '14px', background: '#0284c7', color: '#ffffff', border: 'none', fontWeight: '800', fontSize: '13.5px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(2, 132, 199, 0.2)' }}
-                      >
-                        ⚡ Apply for Developer API Key
-                      </button>
-                    </div>
-                  ) : (
-                    <div>
-                      <p style={{ fontSize: '13px', color: '#475569', margin: '0 0 10px 0', lineHeight: '1.4' }}>
-                        Your active Premium API Key grants full access to Copetra LLM models and FLUX 8K image generation endpoints:
-                      </p>
-                      <div style={{ background: '#0f172a', borderRadius: '12px', padding: '12px 14px', color: '#38bdf8', fontFamily: 'monospace', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '230px' }}>
-                          {user.apiKey}
-                        </span>
-                        <button
-                          onClick={() => {
-                            navigator.clipboard.writeText(user.apiKey!)
-                            setCopiedKey(true)
-                            setTimeout(() => setCopiedKey(false), 2000)
-                          }}
-                          style={{ background: '#0284c7', color: '#fff', border: 'none', borderRadius: '8px', padding: '6px 12px', fontSize: '11.5px', fontWeight: '800', cursor: 'pointer' }}
-                        >
-                          {copiedKey ? 'Copied!' : 'Copy'}
-                        </button>
-                      </div>
-                      <button
-                        onClick={() => {
-                          const newKey = generateApiKey()
-                          showTopToast(`New API Key Generated: ${newKey}`)
-                        }}
-                        style={{ width: '100%', padding: '10px', borderRadius: '12px', background: '#f1f5f9', border: '1px solid #cbd5e1', color: '#0f172a', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}
-                      >
-                        🔄 Regenerate API Key
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div style={{ textAlign: 'center', padding: '8px 0' }}>
-                  <p style={{ fontSize: '13.5px', color: '#64748b', margin: '0 0 16px 0', lineHeight: '1.5' }}>
-                    🔒 API Keys are exclusively available to <strong>Kronx Plus Premium Subscribers</strong>. Upgrade your subscription to unlock API access!
-                  </p>
-                  <button
-                    onClick={() => {
-                      setBrandMenuOpen(false)
-                      setSettingsModalOpen(true)
-                    }}
-                    style={{ width: '100%', padding: '12px', borderRadius: '14px', background: '#0f172a', color: '#ffffff', border: 'none', fontWeight: '800', fontSize: '13.5px', cursor: 'pointer' }}
-                  >
-                    ✦ Upgrade to Kronx Plus (15,000 TZS)
-                  </button>
-                </div>
-              )}
+            {/* API Key Box */}
+            <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '12px', marginBottom: '14px' }}>
+              <div style={{ fontSize: '11px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
+                Your Live API Secret Key
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <input
+                  type="text"
+                  readOnly
+                  value={user?.apiKey || 'kx-live-key-not-generated'}
+                  style={{ flex: 1, padding: '6px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', fontSize: '12px', fontFamily: 'monospace', color: '#0f172a' }}
+                />
+                <button
+                  onClick={() => {
+                    const key = user?.apiKey || generateApiKey()
+                    navigator.clipboard.writeText(key)
+                    setCopiedKey(true)
+                    showTopToast('API Secret Key copied to clipboard!')
+                    setTimeout(() => setCopiedKey(false), 2000)
+                  }}
+                  style={{ padding: '6px 12px', borderRadius: '8px', background: '#0284c7', color: '#ffffff', border: 'none', fontWeight: '700', fontSize: '11.5px', cursor: 'pointer' }}
+                >
+                  {copiedKey ? 'Copied ✓' : 'Copy'}
+                </button>
+              </div>
+            </div>
+
+            {/* Developer Gateway Specs */}
+            <div style={{ fontSize: '12px', color: '#475569', display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '16px', background: '#f0f9ff', padding: '10px 12px', borderRadius: '12px', border: '1px solid #bae6fd' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Endpoint:</span>
+                <span style={{ fontWeight: '700', fontFamily: 'monospace' }}>POST /api/gateway</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Access Status:</span>
+                <span style={{ fontWeight: '700', color: user?.isDeveloper ? '#10b981' : '#f59e0b' }}>
+                  {user?.isDeveloper ? 'Developer Enabled ✓' : 'Standard User'}
+                </span>
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                setBrandMenuOpen(false)
+                setSettingsModalOpen(true)
+              }}
+              style={{ width: '100%', padding: '10px', borderRadius: '12px', background: 'linear-gradient(135deg, #0284c7, #0369a1)', color: '#ffffff', border: 'none', fontWeight: '700', fontSize: '13px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(2, 132, 199, 0.3)' }}
+            >
+              Configure Developer Options
+            </button>
           </div>
         )}
       </div>
 
-      {/* Right Actions: Upgrade & Three Dots Menu */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', position: 'relative' }}>
-        <button
-          onClick={() => setSettingsModalOpen(true)}
-          style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', border: 'none', color: '#2563eb', fontWeight: '600', fontSize: '14px', cursor: 'pointer', fontFamily: "Calibri, 'Calibri Light', sans-serif" }}
-        >
-          <span style={{ fontSize: '14px' }}>✦</span>
-          <span>Upgrade</span>
-        </button>
-
-        {/* Three Dots Menu Button */}
+      {/* Right Area: Top Action Three-Dot Menu Trigger */}
+      <div style={{ position: 'relative' }}>
         <button
           onClick={() => setMenuOpen(!menuOpen)}
-          title="More options"
-          style={{ background: 'transparent', border: 'none', color: '#0f172a', padding: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', borderRadius: '8px' }}
+          aria-label="More Options Menu"
+          style={{
+            background: '#ffffff',
+            border: '1px solid #cbd5e1',
+            borderRadius: '12px',
+            width: '40px',
+            height: '40px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+            color: '#0f172a'
+          }}
         >
-          <svg width={20} height={20} viewBox="0 0 24 24" fill="currentColor">
-            <circle cx="5" cy="12" r="2" />
-            <circle cx="12" cy="12" r="2" />
-            <circle cx="19" cy="12" r="2" />
+          <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+            <circle cx="12" cy="5" r="1.5" />
+            <circle cx="12" cy="12" r="1.5" />
+            <circle cx="12" cy="19" r="1.5" />
           </svg>
         </button>
 
-        {/* Dropdown Menu Modal matching ChatGPT Screenshot */}
+        {/* Top Actions Dropdown Menu */}
         {menuOpen && (
           <div
             style={{
               position: 'absolute',
-              top: '42px',
-              right: '0',
-              width: '200px',
+              right: 0,
+              top: '48px',
+              width: '220px',
               background: '#ffffff',
               borderRadius: '16px',
               border: '1px solid #e2e8f0',
-              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
+              boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
               padding: '8px',
               zIndex: 999,
               display: 'flex',
@@ -264,10 +334,11 @@ export default function TopBar() {
               fontFamily: "Calibri, 'Calibri Light', sans-serif"
             }}
           >
+            {/* 1. View files in chat */}
             <button
               onClick={() => {
                 setMenuOpen(false)
-                showTopToast('No media files uploaded in current session.')
+                setViewFilesModalOpen(true)
               }}
               style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '10px 12px', borderRadius: '10px', border: 'none', background: 'transparent', color: '#0f172a', fontSize: '13.5px', fontWeight: '600', cursor: 'pointer', textAlign: 'left' }}
               onMouseOver={e => (e.currentTarget.style.background = '#f1f5f9')}
@@ -277,32 +348,42 @@ export default function TopBar() {
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
                 <line x1="9" y1="3" x2="9" y2="21" />
               </svg>
-              <span>View files in chat</span>
+              <span>{sw ? 'Tazama faili katika chat' : 'View files in chat'}</span>
             </button>
 
-            <button
-              onClick={() => {
-                setMenuOpen(false)
-                setPinned(!pinned)
-              }}
-              style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '10px 12px', borderRadius: '10px', border: 'none', background: 'transparent', color: pinned ? '#0284c7' : '#0f172a', fontSize: '13.5px', fontWeight: '600', cursor: 'pointer', textAlign: 'left' }}
-              onMouseOver={e => (e.currentTarget.style.background = '#f1f5f9')}
-              onMouseOut={e => (e.currentTarget.style.background = 'transparent')}
-            >
-              <svg width={16} height={16} viewBox="0 0 24 24" fill={pinned ? '#0284c7' : 'none'} stroke="currentColor" strokeWidth={2}>
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-              </svg>
-              <span>{pinned ? 'Pinned' : 'Pin chat'}</span>
-            </button>
-
+            {/* 2. Pin chat */}
             <button
               onClick={() => {
                 setMenuOpen(false)
                 if (activeConversationId) {
-                  deleteConversation(activeConversationId)
+                  togglePinConversation(activeConversationId)
+                  showTopToast(!isPinned ? 'Chat Pinned to Top 📌' : 'Chat Unpinned')
+                } else {
+                  showTopToast('No active conversation to pin.')
                 }
               }}
-              style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '10px 12px', borderRadius: '10px', border: 'none', background: 'transparent', color: '#0f172a', fontSize: '13.5px', fontWeight: '600', cursor: 'pointer', textAlign: 'left' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '10px 12px', borderRadius: '10px', border: 'none', background: 'transparent', color: isPinned ? '#0284c7' : '#0f172a', fontSize: '13.5px', fontWeight: '600', cursor: 'pointer', textAlign: 'left' }}
+              onMouseOver={e => (e.currentTarget.style.background = '#f1f5f9')}
+              onMouseOut={e => (e.currentTarget.style.background = 'transparent')}
+            >
+              <svg width={16} height={16} viewBox="0 0 24 24" fill={isPinned ? '#0284c7' : 'none'} stroke="currentColor" strokeWidth={2}>
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              </svg>
+              <span>{isPinned ? (sw ? 'Yaliyobandikwa (Pinned ✓)' : 'Pinned ✓') : (sw ? 'Bandika chat (Pin chat)' : 'Pin chat')}</span>
+            </button>
+
+            {/* 3. Archive chat */}
+            <button
+              onClick={() => {
+                setMenuOpen(false)
+                if (activeConversationId) {
+                  toggleArchiveConversation(activeConversationId)
+                  showTopToast(!isArchived ? 'Chat Archived 📦' : 'Chat Unarchived')
+                } else {
+                  showTopToast('No active conversation to archive.')
+                }
+              }}
+              style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '10px 12px', borderRadius: '10px', border: 'none', background: 'transparent', color: isArchived ? '#0284c7' : '#0f172a', fontSize: '13.5px', fontWeight: '600', cursor: 'pointer', textAlign: 'left' }}
               onMouseOver={e => (e.currentTarget.style.background = '#f1f5f9')}
               onMouseOut={e => (e.currentTarget.style.background = 'transparent')}
             >
@@ -311,13 +392,14 @@ export default function TopBar() {
                 <rect x="1" y="3" width="22" height="5" />
                 <line x1="10" y1="12" x2="14" y2="12" />
               </svg>
-              <span>Archive</span>
+              <span>{isArchived ? (sw ? 'Ondoa Kwenye Archive' : 'Unarchive') : (sw ? 'Hifadhi kwenye Archive' : 'Archive')}</span>
             </button>
 
+            {/* 4. Delete chat */}
             <button
               onClick={() => {
                 setMenuOpen(false)
-                if (confirm('Delete current chat session?')) {
+                if (confirm(sw ? 'Futa mazungumzo haya ya sasa?' : 'Delete current chat session?')) {
                   clearActiveConversationMessages()
                 }
               }}
@@ -329,7 +411,7 @@ export default function TopBar() {
                 <polyline points="3 6 5 6 21 6" />
                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
               </svg>
-              <span>Delete</span>
+              <span>{sw ? 'Futa Chat' : 'Delete'}</span>
             </button>
           </div>
         )}

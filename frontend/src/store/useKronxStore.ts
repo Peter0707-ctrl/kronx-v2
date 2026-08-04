@@ -21,6 +21,8 @@ interface KronxStore {
   newConversation: () => void
   selectConversation: (id: string) => void
   deleteConversation: (id: string) => void
+  togglePinConversation: (id: string) => void
+  toggleArchiveConversation: (id: string) => void
   clearAllConversations: () => void
   clearActiveConversationMessages: () => void
 
@@ -110,6 +112,20 @@ export const useKronxStore = create<KronxStore>()(
           conversations: s.conversations.filter(c => c.id !== id),
           activeConversationId:
             s.activeConversationId === id ? null : s.activeConversationId,
+        })),
+
+      togglePinConversation: (id) =>
+        set(s => ({
+          conversations: s.conversations.map(c =>
+            c.id === id ? { ...c, isPinned: !c.isPinned } : c
+          ),
+        })),
+
+      toggleArchiveConversation: (id) =>
+        set(s => ({
+          conversations: s.conversations.map(c =>
+            c.id === id ? { ...c, isArchived: !c.isArchived } : c
+          ),
         })),
 
       clearAllConversations: () =>
