@@ -89,10 +89,10 @@ export default function Home() {
             SYSTEM OFFLINE / MAINTENANCE
           </div>
           <h2 style={{ fontSize: '24px', fontWeight: '800', margin: '0 0 12px 0', color: '#ffffff' }}>
-            Kronx AI System Currently Unavailable
+            Copetra AI System Currently Unavailable
           </h2>
           <p style={{ fontSize: '14px', color: '#94a3b8', lineHeight: '1.6', margin: 0 }}>
-            The administrator has temporarily shut down Kronx AI services for scheduled system updates and maintenance. Please try again later.
+            The administrator has temporarily shut down Copetra AI services for scheduled system updates and maintenance. Please try again later.
           </p>
         </div>
       </main>

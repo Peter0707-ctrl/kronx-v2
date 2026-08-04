@@ -43,8 +43,11 @@ export default function PwaInstallPrompt() {
   }, [])
 
   useEffect(() => {
-    // Show install prompt ONLY whenever user is logged in AND app is NOT installed
-    if (user && !isStandalone) {
+    // Show install prompt ONLY ONCE when user enters the system and if app is NOT installed
+    const hasBeenShown = typeof window !== 'undefined' && sessionStorage.getItem('copetra_pwa_shown') === 'true'
+
+    if (user && !isStandalone && !hasBeenShown) {
+      sessionStorage.setItem('copetra_pwa_shown', 'true')
       setShowPrompt(true)
 
       // Auto-disappear within 2.5 seconds automatically
@@ -96,10 +99,10 @@ export default function PwaInstallPrompt() {
         left: '20px',
         maxWidth: '400px',
         margin: '0 auto',
-        background: 'rgba(15, 23, 42, 0.94)',
+        background: 'rgba(179, 184, 195, 0.94)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
-        color: '#ffffff',
+        color: '#ffffff80',
         borderRadius: '18px',
         padding: '16px 18px',
         boxShadow: '0 12px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(56, 189, 248, 0.25)',

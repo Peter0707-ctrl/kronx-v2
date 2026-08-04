@@ -168,7 +168,7 @@ export default function LandingPage({ onStart }: Props) {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
           {/* WhatsApp Direct Action Button */}
           <a
-            href="https://wa.me/255673190931?text=Habari%20PJ%20COPETRANOVA,%20nimetembelea%20PJKRONX%20AI%20na%20ningependa%20mawasiliano."
+            href="https://wa.me/255673190931?text=Habari%20PJ%20COPETRANOVA,%20nimetembelea%20Copetra%20AI%20na%20ningependa%20mawasiliano."
             target="_blank"
             rel="noopener noreferrer"
             style={{
@@ -220,7 +220,7 @@ export default function LandingPage({ onStart }: Props) {
 
           {/* Email Founder Direct Action Button (Gmail Webmail & Native Mail) */}
           <a
-            href="https://mail.google.com/mail/?view=cm&fs=1&to=pb0040280@gmail.com&su=Inquiry%20from%20PJKRONX%20AI%20Platform"
+            href="https://mail.google.com/mail/?view=cm&fs=1&to=pb0040280@gmail.com&su=Inquiry%20from%20Copetra%20AI%20Platform"
             target="_blank"
             rel="noopener noreferrer"
             style={{

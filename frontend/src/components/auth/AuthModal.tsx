@@ -263,7 +263,7 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
         {/* Founder & Developer Social Action Buttons */}
         <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
           <a
-            href="https://wa.me/255673190931?text=Habari%20PJ%20COPETRANOVA,%20nimetembelea%20PJKRONX%20AI%20na%20ningependa%20mawasiliano."
+            href="https://wa.me/255673190931?text=Habari%20PJ%20COPETRANOVA,%20nimetembelea%20Copetra%20AI%20na%20ningependa%20mawasiliano."
             target="_blank"
             rel="noopener noreferrer"
             title="WhatsApp Support"
@@ -287,7 +287,7 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
           </a>
 
           <a
-            href="https://mail.google.com/mail/?view=cm&fs=1&to=pb0040280@gmail.com&su=Inquiry%20from%20PJKRONX%20AI%20Platform"
+            href="https://mail.google.com/mail/?view=cm&fs=1&to=pb0040280@gmail.com&su=Inquiry%20from%20Copetra%20AI%20Platform"
             target="_blank"
             rel="noopener noreferrer"
             title="Email Founder"
