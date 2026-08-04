@@ -17,6 +17,34 @@ interface AttachedFile {
   category: 'image' | 'pdf' | 'word' | 'excel' | 'powerpoint' | 'text' | 'code'
 }
 
+const sanitizeExtractedText = (text: string): string => {
+  if (!text) return ''
+  let clean = text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, ' ')
+  
+  const keywords = new Set([
+    'obj', 'endobj', 'stream', 'endstream', 'xref', 'trailer', 'startxref', 
+    'eof', 'catalog', 'pages', 'parent', 'resources', 'font', 'contents', 
+    'type', 'prev', 'size', 'filter', 'flatedecode', 'length', 'procset', 
+    'mediabox', 'kids', 'count', 'root', 'info', 'creationdate', 'moddate', 
+    'producer', 'creator', 'author', 'title', 'subject', 'keywords', 'metadata', 
+    'xml', 'uuid', 'adobe', 'pdf', 'encrypt', 'standard', 'v2', 'r3', 'o', 'u', 'p', 'bytes',
+    'pk', 'content_types', 'rels', 'theme', 'document'
+  ])
+
+  const words = clean.split(/\s+/)
+  const filtered = words.filter(w => {
+    const lower = w.toLowerCase()
+    if (lower.startsWith('pk') || lower.includes('[content_types]') || lower.includes('_rels')) return false
+    if (keywords.has(lower)) return false
+    if (w.startsWith('/') || w.startsWith('<<') || w.startsWith('>>')) return false
+    if (w.length > 25 && /^[a-fA-F0-9]+$/.test(w)) return false
+    if (/[^a-zA-Z0-9.,?!'"()\-_\s]/g.test(w)) return false
+    return true
+  })
+
+  return filtered.join(' ')
+}
+
 export default function InputBar({ onSend }: Props) {
   const { isStreaming } = useKronxStore()
   const [value, setValue] = useState('')
@@ -164,10 +192,11 @@ export default function InputBar({ onSend }: Props) {
           textResult = textResult.replace(/PK[\s\S]*?\[Content_Types\]\.xml/g, '').replace(/<[^>]+>/g, ' ').trim()
         }
 
+        const sanitized = sanitizeExtractedText(textResult)
         setAttachedFile({
           name: file.name,
           type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-          content: textResult.slice(0, 10000) || `[Word Document '${file.name}' - ${Math.round(file.size / 1024)} KB attached. Please analyze topics and instructions.]`,
+          content: sanitized.slice(0, 10000) || `[Word Document '${file.name}' - ${Math.round(file.size / 1024)} KB attached. Please analyze topics and instructions.]`,
           category: 'word',
         })
       }
@@ -208,10 +237,11 @@ export default function InputBar({ onSend }: Props) {
           console.warn('[JSZip Excel Extraction Error]', err)
         }
 
+        const sanitized = sanitizeExtractedText(textResult)
         setAttachedFile({
           name: file.name,
           type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          content: textResult.slice(0, 9000) || `[Excel Spreadsheet '${file.name}' - ${Math.round(file.size / 1024)} KB attached. Please analyze data columns and tables.]`,
+          content: sanitized.slice(0, 9000) || `[Excel Spreadsheet '${file.name}' - ${Math.round(file.size / 1024)} KB attached. Please analyze data columns and tables.]`,
           category: 'excel',
         })
       }
@@ -241,10 +271,11 @@ export default function InputBar({ onSend }: Props) {
           console.warn('[JSZip PPT Extraction Error]', err)
         }
 
+        const sanitized = sanitizeExtractedText(textResult)
         setAttachedFile({
           name: file.name,
           type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-          content: textResult.slice(0, 9000) || `[PowerPoint Presentation '${file.name}' - ${Math.round(file.size / 1024)} KB attached. Please analyze slide content and topics.]`,
+          content: sanitized.slice(0, 9000) || `[PowerPoint Presentation '${file.name}' - ${Math.round(file.size / 1024)} KB attached. Please analyze slide content and topics.]`,
           category: 'powerpoint',
         })
       }
@@ -277,10 +308,11 @@ export default function InputBar({ onSend }: Props) {
           }
         } catch { }
 
+        const sanitized = sanitizeExtractedText(textResult)
         setAttachedFile({
           name: file.name,
           type: 'application/pdf',
-          content: textResult.slice(0, 8000) || `[PDF Document '${file.name}' - ${Math.round(file.size / 1024)} KB attached. Please analyze all topics, specifications, and questions inside.]`,
+          content: sanitized.slice(0, 8000) || `[PDF Document '${file.name}' - ${Math.round(file.size / 1024)} KB attached. Please analyze all topics, specifications, and questions inside.]`,
           category: 'pdf',
         })
       }
