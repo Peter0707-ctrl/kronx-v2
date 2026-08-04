@@ -175,18 +175,27 @@ export default function MessageBubble({ message, isStreaming, onRegenerate, onEd
         ) : (
           <>
             {message.content ? (
-              <div className="markdown-body" style={{ color: '#000000', fontSize: '14.5px', lineHeight: '1.75', whiteSpace: 'pre-wrap' }}>
+              <div className="markdown-body" style={{ color: '#000000', fontSize: '14.5px', lineHeight: '1.8', whiteSpace: 'pre-wrap', fontFamily: 'Calibri, sans-serif' }}>
                 <ReactMarkdown 
                   remarkPlugins={[remarkGfm]}
                   components={{
                     h1: ({node, ...props}) => <h1 style={{fontSize: '18px', fontWeight: '800', margin: '16px 0 8px'}} {...props} />,
                     h2: ({node, ...props}) => <h2 style={{fontSize: '16px', fontWeight: '700', margin: '16px 0 8px', borderBottom: '1px solid #cbd5e1', paddingBottom: '4px'}} {...props} />,
                     h3: ({node, ...props}) => <h3 style={{fontSize: '14.5px', fontWeight: '700', margin: '12px 0 6px'}} {...props} />,
-                    p: ({node, ...props}) => <p style={{marginBottom: '6px', whiteSpace: 'pre-wrap'}} {...props} />,
+                    p: ({node, ...props}) => <p style={{marginBottom: '10px', whiteSpace: 'pre-wrap', lineHeight: '1.8'}} {...props} />,
                     ul: ({node, ...props}) => <ul style={{paddingLeft: '20px', margin: '6px 0 10px', listStyleType: 'disc'}} {...props} />,
                     ol: ({node, ...props}) => <ol style={{paddingLeft: '22px', margin: '6px 0 10px'}} {...props} />,
-                    li: ({node, ...props}) => <li style={{marginBottom: '5px'}} {...props} />,
-                    blockquote: ({node, ...props}) => <blockquote style={{borderLeft: '3px solid #0284c7', paddingLeft: '12px', margin: '8px 0', fontStyle: 'italic', fontSize: '14px'}} {...props} />,
+                    li: ({node, ...props}) => <li style={{marginBottom: '6px'}} {...props} />,
+                    blockquote: ({node, ...props}) => <blockquote style={{borderLeft: '4px solid #0284c7', background: 'rgba(2, 132, 199, 0.03)', padding: '10px 16px', margin: '12px 0', fontStyle: 'italic', fontSize: '14px', borderRadius: '0 8px 8px 0'}} {...props} />,
+                    table: ({node, ...props}) => (
+                      <div style={{ overflowX: 'auto', margin: '16px 0', width: '100%', borderRadius: '8px', border: '1px solid #cbd5e1', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+                        <table style={{ borderCollapse: 'collapse', width: '100%', minWidth: '500px', fontSize: '13px', color: '#0f172a' }} {...props} />
+                      </div>
+                    ),
+                    thead: ({node, ...props}) => <thead style={{ background: '#f8fafc', borderBottom: '2px solid #cbd5e1' }} {...props} />,
+                    th: ({node, ...props}) => <th style={{ padding: '8px 12px', fontWeight: '700', textAlign: 'left', borderRight: '1px solid #cbd5e1' }} {...props} />,
+                    tr: ({node, ...props}) => <tr style={{ borderBottom: '1px solid #cbd5e1', background: '#ffffff' }} {...props} />,
+                    td: ({node, ...props}) => <td style={{ padding: '8px 12px', borderRight: '1px solid #cbd5e1' }} {...props} />,
                     code: ({node, inline, className, children, ...props}: any) => {
                       const match = /language-(\w+)/.exec(className || '')
                       return !inline ? (
