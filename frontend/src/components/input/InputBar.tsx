@@ -425,37 +425,39 @@ export default function InputBar({ onSend }: Props) {
           gap: '12px',
         }}
       >
-        {/* Plus '+' icon button on left -> File Upload */}
-        <input
-          id="file-upload-input"
-          type="file"
-          style={{ display: 'none' }}
-          accept=".pdf,.docx,.doc,.xlsx,.xls,.csv,.pptx,.ppt,.png,.jpg,.jpeg,.webp,.gif,.txt,.md,.json,.js,.py,.java,.cpp,.html,.css,.sql"
-          onChange={(e) => {
-            const file = e.target.files?.[0]
-            if (file) handleFileUpload(file)
-            e.target.value = ''
-          }}
-        />
-        <button
-          onClick={() => document.getElementById('file-upload-input')?.click()}
+        {/* Plus '+' icon button on left -> Native Mobile PWA File Upload */}
+        <label
+          htmlFor="file-upload-input"
           style={{
             background: 'none',
             border: 'none',
             color: '#64748b',
             cursor: 'pointer',
-            padding: '4px',
+            padding: '6px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            WebkitTapHighlightColor: 'transparent',
+            borderRadius: '50%',
           }}
           title="Upload Image, Word, PDF, Excel or Code File for AI Analysis"
         >
-          <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+          <input
+            id="file-upload-input"
+            type="file"
+            style={{ display: 'none' }}
+            accept="image/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/*,.pdf,.docx,.doc,.xlsx,.xls,.csv,.pptx,.ppt,.png,.jpg,.jpeg,.webp,.gif,.txt,.md,.json,.js,.py,.java,.cpp,.html,.css,.sql"
+            onChange={(e) => {
+              const file = e.target.files?.[0]
+              if (file) handleFileUpload(file)
+              e.target.value = ''
+            }}
+          />
+          <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}>
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
-        </button>
+        </label>
 
         {/* Ask anything text area */}
         <textarea
