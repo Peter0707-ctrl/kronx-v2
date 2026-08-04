@@ -68,6 +68,26 @@ export const metadata: Metadata = {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'Copetra AI',
+    alternateName: ['Copetra', 'CopetraAI', 'PJ Copetranova AI'],
+    operatingSystem: 'All',
+    applicationCategory: 'EducationalApplication',
+    description: 'Copetra AI is an advanced artificial intelligence platform engineered by PJ Copetranova for students, researchers, and professionals.',
+    url: 'https://miraculous-forgiveness-production-10d4.up.railway.app',
+    author: {
+      '@type': 'Person',
+      name: 'PJ Copetranova',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'PJ Copetranova',
+      url: 'https://miraculous-forgiveness-production-10d4.up.railway.app',
+    },
+  }
+
   return (
     <html lang="en">
       <head>
@@ -77,6 +97,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="mobile-web-app-capable" content="yes" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
       </head>
       <body>{children}</body>
     </html>
