@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState, KeyboardEvent } from 'react'
+import JSZip from 'jszip'
 import { useKronxStore } from '@/store/useKronxStore'
 
 interface Props {
@@ -79,36 +80,35 @@ export default function InputBar({ onSend }: Props) {
 
     // 2. WORD DOCUMENTS (.docx, .doc)
     if (fileName.endsWith('.docx') || fileName.endsWith('.doc')) {
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         const buffer = e.target?.result as ArrayBuffer
         let textResult = ''
         try {
-          const utf8Decoder = new TextDecoder('utf-8', { fatal: false })
-          const latin1Decoder = new TextDecoder('latin1')
-          const decodedUtf8 = utf8Decoder.decode(buffer)
-          const decodedLatin1 = latin1Decoder.decode(buffer)
-
-          // Extract text nodes from Word XML <w:t> tags
-          const xmlMatches = decodedUtf8.match(/<w:t[^>]*>(.*?)<\/w:t>/g) || decodedLatin1.match(/<w:t[^>]*>(.*?)<\/w:t>/g)
-          if (xmlMatches && xmlMatches.length > 0) {
-            textResult = xmlMatches.map(m => m.replace(/<[^>]+>/g, '').trim()).filter(Boolean).join(' ')
-          }
-
-          if (!textResult || textResult.length < 20) {
-            // Fallback: extract all printable ASCII word words
-            const words = decodedLatin1.match(/[A-Za-z0-9.,?!'"()$%:\-]{2,}/g)
-            if (words) {
-              textResult = words.join(' ')
+          const zip = await JSZip.loadAsync(buffer)
+          const docXml = await zip.file('word/document.xml')?.async('string')
+          if (docXml) {
+            const matches = docXml.match(/<w:t[^>]*>(.*?)<\/w:t>/g)
+            if (matches && matches.length > 0) {
+              textResult = matches.map(m => m.replace(/<[^>]+>/g, '').trim()).filter(Boolean).join(' ')
             }
           }
         } catch (err) {
-          console.warn('[Word Document Extraction Fallback]', err)
+          console.warn('[JSZip Word Extraction Error]', err)
+        }
+
+        if (!textResult || textResult.length < 20) {
+          try {
+            const latin1Decoder = new TextDecoder('latin1')
+            const decoded = latin1Decoder.decode(buffer)
+            const words = decoded.match(/[A-Za-z0-9.,?!'"()$%:\-]{3,}/g)
+            if (words) textResult = words.filter(w => !w.startsWith('xml') && !w.startsWith('w:') && !w.startsWith('r:')).join(' ')
+          } catch { }
         }
 
         setAttachedFile({
           name: file.name,
           type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-          content: textResult.slice(0, 6000) || `[Word Document '${file.name}' - ${Math.round(file.size / 1024)} KB attached]`,
+          content: textResult.slice(0, 7000) || `[Word Document '${file.name}' - ${Math.round(file.size / 1024)} KB attached]`,
           category: 'word',
         })
       }
@@ -124,7 +124,7 @@ export default function InputBar({ onSend }: Props) {
           setAttachedFile({
             name: file.name,
             type: 'text/csv',
-            content: csvText.slice(0, 6000),
+            content: csvText.slice(0, 7000),
             category: 'excel',
           })
         }
@@ -132,25 +132,26 @@ export default function InputBar({ onSend }: Props) {
         return
       }
 
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         const buffer = e.target?.result as ArrayBuffer
         let textResult = ''
         try {
-          const latin1Decoder = new TextDecoder('latin1')
-          const decoded = latin1Decoder.decode(buffer)
-          const cellMatches = decoded.match(/<(?:v|t)[^>]*>(.*?)<\/(?:v|t)>/g)
-          if (cellMatches && cellMatches.length > 0) {
-            textResult = cellMatches.map(m => m.replace(/<[^>]+>/g, '').trim()).filter(Boolean).join(' | ')
-          } else {
-            const words = decoded.match(/[A-Za-z0-9.,?!'"()$%:\-]{2,}/g)
-            if (words) textResult = words.join(' ')
+          const zip = await JSZip.loadAsync(buffer)
+          const sharedStrings = await zip.file('xl/sharedStrings.xml')?.async('string')
+          if (sharedStrings) {
+            const matches = sharedStrings.match(/<t[^>]*>(.*?)<\/t>/g)
+            if (matches) {
+              textResult = matches.map(m => m.replace(/<[^>]+>/g, '').trim()).filter(Boolean).join(' | ')
+            }
           }
-        } catch { }
+        } catch (err) {
+          console.warn('[JSZip Excel Extraction Error]', err)
+        }
 
         setAttachedFile({
           name: file.name,
           type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          content: textResult.slice(0, 6000) || `[Excel Spreadsheet '${file.name}' - ${Math.round(file.size / 1024)} KB attached]`,
+          content: textResult.slice(0, 7000) || `[Excel Spreadsheet '${file.name}' - ${Math.round(file.size / 1024)} KB attached]`,
           category: 'excel',
         })
       }
@@ -160,23 +161,29 @@ export default function InputBar({ onSend }: Props) {
 
     // 4. POWERPOINT PRESENTATIONS (.pptx, .ppt)
     if (fileName.endsWith('.pptx') || fileName.endsWith('.ppt')) {
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         const buffer = e.target?.result as ArrayBuffer
         let textResult = ''
         try {
-          const utf8Decoder = new TextDecoder('utf-8', { fatal: false })
-          const latin1Decoder = new TextDecoder('latin1')
-          const decoded = utf8Decoder.decode(buffer) || latin1Decoder.decode(buffer)
-          const slideMatches = decoded.match(/<a:t[^>]*>(.*?)<\/a:t>/g)
-          if (slideMatches) {
-            textResult = slideMatches.map(m => m.replace(/<[^>]+>/g, '').trim()).filter(Boolean).join('\n')
+          const zip = await JSZip.loadAsync(buffer)
+          const slideFiles = Object.keys(zip.files).filter(k => k.startsWith('ppt/slides/slide'))
+          for (const sFile of slideFiles) {
+            const sXml = await zip.file(sFile)?.async('string')
+            if (sXml) {
+              const matches = sXml.match(/<a:t[^>]*>(.*?)<\/a:t>/g)
+              if (matches) {
+                textResult += matches.map(m => m.replace(/<[^>]+>/g, '').trim()).filter(Boolean).join(' ') + '\n'
+              }
+            }
           }
-        } catch { }
+        } catch (err) {
+          console.warn('[JSZip PPT Extraction Error]', err)
+        }
 
         setAttachedFile({
           name: file.name,
           type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-          content: textResult.slice(0, 6000) || `[PowerPoint Presentation '${file.name}' - ${Math.round(file.size / 1024)} KB attached]`,
+          content: textResult.slice(0, 7000) || `[PowerPoint Presentation '${file.name}' - ${Math.round(file.size / 1024)} KB attached]`,
           category: 'powerpoint',
         })
       }
