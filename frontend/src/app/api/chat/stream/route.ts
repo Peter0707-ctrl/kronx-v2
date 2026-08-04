@@ -226,6 +226,13 @@ export async function POST(req: NextRequest) {
               'llama-3.1-8b-instant',
               'llama-3.3-70b-versatile'
             ]
+          : isDocument
+          ? [
+              'llama-3.3-70b-versatile',
+              'llama-3.1-8b-instant',
+              'gemma2-9b-it',
+              'mixtral-8x7b-32768'
+            ]
           : [
               'llama-3.1-8b-instant',
               'llama-3.3-70b-versatile',
@@ -240,7 +247,11 @@ export async function POST(req: NextRequest) {
             const currentGroqMessages = buildGroqMessages(message, mode, history, isVisionModel)
 
             const abortCtrl = new AbortController()
-            const timeoutMs = isVisionModel ? 1800 : model.includes('70b') ? 12000 : 8000
+            const timeoutMs = isVisionModel 
+              ? 2500 
+              : isDocument 
+                ? (model.includes('70b') ? 18000 : 12000) 
+                : (model.includes('70b') ? 8000 : 5000)
             setTimeout(() => abortCtrl.abort(), timeoutMs)
 
             const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
