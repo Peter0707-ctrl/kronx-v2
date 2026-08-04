@@ -24,10 +24,16 @@ async function initDb() {
         last_active VARCHAR(255),
         conversation_count INTEGER,
         is_developer BOOLEAN DEFAULT FALSE,
+        expires_at TIMESTAMP NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `)
     
+    // Ensure expires_at column exists for existing tables
+    await client.query(`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS expires_at TIMESTAMP NULL;
+    `)
+
     // Insert default admin if not exists
     const checkAdmin = await client.query(`SELECT id FROM users WHERE id = 'u-admin-master'`)
     if (checkAdmin.rowCount === 0) {
@@ -63,6 +69,17 @@ async function ensureDb() {
 export async function GET() {
   try {
     await ensureDb()
+    
+    // Auto-expire subscriptions older than 30 days for non-admin accounts
+    await pool.query(`
+      UPDATE users 
+      SET plan = 'free', expires_at = NULL 
+      WHERE plan != 'free' 
+        AND role != 'admin' 
+        AND expires_at IS NOT NULL 
+        AND expires_at < NOW();
+    `)
+
     const result = await pool.query('SELECT * FROM users ORDER BY created_at ASC')
     
     // Map snake_case from DB to camelCase for frontend
@@ -76,12 +93,12 @@ export async function GET() {
       lastActive: row.last_active,
       conversationCount: row.conversation_count,
       isDeveloper: row.is_developer,
+      expiresAt: row.expires_at,
     }))
     
     return NextResponse.json(users)
   } catch (e: any) {
     console.error('DB GET Error', e)
-    // If DB fails (e.g. locally), return empty array so UI doesn't crash completely
     return NextResponse.json([], { status: 500 })
   }
 }
@@ -90,18 +107,26 @@ export async function POST(req: NextRequest) {
   try {
     await ensureDb()
     const user = await req.json()
+
+    // Calculate 30-day monthly expiration date for paid subscriptions
+    let expiresAt: Date | null = null
+    if (user.plan && user.plan !== 'free') {
+      // Set expiration to 30 days from now (end of monthly billing period)
+      expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+    }
     
     // UPSERT logic
     const query = `
-      INSERT INTO users (id, name, email, role, plan, avatar, last_active, conversation_count, is_developer)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      INSERT INTO users (id, name, email, role, plan, avatar, last_active, conversation_count, is_developer, expires_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       ON CONFLICT (email) DO UPDATE SET
         name = EXCLUDED.name,
         role = EXCLUDED.role,
         plan = EXCLUDED.plan,
         avatar = EXCLUDED.avatar,
         last_active = EXCLUDED.last_active,
-        is_developer = EXCLUDED.is_developer
+        is_developer = EXCLUDED.is_developer,
+        expires_at = EXCLUDED.expires_at
       RETURNING *;
     `
     
@@ -114,7 +139,8 @@ export async function POST(req: NextRequest) {
       user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.name || 'User')}`,
       user.lastActive || 'Just now',
       user.conversationCount || 0,
-      user.isDeveloper || false
+      user.isDeveloper || false,
+      expiresAt
     ]
     
     const result = await pool.query(query, values)
@@ -130,6 +156,7 @@ export async function POST(req: NextRequest) {
       lastActive: row.last_active,
       conversationCount: row.conversation_count,
       isDeveloper: row.is_developer,
+      expiresAt: row.expires_at
     }
     
     return NextResponse.json({ success: true, user: savedUser })
