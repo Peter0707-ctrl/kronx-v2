@@ -175,14 +175,14 @@ export default function MessageBubble({ message, isStreaming, onRegenerate, onEd
         ) : (
           <>
             {message.content ? (
-              <div className="markdown-body" style={{ color: '#000000', fontSize: '14.5px', lineHeight: '1.75' }}>
+              <div className="markdown-body" style={{ color: '#000000', fontSize: '14.5px', lineHeight: '1.75', whiteSpace: 'pre-wrap' }}>
                 <ReactMarkdown 
                   remarkPlugins={[remarkGfm]}
                   components={{
                     h1: ({node, ...props}) => <h1 style={{fontSize: '18px', fontWeight: '800', margin: '16px 0 8px'}} {...props} />,
                     h2: ({node, ...props}) => <h2 style={{fontSize: '16px', fontWeight: '700', margin: '16px 0 8px', borderBottom: '1px solid #cbd5e1', paddingBottom: '4px'}} {...props} />,
                     h3: ({node, ...props}) => <h3 style={{fontSize: '14.5px', fontWeight: '700', margin: '12px 0 6px'}} {...props} />,
-                    p: ({node, ...props}) => <p style={{marginBottom: '6px'}} {...props} />,
+                    p: ({node, ...props}) => <p style={{marginBottom: '6px', whiteSpace: 'pre-wrap'}} {...props} />,
                     ul: ({node, ...props}) => <ul style={{paddingLeft: '20px', margin: '6px 0 10px', listStyleType: 'disc'}} {...props} />,
                     ol: ({node, ...props}) => <ol style={{paddingLeft: '22px', margin: '6px 0 10px'}} {...props} />,
                     li: ({node, ...props}) => <li style={{marginBottom: '5px'}} {...props} />,
