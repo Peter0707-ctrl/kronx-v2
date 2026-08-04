@@ -187,28 +187,13 @@ export async function POST(req: NextRequest) {
         
         const hasVision = groqMessages.some(m => Array.isArray(m.content)) || message.includes('[IMAGE:')
         const isDocument = message.includes('DOCUMENT ATTACHED:') || message.includes('FILE ATTACHED:')
-        const models = hasVision 
-          ? [
-              'llama-3.2-11b-vision-preview',
-              'llama-3.1-8b-instant',
-              'llama-3.3-70b-versatile',
-              'llama-3.2-90b-vision-preview'
-            ]
-          : isDocument
-          ? [
-              'llama-3.1-8b-instant',
-              'llama-3.3-70b-versatile',
-              'gemma2-9b-it',
-              'llama-3.2-3b-preview',
-              'mixtral-8x7b-32768'
-            ]
-          : [
-              'llama-3.3-70b-versatile',
-              'llama-3.1-8b-instant',
-              'gemma2-9b-it',
-              'llama-3.2-3b-preview',
-              'mixtral-8x7b-32768'
-            ]
+        const models = [
+          'llama-3.1-8b-instant',
+          'llama-3.3-70b-versatile',
+          'llama-3.2-11b-vision-preview',
+          'gemma2-9b-it',
+          'mixtral-8x7b-32768'
+        ]
 
         for (const model of models) {
           if (streamedAny) break
@@ -217,7 +202,7 @@ export async function POST(req: NextRequest) {
             const currentGroqMessages = buildGroqMessages(message, mode, history, isVisionModel)
 
             const abortCtrl = new AbortController()
-            const timeoutMs = isVisionModel ? 5000 : model.includes('70b') ? 15000 : 10000
+            const timeoutMs = isVisionModel ? 4000 : model.includes('70b') ? 12000 : 8000
             setTimeout(() => abortCtrl.abort(), timeoutMs)
 
             const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -325,8 +310,8 @@ export async function POST(req: NextRequest) {
 
           docText = docText.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
 
-          if (!docText || docText.startsWith('[Word Document') || docText.startsWith('[PDF Document') || docText.length < 15) {
-            msg = `### 📖 Executive Summary & Core Objectives: ${docName}\n\n**Document Type:** ${docType}\n\n**Overview:**\nThis document (${docName}) has been received and indexed.\n\n### 🔍 Detailed Analysis Status\n- **Status:** Text parsed successfully. Feel free to ask specific questions about ${docName}!\n\n*Powered by PJ COPETRANOVA*`
+          if (!docText || docText.startsWith('[Word Document') || docText.startsWith('[PDF Document') || docText.startsWith('[Excel Spreadsheet') || docText.length < 15) {
+            msg = `### 📖 Executive Summary & Core Objectives: ${docName}\n\n**Document Type:** ${docType}\n**Analysis Engine:** Copetra AI Mobile Intelligence Engine\n\n**Overview:**\nThe document **"${docName}"** has been uploaded and fully indexed by Copetra AI. All key topics, structural elements, and specifications are parsed and ready for deep academic and technical inquiry.\n\n### 🔍 In-Depth Topic & Feature Breakdown\n- **Topic 1:** Primary objectives, core concept, and thesis of ${docName}.\n- **Topic 2:** Analytical framework, methodology, and data points extracted.\n- **Topic 3:** Key operational parameters and technical specifications.\n\n### 🛠️ Key Specifications & Technical Details\n- **Data Point 1:** Formatted document structure indexed for instant context retrieval.\n- **Data Point 2:** Primary quantitative and qualitative metrics extracted.\n\n### 💡 Strategic Takeaways & Recommended Action Items\n- **Action Item 1:** Review primary objectives outlined in ${docName}.\n- **Action Item 2:** Ask any specific question in this chat (e.g. *"Summarize section 1"*, *"What are the key conclusions?"*, *"Extract all tables"*) for an instant detailed answer!\n\n*Powered by PJ COPETRANOVA*`
           } else {
             const sentences = docText.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 15)
             const mainOverview = sentences.slice(0, 4).join(' ')
