@@ -12,6 +12,7 @@ interface AttachedFile {
   type: string
   preview?: string
   content: string
+  category: 'image' | 'pdf' | 'word' | 'excel' | 'powerpoint' | 'text' | 'code'
 }
 
 export default function InputBar({ onSend }: Props) {
@@ -25,10 +26,11 @@ export default function InputBar({ onSend }: Props) {
   const handleSend = () => {
     let text = value.trim()
     if (attachedFile) {
-      if (attachedFile.type.startsWith('image/')) {
+      if (attachedFile.category === 'image') {
         text = `${text}\n\n[IMAGE: ${attachedFile.content}]`.trim()
       } else {
-        text = `${text}\n\n[FILE ATTACHED: ${attachedFile.name}]\n\`\`\`\n${attachedFile.content}\n\`\`\``.trim()
+        const catName = attachedFile.category.toUpperCase()
+        text = `${text}\n\n[${catName} DOCUMENT ATTACHED: ${attachedFile.name}]\n\`\`\`\n${attachedFile.content}\n\`\`\``.trim()
       }
     }
 
@@ -56,8 +58,10 @@ export default function InputBar({ onSend }: Props) {
   }
 
   const handleFileUpload = (file: File) => {
+    const fileName = file.name.toLowerCase()
     const reader = new FileReader()
 
+    // 1. IMAGE FILES
     if (file.type.startsWith('image/')) {
       reader.onload = (e) => {
         const result = e.target?.result as string
@@ -66,26 +70,136 @@ export default function InputBar({ onSend }: Props) {
           type: file.type,
           preview: result,
           content: result,
+          category: 'image',
         })
       }
       reader.readAsDataURL(file)
-    } else {
+      return
+    }
+
+    // 2. WORD DOCUMENTS (.docx)
+    if (fileName.endsWith('.docx') || fileName.endsWith('.doc')) {
       reader.onload = (e) => {
-        let textResult = e.target?.result as string || ''
-        // If binary file content, sanitize or provide summary
-        if (typeof textResult !== 'string' || textResult.includes('\0')) {
-          textResult = `[Binary Document '${file.name}' - ${Math.round(file.size / 1024)} KB]`
-        } else {
-          textResult = textResult.slice(0, 12000)
+        const textResult = e.target?.result as string || ''
+        // Extract text nodes from Word document XML structure <w:t>
+        const matches = textResult.match(/<w:t[^>]*>(.*?)<\/w:t>/g)
+        let extractedText = ''
+        if (matches) {
+          extractedText = matches.map(m => m.replace(/<[^>]+>/g, '')).join(' ')
         }
+        if (!extractedText || extractedText.length < 10) {
+          // Clean text fallback
+          extractedText = textResult.replace(/[^\x20-\x7E\n\r\t]/g, ' ').replace(/\s+/g, ' ').trim()
+        }
+
         setAttachedFile({
           name: file.name,
-          type: file.type || 'text/plain',
-          content: textResult,
+          type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          content: extractedText.slice(0, 15000) || `[Word Document '${file.name}' - ${Math.round(file.size / 1024)} KB attached]`,
+          category: 'word',
         })
       }
       reader.readAsText(file)
+      return
     }
+
+    // 3. EXCEL SPREADSHEETS (.xlsx, .csv)
+    if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls') || fileName.endsWith('.csv')) {
+      reader.onload = (e) => {
+        const textResult = e.target?.result as string || ''
+        let extractedText = textResult
+        if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
+          // Extract cell values from sheet XML tags <v> or <t>
+          const cellMatches = textResult.match(/<(?:v|t)[^>]*>(.*?)<\/(?:v|t)>/g)
+          if (cellMatches) {
+            extractedText = cellMatches.map(m => m.replace(/<[^>]+>/g, '')).join(' | ')
+          } else {
+            extractedText = textResult.replace(/[^\x20-\x7E\n\r\t]/g, ' ').replace(/\s+/g, ' ').trim()
+          }
+        }
+
+        setAttachedFile({
+          name: file.name,
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          content: extractedText.slice(0, 15000) || `[Excel Spreadsheet '${file.name}' - ${Math.round(file.size / 1024)} KB attached]`,
+          category: 'excel',
+        })
+      }
+      reader.readAsText(file)
+      return
+    }
+
+    // 4. POWERPOINT PRESENTATIONS (.pptx)
+    if (fileName.endsWith('.pptx') || fileName.endsWith('.ppt')) {
+      reader.onload = (e) => {
+        const textResult = e.target?.result as string || ''
+        const slideMatches = textResult.match(/<a:t[^>]*>(.*?)<\/a:t>/g)
+        let extractedText = ''
+        if (slideMatches) {
+          extractedText = slideMatches.map(m => m.replace(/<[^>]+>/g, '')).join('\n')
+        } else {
+          extractedText = textResult.replace(/[^\x20-\x7E\n\r\t]/g, ' ').replace(/\s+/g, ' ').trim()
+        }
+
+        setAttachedFile({
+          name: file.name,
+          type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+          content: extractedText.slice(0, 15000) || `[PowerPoint Presentation '${file.name}' - ${Math.round(file.size / 1024)} KB attached]`,
+          category: 'powerpoint',
+        })
+      }
+      reader.readAsText(file)
+      return
+    }
+
+    // 5. PDF DOCUMENTS (.pdf)
+    if (fileName.endsWith('.pdf')) {
+      reader.onload = (e) => {
+        const textResult = e.target?.result as string || ''
+        // Extract ASCII text streams from PDF stream objects
+        const streamMatches = textResult.match(/\(([^)]+)\)|BT[\s\S]*?ET/g)
+        let extractedText = ''
+        if (streamMatches) {
+          extractedText = streamMatches
+            .map(m => m.replace(/[()]/g, '').trim())
+            .filter(t => t.length > 2 && !t.startsWith('/') && !t.startsWith('BT'))
+            .join(' ')
+        }
+
+        if (!extractedText || extractedText.length < 20) {
+          extractedText = textResult.replace(/[^\x20-\x7E\n\r\t]/g, ' ').replace(/\s+/g, ' ').trim()
+        }
+
+        setAttachedFile({
+          name: file.name,
+          type: 'application/pdf',
+          content: extractedText.slice(0, 15000) || `[PDF Document '${file.name}' - ${Math.round(file.size / 1024)} KB attached]`,
+          category: 'pdf',
+        })
+      }
+      reader.readAsText(file)
+      return
+    }
+
+    // 6. TEXT & CODE FILES (.txt, .md, .py, .js, .json, .html, .css, .sql)
+    reader.onload = (e) => {
+      let textResult = e.target?.result as string || ''
+      if (typeof textResult !== 'string' || textResult.includes('\0')) {
+        textResult = `[Attached File '${file.name}' - ${Math.round(file.size / 1024)} KB]`
+      } else {
+        textResult = textResult.slice(0, 15000)
+      }
+
+      const isCode = /\.(py|js|ts|tsx|jsx|html|css|json|sql|java|cpp|c|cs|go|rs|sh)$/i.test(fileName)
+
+      setAttachedFile({
+        name: file.name,
+        type: file.type || 'text/plain',
+        content: textResult,
+        category: isCode ? 'code' : 'text',
+      })
+    }
+    reader.readAsText(file)
   }
 
   const toggleListening = () => {
@@ -133,6 +247,18 @@ export default function InputBar({ onSend }: Props) {
     }
   }
 
+  const getCategoryIcon = (cat: string) => {
+    switch (cat) {
+      case 'image': return '🖼️'
+      case 'word': return '📄'
+      case 'pdf': return '📕'
+      case 'excel': return '📊'
+      case 'powerpoint': return '📙'
+      case 'code': return '💻'
+      default: return '📝'
+    }
+  }
+
   return (
     <div style={{ width: '100%', maxWidth: '760px', margin: '0 auto 28px auto', padding: '0 16px' }}>
       {/* Attached File Preview Badge */}
@@ -159,10 +285,10 @@ export default function InputBar({ onSend }: Props) {
               style={{ width: '24px', height: '24px', borderRadius: '4px', objectFit: 'cover' }}
             />
           ) : (
-            <span>📄</span>
+            <span>{getCategoryIcon(attachedFile.category)}</span>
           )}
           <span style={{ maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {attachedFile.name}
+            {attachedFile.name} ({attachedFile.category.toUpperCase()})
           </span>
           <button
             onClick={() => setAttachedFile(null)}
@@ -199,7 +325,7 @@ export default function InputBar({ onSend }: Props) {
           id="file-upload-input"
           type="file"
           style={{ display: 'none' }}
-          accept=".pdf,.docx,.xlsx,.pptx,.png,.jpg,.jpeg,.webp,.gif,.txt,.md,.json,.csv,.js,.py,.java,.cpp,.html,.css,.sql"
+          accept=".pdf,.docx,.doc,.xlsx,.xls,.csv,.pptx,.ppt,.png,.jpg,.jpeg,.webp,.gif,.txt,.md,.json,.js,.py,.java,.cpp,.html,.css,.sql"
           onChange={(e) => {
             const file = e.target.files?.[0]
             if (file) handleFileUpload(file)
@@ -218,7 +344,7 @@ export default function InputBar({ onSend }: Props) {
             alignItems: 'center',
             justifyContent: 'center',
           }}
-          title="Upload Image, Document or Code File for AI Analysis"
+          title="Upload Image, Word, PDF, Excel or Code File for AI Analysis"
         >
           <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
             <line x1="12" y1="5" x2="12" y2="19" />
@@ -231,7 +357,7 @@ export default function InputBar({ onSend }: Props) {
           ref={taRef}
           value={value}
           rows={1}
-          placeholder={isStreaming ? "Copetra AI is analyzing & generating..." : "Ask anything or attach files/images..."}
+          placeholder={isStreaming ? "Copetra AI is analyzing document & generating..." : "Ask anything or attach Image, Word, PDF, Excel..."}
           onChange={(e) => setValue(e.target.value)}
           onInput={handleInput}
           onKeyDown={handleKey}
