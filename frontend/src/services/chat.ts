@@ -105,7 +105,7 @@ export async function* streamMessage(
       yield `\x00REPLACE\x00${fallbackText}`
     } catch (directErr) {
       console.error('[Copetra Direct Fetch Error]', directErr)
-      yield `\x00REPLACE\x00**Copetra AI** is warming up. The Ollama AI engine is loading — please try again in a moment.`
+      yield `\x00REPLACE\x00**Copetra AI** is warming up. The intelligence engine is loading — please try again in a moment.`
     }
   }
 }
