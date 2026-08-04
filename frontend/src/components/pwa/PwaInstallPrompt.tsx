@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useKronxStore } from '@/store/useKronxStore'
 
 export default function PwaInstallPrompt() {
@@ -9,10 +9,11 @@ export default function PwaInstallPrompt() {
   const [isStandalone, setIsStandalone] = useState(false)
   const [showPrompt, setShowPrompt] = useState(false)
   const [isIos, setIsIos] = useState(false)
+  const autoCloseTimerRef = useRef<NodeJS.Timeout | null>(null)
   const sw = language === 'sw'
 
   useEffect(() => {
-    // 1. Check if running in standalone mode (already installed)
+    // 1. Check if running in standalone mode (already installed & downloaded)
     const checkStandalone = () => {
       const isStandaloneMode =
         window.matchMedia('(display-mode: standalone)').matches ||
@@ -42,19 +43,26 @@ export default function PwaInstallPrompt() {
   }, [])
 
   useEffect(() => {
-    // Show install prompt whenever user is logged in AND app is NOT running as installed PWA
+    // Show install prompt ONLY whenever user is logged in AND app is NOT installed
     if (user && !isStandalone) {
-      // Delay slightly to let the UI load smoothly
-      const timer = setTimeout(() => {
-        setShowPrompt(true)
-      }, 1000)
-      return () => clearTimeout(timer)
+      setShowPrompt(true)
+
+      // Auto-disappear within 2.5 seconds automatically
+      autoCloseTimerRef.current = setTimeout(() => {
+        setShowPrompt(false)
+      }, 2500)
+
+      return () => {
+        if (autoCloseTimerRef.current) clearTimeout(autoCloseTimerRef.current)
+      }
     } else {
       setShowPrompt(false)
     }
   }, [user, isStandalone])
 
   const handleInstallClick = async () => {
+    if (autoCloseTimerRef.current) clearTimeout(autoCloseTimerRef.current)
+
     if (deferredPrompt) {
       deferredPrompt.prompt()
       const { outcome } = await deferredPrompt.userChoice
@@ -84,62 +92,94 @@ export default function PwaInstallPrompt() {
       style={{
         position: 'fixed',
         bottom: '24px',
-        right: '24px',
-        left: '24px',
-        maxWidth: '440px',
+        right: '20px',
+        left: '20px',
+        maxWidth: '400px',
         margin: '0 auto',
-        background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+        background: 'rgba(15, 23, 42, 0.94)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
         color: '#ffffff',
-        borderRadius: '20px',
-        padding: '20px 22px',
-        boxShadow: '0 12px 36px rgba(0,0,0,0.35)',
+        borderRadius: '18px',
+        padding: '16px 18px',
+        boxShadow: '0 12px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(56, 189, 248, 0.25)',
         zIndex: 99999,
-        border: '1px solid #38bdf8',
         display: 'flex',
         flexDirection: 'column',
-        gap: '14px',
+        gap: '12px',
+        overflow: 'hidden',
         animation: 'message-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
       }}
     >
+      {/* Sleek 2-second Auto-Cancel Timer Progress Line */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          height: '3px',
+          background: 'linear-gradient(90deg, #38bdf8, #0284c7)',
+          width: '100%',
+          animation: 'pwa-timer-shrink 2.5s linear forwards',
+        }}
+      />
+
+      <style jsx>{`
+        @keyframes pwa-timer-shrink {
+          from {
+            width: 100%;
+          }
+          to {
+            width: 0%;
+          }
+        }
+      `}</style>
+
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div
             style={{
-              width: '42px',
-              height: '42px',
-              borderRadius: '12px',
+              width: '36px',
+              height: '36px',
+              borderRadius: '10px',
               overflow: 'hidden',
               background: '#0284c7',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              border: '1px solid rgba(255,255,255,0.2)',
+              boxShadow: '0 2px 8px rgba(2, 132, 199, 0.4)',
             }}
           >
             <img src="/kronx_logo.jpg" alt="Copetra Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
           <div>
-            <div style={{ fontSize: '15px', fontWeight: '800', color: '#ffffff', letterSpacing: '-0.2px' }}>
+            <div style={{ fontSize: '14px', fontWeight: '800', color: '#ffffff', letterSpacing: '-0.2px' }}>
               {sw ? 'Sakinisha Programu ya Copetra AI' : 'Install Copetra AI App'}
             </div>
-            <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>
-              {sw ? 'Pata uwezo kamili bila kutumia browser' : 'Download for faster access & instant AI responses'}
+            <div style={{ fontSize: '11.5px', color: '#94a3b8' }}>
+              {sw ? 'Pakua app bila kutumia browser' : 'Get fast access without browser bar'}
             </div>
           </div>
         </div>
 
         <button
-          onClick={() => setShowPrompt(false)}
+          onClick={() => {
+            if (autoCloseTimerRef.current) clearTimeout(autoCloseTimerRef.current)
+            setShowPrompt(false)
+          }}
           style={{
             background: 'rgba(255,255,255,0.1)',
             border: 'none',
             color: '#94a3b8',
             borderRadius: '50%',
-            width: '28px',
-            height: '28px',
+            width: '26px',
+            height: '26px',
             cursor: 'pointer',
             fontWeight: '700',
-            fontSize: '14px',
+            fontSize: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
           title="Close"
         >
@@ -147,43 +187,46 @@ export default function PwaInstallPrompt() {
         </button>
       </div>
 
-      <div style={{ display: 'flex', gap: '10px' }}>
+      <div style={{ display: 'flex', gap: '8px' }}>
         <button
           onClick={handleInstallClick}
           style={{
             flex: 1,
-            padding: '11px 16px',
-            borderRadius: '12px',
+            padding: '9px 14px',
+            borderRadius: '10px',
             background: 'linear-gradient(135deg, #0284c7, #0369a1)',
             color: '#ffffff',
             border: 'none',
             fontWeight: '800',
-            fontSize: '13.5px',
+            fontSize: '12.5px',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '8px',
-            boxShadow: '0 4px 14px rgba(2, 132, 199, 0.4)',
+            gap: '6px',
+            boxShadow: '0 4px 12px rgba(2, 132, 199, 0.35)',
           }}
         >
           <span>📱</span>
-          <span>{sw ? 'SAKINISHA APP SASA' : 'INSTALL APP NOW'}</span>
+          <span>{sw ? 'SAKINISHA SASA' : 'INSTALL NOW'}</span>
         </button>
         <button
-          onClick={() => setShowPrompt(false)}
+          onClick={() => {
+            if (autoCloseTimerRef.current) clearTimeout(autoCloseTimerRef.current)
+            setShowPrompt(false)
+          }}
           style={{
-            padding: '11px 14px',
-            borderRadius: '12px',
+            padding: '9px 12px',
+            borderRadius: '10px',
             background: 'transparent',
             color: '#94a3b8',
             border: '1px solid rgba(255,255,255,0.15)',
             fontWeight: '600',
-            fontSize: '12.5px',
+            fontSize: '12px',
             cursor: 'pointer',
           }}
         >
-          {sw ? 'Baadaye' : 'Later'}
+          {sw ? 'Acha' : 'Cancel'}
         </button>
       </div>
     </div>
