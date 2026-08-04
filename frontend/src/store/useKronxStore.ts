@@ -382,7 +382,7 @@ export const useKronxStore = create<KronxStore>()(
     {
       name: 'kronx-storage', // name of the item in the storage (must be unique)
       partialize: (state) => Object.fromEntries(
-        Object.entries(state).filter(([key]) => !['conversations', 'activeConversationId'].includes(key))
+        Object.entries(state).filter(([key]) => !['isStreaming', 'authModalOpen', 'settingsModalOpen', 'sidebarOpen'].includes(key))
       ),
       storage: createJSONStorage(() => typeof window !== 'undefined' ? localStorage : {
         getItem: () => null,
