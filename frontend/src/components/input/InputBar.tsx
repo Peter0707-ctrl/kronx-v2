@@ -7,17 +7,34 @@ interface Props {
   onSend: (text: string) => void
 }
 
+interface AttachedFile {
+  name: string
+  type: string
+  preview?: string
+  content: string
+}
+
 export default function InputBar({ onSend }: Props) {
   const { isStreaming } = useKronxStore()
   const [value, setValue] = useState('')
+  const [attachedFile, setAttachedFile] = useState<AttachedFile | null>(null)
   const [isListening, setIsListening] = useState(false)
   const taRef = useRef<HTMLTextAreaElement>(null)
   const recognitionRef = useRef<any>(null)
 
   const handleSend = () => {
-    const text = value.trim()
+    let text = value.trim()
+    if (attachedFile) {
+      if (attachedFile.type.startsWith('image/')) {
+        text = `${text}\n\n[IMAGE: ${attachedFile.content}]`.trim()
+      } else {
+        text = `${text}\n\n[FILE ATTACHED: ${attachedFile.name}]\n\`\`\`\n${attachedFile.content}\n\`\`\``.trim()
+      }
+    }
+
     if (!text || isStreaming) return
     setValue('')
+    setAttachedFile(null)
     if (taRef.current) {
       taRef.current.style.height = 'auto'
     }
@@ -36,6 +53,39 @@ export default function InputBar({ onSend }: Props) {
     if (!ta) return
     ta.style.height = 'auto'
     ta.style.height = Math.min(ta.scrollHeight, 120) + 'px'
+  }
+
+  const handleFileUpload = (file: File) => {
+    const reader = new FileReader()
+
+    if (file.type.startsWith('image/')) {
+      reader.onload = (e) => {
+        const result = e.target?.result as string
+        setAttachedFile({
+          name: file.name,
+          type: file.type,
+          preview: result,
+          content: result,
+        })
+      }
+      reader.readAsDataURL(file)
+    } else {
+      reader.onload = (e) => {
+        let textResult = e.target?.result as string || ''
+        // If binary file content, sanitize or provide summary
+        if (typeof textResult !== 'string' || textResult.includes('\0')) {
+          textResult = `[Binary Document '${file.name}' - ${Math.round(file.size / 1024)} KB]`
+        } else {
+          textResult = textResult.slice(0, 12000)
+        }
+        setAttachedFile({
+          name: file.name,
+          type: file.type || 'text/plain',
+          content: textResult,
+        })
+      }
+      reader.readAsText(file)
+    }
   }
 
   const toggleListening = () => {
@@ -85,6 +135,53 @@ export default function InputBar({ onSend }: Props) {
 
   return (
     <div style={{ width: '100%', maxWidth: '760px', margin: '0 auto 28px auto', padding: '0 16px' }}>
+      {/* Attached File Preview Badge */}
+      {attachedFile && (
+        <div
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            background: 'rgba(37, 99, 235, 0.08)',
+            border: '1px solid rgba(37, 99, 235, 0.2)',
+            borderRadius: '16px',
+            padding: '6px 12px',
+            marginBottom: '8px',
+            fontSize: '13px',
+            color: '#1e40af',
+            fontWeight: 500,
+          }}
+        >
+          {attachedFile.preview ? (
+            <img
+              src={attachedFile.preview}
+              alt="Uploaded file preview"
+              style={{ width: '24px', height: '24px', borderRadius: '4px', objectFit: 'cover' }}
+            />
+          ) : (
+            <span>📄</span>
+          )}
+          <span style={{ maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {attachedFile.name}
+          </span>
+          <button
+            onClick={() => setAttachedFile(null)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#1e40af',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              padding: '0 4px',
+              fontSize: '14px',
+            }}
+            title="Remove attachment"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       <div
         style={{
           display: 'flex',
@@ -94,7 +191,7 @@ export default function InputBar({ onSend }: Props) {
           borderRadius: '28px',
           padding: '8px 14px 8px 18px',
           boxShadow: '0 4px 20px rgba(0, 0, 0, 0.04)',
-          gap: '12px'
+          gap: '12px',
         }}
       >
         {/* Plus '+' icon button on left -> File Upload */}
@@ -102,31 +199,11 @@ export default function InputBar({ onSend }: Props) {
           id="file-upload-input"
           type="file"
           style={{ display: 'none' }}
-          accept=".pdf,.docx,.xlsx,.pptx,.png,.jpg,.jpeg,.txt"
+          accept=".pdf,.docx,.xlsx,.pptx,.png,.jpg,.jpeg,.webp,.gif,.txt,.md,.json,.csv,.js,.py,.java,.cpp,.html,.css,.sql"
           onChange={(e) => {
             const file = e.target.files?.[0]
-            if (file) {
-              const reader = new FileReader()
-              reader.onload = (event) => {
-                const result = event.target?.result as string
-                if (file.type.startsWith('image/')) {
-                  // Attach base64 image data URL so the backend can parse it for Vision model
-                  setValue(prev => `${prev}\n\n[IMAGE: ${result}]\n`)
-                } else if (file.type === 'text/plain' || file.name.endsWith('.txt') || file.name.endsWith('.md')) {
-                  const snippet = result.slice(0, 3000)
-                  setValue(prev => `${prev}\n\n[Attached File: ${file.name}]\n\`\`\`\n${snippet}\n\`\`\`\n`)
-                } else {
-                  alert("PDF and Word document parsing requires backend extraction. Please upload Text (.txt) or Images for direct AI analysis right now.")
-                }
-              }
-              if (file.type.startsWith('image/')) {
-                reader.readAsDataURL(file)
-              } else if (file.type === 'text/plain' || file.name.endsWith('.txt') || file.name.endsWith('.md')) {
-                reader.readAsText(file)
-              } else {
-                alert("For the best analysis, please upload Images (.png/.jpg) or Text (.txt) files.")
-              }
-            }
+            if (file) handleFileUpload(file)
+            e.target.value = ''
           }}
         />
         <button
@@ -139,9 +216,9 @@ export default function InputBar({ onSend }: Props) {
             padding: '4px',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
           }}
-          title="Upload Image or Text File"
+          title="Upload Image, Document or Code File for AI Analysis"
         >
           <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
             <line x1="12" y1="5" x2="12" y2="19" />
@@ -154,8 +231,8 @@ export default function InputBar({ onSend }: Props) {
           ref={taRef}
           value={value}
           rows={1}
-          placeholder={isStreaming ? "Copetra AI is generating response..." : "Ask anything"}
-          onChange={e => setValue(e.target.value)}
+          placeholder={isStreaming ? "Copetra AI is analyzing & generating..." : "Ask anything or attach files/images..."}
+          onChange={(e) => setValue(e.target.value)}
           onInput={handleInput}
           onKeyDown={handleKey}
           onFocus={() => window.dispatchEvent(new Event('hide-suggestions'))}
@@ -170,7 +247,7 @@ export default function InputBar({ onSend }: Props) {
             color: '#0f172a',
             fontFamily: "Calibri, 'Calibri Light', sans-serif",
             padding: '6px 0',
-            lineHeight: '1.4'
+            lineHeight: '1.4',
           }}
         />
 
@@ -180,62 +257,52 @@ export default function InputBar({ onSend }: Props) {
           <button
             onClick={toggleListening}
             style={{
-              background: 'none',
+              background: isListening ? '#ef4444' : 'none',
               border: 'none',
-              color: isListening ? '#ef4444' : '#64748b',
+              color: isListening ? '#ffffff' : '#64748b',
               cursor: 'pointer',
-              padding: '4px',
-              display: 'flex',
-              alignItems: 'center'
-            }}
-            title="Voice input"
-          >
-            <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 6 0V4a3 3 0 0 0-3-3z" />
-              <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8" />
-            </svg>
-          </button>
-
-          {/* Voice Wave pill / Send button */}
-          <button
-            onClick={handleSend}
-            disabled={!value.trim() && !isStreaming}
-            style={{
-              width: '36px',
-              height: '36px',
+              padding: '6px',
               borderRadius: '50%',
-              background: value.trim() ? '#0f172a' : '#000000',
-              color: '#ffffff',
-              border: 'none',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              cursor: value.trim() ? 'pointer' : 'default'
+              transition: 'all 0.2s ease',
             }}
+            title={isListening ? "Listening... Click to stop" : "Voice Dictation"}
           >
-            {value.trim() ? (
-              <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
-                <line x1="12" y1="19" x2="12" y2="5" />
-                <polyline points="5 12 12 5 19 12" />
-              </svg>
-            ) : (
-              <svg width={16} height={16} viewBox="0 0 24 24" fill="currentColor">
-                <rect x="5" y="6" width="2" height="12" rx="1" />
-                <rect x="9" y="3" width="2" height="18" rx="1" />
-                <rect x="13" y="8" width="2" height="8" rx="1" />
-                <rect x="17" y="5" width="2" height="14" rx="1" />
-              </svg>
-            )}
+            <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+              <line x1="12" y1="19" x2="12" y2="23" />
+              <line x1="8" y1="23" x2="16" y2="23" />
+            </svg>
+          </button>
+
+          {/* Send Button */}
+          <button
+            onClick={handleSend}
+            disabled={(!value.trim() && !attachedFile) || isStreaming}
+            style={{
+              background: (!value.trim() && !attachedFile) || isStreaming ? '#cbd5e1' : '#2563eb',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '50%',
+              width: '34px',
+              height: '34px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: (!value.trim() && !attachedFile) || isStreaming ? 'not-allowed' : 'pointer',
+              transition: 'background 0.2s ease',
+            }}
+            title="Send to Copetra AI"
+          >
+            <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+              <line x1="22" y1="2" x2="11" y2="13" />
+              <polygon points="22 2 15 22 11 13 2 9 22 2" />
+            </svg>
           </button>
         </div>
-      </div>
-
-      {/* Powered by PJ COPETRANOVA attribution footer */}
-      <div style={{ textAlign: 'center', marginTop: '10px', fontSize: '11px', fontWeight: '700', color: '#64748b', letterSpacing: '1px', fontFamily: "Calibri, 'Calibri Light', sans-serif" }}>
-        POWERED BY <span style={{ color: '#0284c7', fontWeight: '800' }}>PJ COPETRANOVA</span>
-      </div>
-      <div style={{ textAlign: 'center', marginTop: '4px', fontSize: '10px', color: '#94a3b8', fontFamily: "Calibri, 'Calibri Light', sans-serif" }}>
-        AI can make mistakes. Please verify important information.
       </div>
     </div>
   )
