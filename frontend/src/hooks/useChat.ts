@@ -19,14 +19,23 @@ export function useChat() {
       // Re-read to guarantee we have the initialized activeConversationId
       const currentState = useKronxStore.getState()
 
-      // Instant Picture generation request handler
+      // Instant Picture generation request handler (Skip if user is uploading/analyzing an image)
       const lower = text.toLowerCase()
+      const isAttachedImage = text.includes('[IMAGE:') || text.includes('data:image/')
+
       if (
-        lower.includes('image') ||
-        lower.includes('picture') ||
-        lower.includes('picha') ||
-        lower.includes('draw') ||
-        lower.includes('photo')
+        !isAttachedImage &&
+        (
+          lower.startsWith('generate image') ||
+          lower.startsWith('create image') ||
+          lower.startsWith('draw') ||
+          lower.startsWith('generate picture') ||
+          lower.startsWith('make image') ||
+          lower.startsWith('tengeneza picha') ||
+          lower.includes('draw a ') ||
+          lower.includes('generate an image') ||
+          lower.includes('create an image')
+        )
       ) {
         if (!currentState.canGeneratePicture()) {
           const limitMsg = `You have reached chat limit. Upgrade`
