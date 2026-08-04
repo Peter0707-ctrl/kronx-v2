@@ -226,13 +226,38 @@ export default function InputBar({ onSend }: Props) {
         let textResult = ''
         try {
           const zip = await JSZip.loadAsync(buffer)
+          let extractedCells: string[] = []
+
+          // 1. Get shared strings mapped
+          let stringTable: string[] = []
           const sharedStrings = await zip.file('xl/sharedStrings.xml')?.async('string')
           if (sharedStrings) {
-            const matches = sharedStrings.match(/<t[^>]*>(.*?)<\/t>/g)
+            const matches = sharedStrings.match(/<t[^>]*>([\s\S]*?)<\/t>/gi)
             if (matches) {
-              textResult = matches.map(m => m.replace(/<[^>]+>/g, '').trim()).filter(Boolean).join(' | ')
+              stringTable = matches.map(m => m.replace(/<[^>]+>/g, '').trim())
             }
           }
+
+          // 2. Scan sheet worksheets for numeric/text cell values
+          const worksheetFiles = Object.keys(zip.files).filter(k => k.startsWith('xl/worksheets/sheet'))
+          for (const sheetFile of worksheetFiles) {
+            const sheetXml = await zip.file(sheetFile)?.async('string')
+            if (sheetXml) {
+              const valMatches = sheetXml.match(/<v>([^<]+)<\/v>/g)
+              if (valMatches) {
+                const values = valMatches.map(v => {
+                  const rawVal = v.replace(/<\/?v>/g, '').trim()
+                  const idx = parseInt(rawVal, 10)
+                  if (!isNaN(idx) && stringTable[idx] !== undefined) {
+                    return stringTable[idx]
+                  }
+                  return rawVal
+                })
+                extractedCells.push(...values)
+              }
+            }
+          }
+          textResult = extractedCells.filter(Boolean).slice(0, 1500).join(' | ')
         } catch (err) {
           console.warn('[JSZip Excel Extraction Error]', err)
         }
@@ -286,27 +311,45 @@ export default function InputBar({ onSend }: Props) {
     // 5. PDF DOCUMENTS (.pdf, mobile pdf mime)
     const isPDF = fileName.endsWith('.pdf') || file.type.includes('pdf')
     if (isPDF) {
-      reader.onload = (e) => {
+      reader.onload = async (e) => {
         const buffer = e.target?.result as ArrayBuffer
         let textResult = ''
         try {
-          const latin1Decoder = new TextDecoder('latin1')
-          const decoded = latin1Decoder.decode(buffer)
-          const parenMatches = decoded.match(/\(([^()]{2,})\)/g)
-          if (parenMatches && parenMatches.length > 0) {
-            textResult = parenMatches
-              .map(m => m.slice(1, -1).trim())
-              .filter(t => t.length > 1 && !/^[0-9\/\\_]+$/.test(t))
-              .join(' ')
+          const pdfjsLib = await import('pdfjs-dist')
+          const pdfjs = (pdfjsLib as any).default || pdfjsLib
+          pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`
+          const loadingTask = pdfjs.getDocument({ data: new Uint8Array(buffer) })
+          const pdf = await loadingTask.promise
+          let extracted = ''
+          const maxPages = Math.min(pdf.numPages, 10)
+          for (let i = 1; i <= maxPages; i++) {
+            const page = await pdf.getPage(i)
+            const content = await page.getTextContent()
+            const pageText = content.items.map((item: any) => (item as any).str).join(' ')
+            extracted += pageText + '\n'
           }
-
-          if (!textResult || textResult.length < 30) {
-            const words = decoded.match(/[A-Za-z0-9.,?!'"()$%:\-]{3,}/g)
-            if (words) {
-              textResult = words.filter(w => !w.startsWith('/') && !w.startsWith('obj') && !w.startsWith('endobj')).join(' ')
+          textResult = extracted.trim()
+        } catch (pdfErr) {
+          console.warn('[PDFJS parsing fallback triggered]', pdfErr)
+          try {
+            const latin1Decoder = new TextDecoder('latin1')
+            const decoded = latin1Decoder.decode(buffer)
+            const parenMatches = decoded.match(/\(([^()]{2,})\)/g)
+            if (parenMatches && parenMatches.length > 0) {
+              textResult = parenMatches
+                .map(m => m.slice(1, -1).trim())
+                .filter(t => t.length > 1 && !/^[0-9\/\\_]+$/.test(t))
+                .join(' ')
             }
-          }
-        } catch { }
+
+            if (!textResult || textResult.length < 30) {
+              const words = decoded.match(/[A-Za-z0-9.,?!'"()$%:\-]{3,}/g)
+              if (words) {
+                textResult = words.filter(w => !w.startsWith('/') && !w.startsWith('obj') && !w.startsWith('endobj')).join(' ')
+              }
+            }
+          } catch { }
+        }
 
         const sanitized = sanitizeExtractedText(textResult)
         setAttachedFile({
