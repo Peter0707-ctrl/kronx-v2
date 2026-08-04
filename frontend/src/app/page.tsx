@@ -30,6 +30,17 @@ export default function Home() {
       }).catch(err => console.warn('[PWA Update Check Error]', err))
     }
 
+    // Purge old cached PWA bundles once so Chrome loads latest build
+    if (typeof window !== 'undefined' && 'caches' in window) {
+      caches.keys().then(names => {
+        for (const name of names) {
+          if (name.includes('workbox-precache') || name.includes('kronx') || name.includes('copetra')) {
+            caches.delete(name)
+          }
+        }
+      })
+    }
+
     // Sync logged-in user profile & plan directly from PostgreSQL DB (assigned by Admin)
     if (user?.email) {
       fetch('/api/users')
