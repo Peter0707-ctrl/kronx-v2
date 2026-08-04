@@ -1,27 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
   <url>
     <loc>https://miraculous-forgiveness-production-10d4.up.railway.app/</loc>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-04T13:54:00+00:00</lastmod>
     <changefreq>daily</changefreq>
-    <priority>1.0</priority>
+    <priority>1.00</priority>
   </url>
   <url>
     <loc>https://miraculous-forgiveness-production-10d4.up.railway.app/chat</loc>
-    <lastmod>2026-08-02</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
+    <lastmod>2026-08-04T13:54:00+00:00</lastmod>
+    <changefreq>always</changefreq>
+    <priority>0.95</priority>
   </url>
   <url>
     <loc>https://miraculous-forgiveness-production-10d4.up.railway.app/landing</loc>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-04T13:54:00+00:00</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.90</priority>
   </url>
   <url>
-    <loc>https://miraculous-forgiveness-production-10d4.up.railway.app/admin</loc>
-    <lastmod>2026-08-02</lastmod>
+    <loc>https://miraculous-forgiveness-production-10d4.up.railway.app/dashboard</loc>
+    <lastmod>2026-08-04T13:54:00+00:00</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://miraculous-forgiveness-production-10d4.up.railway.app/api/gateway</loc>
+    <lastmod>2026-08-04T13:54:00+00:00</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
+    <priority>0.50</priority>
   </url>
 </urlset>
