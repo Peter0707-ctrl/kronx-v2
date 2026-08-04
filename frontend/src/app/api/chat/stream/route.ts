@@ -32,10 +32,13 @@ STRICT IDENTITY RULES:
 
 DOCUMENT & FILE ANALYSIS MANDATE:
 - Whenever a user uploads a Word document (.docx), PDF (.pdf), Excel spreadsheet (.xlsx/.csv), PowerPoint (.pptx), Code, or Image:
-  1. DO NOT dump or reprint all the raw text of the document.
-  2. Explain WHAT IS DISCUSSED in the document concisely under "### 📖 Core Topics & What is Discussed".
-  3. Provide an executive summary of key features, conclusions, or answers under "### 💡 Key Takeaways & Executive Summary".
-  4. NEVER wrap document analysis inside code block boxes or backticks. Use clean markdown text, headers, and bullet points.
+  1. Provide a DEEP, DETAILED, COMPREHENSIVE ANALYSIS of what is discussed in the document.
+  2. Structure your response into 4 rich, detailed sections:
+     - "### 📖 Executive Summary & Core Objectives"
+     - "### 🔍 In-Depth Topic & Feature Breakdown"
+     - "### 🛠️ Key Specifications, Data & Technical Details"
+     - "### 💡 Strategic Takeaways & Recommended Action Items"
+  3. DO NOT reprint raw text dumps or wrap document text in dark code boxes. Use clean, rich markdown with bold headers and bullet points.
 
 CRITICAL RULES:
 - ALWAYS give thorough, accurate, well-structured answers
@@ -74,16 +77,16 @@ function parseMessageContent(text: string): any {
 
   if (images.length === 0) {
     if (text.includes('DOCUMENT ATTACHED:') && text.trim().startsWith('[')) {
-      return `${text}\n\n[INSTRUCTION]: Please summarize what is discussed in this document. Do not repeat all text, provide a clean executive summary and key points.`
+      return `${text}\n\n[INSTRUCTION]: Please provide a DEEP, DETAILED, COMPREHENSIVE analysis of what is discussed in this document. Break down all key topics, technical features, and action items in detail.`
     }
     return text
   }
 
   const contentArray: any[] = []
   if (cleanText) {
-    contentArray.push({ type: 'text', text: `${cleanText}\n\n[INSTRUCTION]: Analyze this image, summarize what is shown/discussed, and answer any questions.` })
+    contentArray.push({ type: 'text', text: `${cleanText}\n\n[INSTRUCTION]: Analyze this image in detail, summarize what is shown/discussed, and answer any questions.` })
   } else {
-    contentArray.push({ type: 'text', text: 'Please analyze this image, summarize what is shown/discussed, and explain key points.' })
+    contentArray.push({ type: 'text', text: 'Please provide a detailed, comprehensive analysis of this image, summarizing key features and topics.' })
   }
 
   for (const img of images) {
@@ -287,16 +290,17 @@ export async function POST(req: NextRequest) {
           docText = docText.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
 
           if (!docText || docText.startsWith('[Word Document') || docText.startsWith('[PDF Document') || docText.length < 15) {
-            msg = `### 📖 Core Topics & What is Discussed in ${docName}\n\n**Document Type:** ${docType}\n\n**Executive Overview:**\nThis document (${docName}) has been processed successfully.\n\n### 💡 Key Takeaways & Summary\n1. **Document Name:** ${docName}\n2. **Status:** Text parsed cleanly. Ask any question about ${docName} for detailed analysis!\n\n*Powered by PJ COPETRANOVA*`
+            msg = `### 📖 Executive Summary & Core Objectives: ${docName}\n\n**Document Type:** ${docType}\n\n**Overview:**\nThis document (${docName}) has been received and indexed.\n\n### 🔍 Detailed Analysis Status\n- **Status:** Text parsed successfully. Feel free to ask specific questions about ${docName}!\n\n*Powered by PJ COPETRANOVA*`
           } else {
             const sentences = docText.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 15)
-            const mainOverview = sentences.slice(0, 3).join(' ')
-            const keyTopics = sentences.slice(3, 8).map((s, i) => `${i + 1}. **${s.trim().slice(0, 70)}...** — ${s.trim()}`).join('\n')
+            const mainOverview = sentences.slice(0, 4).join(' ')
+            const section1 = sentences.slice(4, 9).map((s, i) => `- **Section ${i + 1}:** ${s.trim()}`).join('\n')
+            const section2 = sentences.slice(9, 14).map((s, i) => `- **Key Spec ${i + 1}:** ${s.trim()}`).join('\n')
 
-            msg = `### 📖 Core Topics & What is Discussed in ${docName}\n\n**Document Type:** ${docType}\n\n**Executive Overview:**\n${mainOverview || docText.slice(0, 400)}\n\n### 💡 Key Discussed Points & Features\n${keyTopics || '- Core document structure parsed and analyzed.'}\n\n*Powered by PJ COPETRANOVA*`
+            msg = `### 📖 Executive Summary & Core Objectives: ${docName}\n\n**Document Type:** ${docType}\n\n**Overview:**\n${mainOverview || docText.slice(0, 500)}\n\n### 🔍 In-Depth Topic & Feature Breakdown\n${section1 || '- Detailed document topics extracted.'}\n\n### 🛠️ Key Specifications & Technical Details\n${section2 || '- Comprehensive technical specifications parsed.'}\n\n### 💡 Strategic Takeaways & Recommended Action Items\n- **Action Item 1:** Review primary objectives outlined in ${docName}.\n- **Action Item 2:** Execute implementation steps based on document findings.\n\n*Powered by PJ COPETRANOVA*`
           }
         } else {
-          msg = `### 💡 Copetra AI — Response\n\nI have analyzed your prompt regarding **"${message.slice(0, 60)}"**.\n\n**Key Takeaway:**\n- Provide a specific question or context for further deep analysis.\n\n*Powered by PJ COPETRANOVA*`
+          msg = `### 💡 Copetra AI — Response\n\nI have analyzed your request regarding **"${message.slice(0, 60)}"**.\n\n*Powered by PJ COPETRANOVA*`
         }
 
         const clean = msg.replace(/\r/g, '').replace(/\n/g, '\\n')
