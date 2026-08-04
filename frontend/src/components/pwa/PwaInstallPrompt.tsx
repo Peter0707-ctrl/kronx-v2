@@ -49,22 +49,12 @@ export default function PwaInstallPrompt() {
     if (user && !isStandalone && !hasBeenShown) {
       sessionStorage.setItem('copetra_pwa_shown', 'true')
       setShowPrompt(true)
-
-      autoCloseTimerRef.current = setTimeout(() => {
-        setShowPrompt(false)
-      }, 2500)
-
-      return () => {
-        if (autoCloseTimerRef.current) clearTimeout(autoCloseTimerRef.current)
-      }
     } else {
       setShowPrompt(false)
     }
   }, [user, isStandalone])
 
   const handleInstallClick = async () => {
-    if (autoCloseTimerRef.current) clearTimeout(autoCloseTimerRef.current)
-
     if (deferredPrompt) {
       deferredPrompt.prompt()
       const { outcome } = await deferredPrompt.userChoice
@@ -77,8 +67,8 @@ export default function PwaInstallPrompt() {
     } else {
       alert(
         sw
-          ? 'Ili kusakinisha Programu:\n1. Fungua menyu ya kivinjari chako (⋮).\n2. Chagua "Sakinisha Programu (Install App)" au "Ongeza kwenye Skrini ya Nyumbani".'
-          : 'To install the App:\n1. Open your browser menu (⋮).\n2. Tap "Install App" or "Add to Home Screen".'
+          ? 'Ili kupakua Programu:\n1. Fungua menyu ya kivinjari chako (⋮).\n2. Chagua "Sakinisha Programu (Install App)" au "Ongeza kwenye Skrini ya Nyumbani".'
+          : 'To download the App:\n1. Open your browser menu (⋮).\n2. Tap "Install App" or "Add to Home Screen".'
       )
     }
   }
@@ -87,7 +77,7 @@ export default function PwaInstallPrompt() {
 
   return (
     <>
-      {/* 1. Sleek PWA Banner Prompt (2.5s Auto-Disappear) */}
+      {/* 1. Sleek PWA Banner Prompt (Permanent until dismissed/installed) */}
       {showPrompt && (
         <div
           style={{
@@ -97,13 +87,13 @@ export default function PwaInstallPrompt() {
             left: '20px',
             maxWidth: '400px',
             margin: '0 auto',
-            background: 'rgba(15, 23, 42, 0.92)',
+            background: 'rgba(15, 23, 42, 0.94)',
             backdropFilter: 'blur(16px)',
             WebkitBackdropFilter: 'blur(16px)',
             color: '#ffffff',
             borderRadius: '18px',
             padding: '16px 18px',
-            boxShadow: '0 12px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(56, 189, 248, 0.25)',
+            boxShadow: '0 12px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(56, 189, 248, 0.3)',
             zIndex: 99999,
             display: 'flex',
             flexDirection: 'column',
@@ -112,30 +102,6 @@ export default function PwaInstallPrompt() {
             animation: 'message-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
           }}
         >
-          {/* 2.5s Auto-Disappear Timer Bar */}
-          <div
-            style={{
-              position: 'absolute',
-              bottom: 0,
-              left: 0,
-              height: '3px',
-              background: 'linear-gradient(90deg, #38bdf8, #0284c7)',
-              width: '100%',
-              animation: 'pwa-timer-shrink 2.5s linear forwards',
-            }}
-          />
-
-          <style jsx>{`
-            @keyframes pwa-timer-shrink {
-              from {
-                width: 100%;
-              }
-              to {
-                width: 0%;
-              }
-            }
-          `}</style>
-
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <div
@@ -151,25 +117,22 @@ export default function PwaInstallPrompt() {
                   boxShadow: '0 2px 8px rgba(2, 132, 199, 0.4)',
                 }}
               >
-                <span style={{ fontSize: '18px' }}>🤖</span>
+                <span style={{ fontSize: '18px' }}>📥</span>
               </div>
               <div>
                 <div style={{ fontSize: '14px', fontWeight: '800', color: '#ffffff', letterSpacing: '-0.2px' }}>
-                  {sw ? 'Sakinisha Programu ya Copetra AI' : 'Install Copetra AI App'}
+                  {sw ? 'Pakua Programu ya Copetra AI' : 'Download Copetra AI App'}
                 </div>
                 <div style={{ fontSize: '11.5px', color: '#94a3b8' }}>
                   {isIos
-                    ? (sw ? 'Bofya hapa kuweka kwenye iPhone' : 'Tap to add to iPhone Home Screen')
-                    : (sw ? 'Pakua app bila kutumia browser' : 'Get fast access without browser bar')}
+                    ? (sw ? 'Bofya kuweka kwenye iPhone' : 'Tap to add to iPhone Home Screen')
+                    : (sw ? 'Pakua app ya simu haraka' : 'Download direct app to your phone')}
                 </div>
               </div>
             </div>
 
             <button
-              onClick={() => {
-                if (autoCloseTimerRef.current) clearTimeout(autoCloseTimerRef.current)
-                setShowPrompt(false)
-              }}
+              onClick={() => setShowPrompt(false)}
               style={{
                 background: 'rgba(255,255,255,0.1)',
                 border: 'none',
@@ -210,14 +173,11 @@ export default function PwaInstallPrompt() {
                 boxShadow: '0 4px 12px rgba(2, 132, 199, 0.35)',
               }}
             >
-              <span>📱</span>
-              <span>{sw ? 'SAKINISHA SASA' : 'INSTALL NOW'}</span>
+              <span>📥</span>
+              <span>{sw ? 'PAKUA APP SASA' : 'DOWNLOAD APP NOW'}</span>
             </button>
             <button
-              onClick={() => {
-                if (autoCloseTimerRef.current) clearTimeout(autoCloseTimerRef.current)
-                setShowPrompt(false)
-              }}
+              onClick={() => setShowPrompt(false)}
               style={{
                 padding: '9px 12px',
                 borderRadius: '10px',
