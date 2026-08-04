@@ -16,9 +16,13 @@ export default function ChatArea({ onSend, onRegenerate, onEditAndResend }: Prop
   const messages = activeMessages()
   const bottomRef = useRef<HTMLDivElement>(null)
 
-  // Smooth automatic scroll to bottom whenever messages update or AI streams text
+  // Automatic scroll to bottom: use 'auto' (instant) during active streaming to prevent animation thread choke
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (bottomRef.current) {
+      bottomRef.current.scrollIntoView({
+        behavior: isStreaming ? 'auto' : 'smooth'
+      })
+    }
   }, [messages.length, messages[messages.length - 1]?.content, isStreaming])
 
   return (
