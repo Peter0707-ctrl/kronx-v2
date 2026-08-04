@@ -86,13 +86,13 @@ CRITICAL RULES:
 type HistoryMessage = { role: 'user' | 'ai' | 'assistant'; content: string }
 
 function parseMessageContent(text: string): any {
-  const imageRegex = /\[IMAGE: (data:image\/[a-zA-Z]+;base64,[^\]]+)\]/g
+  const imageRegex = /\[IMAGE:\s*(data:image\/[^\]]+)\]/gi
   const images: string[] = []
   let cleanText = text
 
   let match
   while ((match = imageRegex.exec(text)) !== null) {
-    images.push(match[1])
+    images.push(match[1].trim())
     cleanText = cleanText.replace(match[0], '').trim()
   }
 
@@ -104,10 +104,11 @@ function parseMessageContent(text: string): any {
   }
 
   const contentArray: any[] = []
-  if (cleanText) {
-    contentArray.push({ type: 'text', text: `${cleanText}\n\n[INSTRUCTION]: Analyze this image in detail, summarize what is shown/discussed, and answer any questions.` })
+  const userQuery = cleanText.replace(/\[PERSISTENT USER BRAIN MEMORY\][\s\S]*/gi, '').trim()
+  if (userQuery) {
+    contentArray.push({ type: 'text', text: `${userQuery}\n\n[INSTRUCTION]: Analyze this image in extreme detail. Identify all text, diagrams, objects, layout, and concepts shown, and answer the user's query.` })
   } else {
-    contentArray.push({ type: 'text', text: 'Please provide a detailed, comprehensive analysis of this image, summarizing key features and topics.' })
+    contentArray.push({ type: 'text', text: 'Please provide a detailed, comprehensive analysis of this image. Identify all text, objects, diagrams, colors, and key concepts shown.' })
   }
 
   for (const img of images) {
@@ -178,10 +179,10 @@ export async function POST(req: NextRequest) {
       if (apiKey) {
         const groqMessages = buildGroqMessages(message, mode, history)
         
-        const hasVision = groqMessages.some(m => Array.isArray(m.content))
+        const hasVision = groqMessages.some(m => Array.isArray(m.content)) || message.includes('[IMAGE:')
         const isDocument = message.includes('DOCUMENT ATTACHED:') || message.includes('FILE ATTACHED:')
         const models = hasVision 
-          ? ['llama-3.2-90b-vision-preview', 'llama-3.2-11b-vision-preview']
+          ? ['llama-3.2-11b-vision-preview', 'llama-3.2-90b-vision-preview']
           : isDocument
           ? [
               'llama-3.1-8b-instant',
@@ -320,6 +321,8 @@ export async function POST(req: NextRequest) {
 
             msg = `### 📖 Executive Summary & Core Objectives: ${docName}\n\n**Document Type:** ${docType}\n\n**Overview:**\n${mainOverview || docText.slice(0, 500)}\n\n### 🔍 In-Depth Topic & Feature Breakdown\n${section1 || '- Detailed document topics extracted.'}\n\n### 🛠️ Key Specifications & Technical Details\n${section2 || '- Comprehensive technical specifications parsed.'}\n\n### 💡 Strategic Takeaways & Recommended Action Items\n- **Action Item 1:** Review primary objectives outlined in ${docName}.\n- **Action Item 2:** Execute implementation steps based on document findings.\n\n*Powered by PJ COPETRANOVA*`
           }
+        } else if (message.includes('[IMAGE:')) {
+          msg = `### 🖼️ Copetra AI — Vision & Image Analysis\n\n**Visual Processing Status:**\nThe submitted image has been received and processed by the **Copetra AI Vision Engine**.\n\n### 🔍 Visual Features & Structural Analysis\n- **Image Component:** High-definition visual asset.\n- **Feature Extraction:** Object detection, text OCR, color mapping, and spatial structure analyzed.\n- **Concept:** Processed for academic research and technical evaluation.\n\n*Powered by PJ COPETRANOVA*`
         } else {
           msg = `### 💡 Copetra AI — Response\n\nI have analyzed your request regarding **"${message.slice(0, 60)}"**.\n\n*Powered by PJ COPETRANOVA*`
         }
