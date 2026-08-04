@@ -188,13 +188,18 @@ export async function POST(req: NextRequest) {
         
         const hasVision = groqMessages.some(m => Array.isArray(m.content)) || message.includes('[IMAGE:')
         const isDocument = message.includes('DOCUMENT ATTACHED:') || message.includes('FILE ATTACHED:')
-        const models = [
-          'llama-3.1-8b-instant',
-          'llama-3.3-70b-versatile',
-          'gemma2-9b-it',
-          'llama-3.2-11b-vision-preview',
-          'mixtral-8x7b-32768'
-        ]
+        const models = hasVision
+          ? [
+              'llama-3.2-11b-vision-preview',
+              'llama-3.1-8b-instant',
+              'llama-3.3-70b-versatile'
+            ]
+          : [
+              'llama-3.1-8b-instant',
+              'llama-3.3-70b-versatile',
+              'gemma2-9b-it',
+              'mixtral-8x7b-32768'
+            ]
 
         for (const model of models) {
           if (streamedAny) break
@@ -203,7 +208,7 @@ export async function POST(req: NextRequest) {
             const currentGroqMessages = buildGroqMessages(message, mode, history, isVisionModel)
 
             const abortCtrl = new AbortController()
-            const timeoutMs = isVisionModel ? 4000 : model.includes('70b') ? 12000 : 8000
+            const timeoutMs = isVisionModel ? 1800 : model.includes('70b') ? 12000 : 8000
             setTimeout(() => abortCtrl.abort(), timeoutMs)
 
             const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
