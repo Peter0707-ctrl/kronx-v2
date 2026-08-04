@@ -133,7 +133,14 @@ async function callGroq(
   const hasVision = groqMessages.some(m => Array.isArray(m.content))
   const models = hasVision 
     ? ['llama-3.2-90b-vision-preview', 'llama-3.2-11b-vision-preview']
-    : ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'gemma2-9b-it']
+    : [
+        'llama-3.3-70b-versatile',
+        'llama-3.1-8b-instant',
+        'gemma2-9b-it',
+        'llama-3.2-3b-preview',
+        'llama-3.2-1b-preview',
+        'mixtral-8x7b-32768'
+      ]
 
   for (const model of models) {
     try {
@@ -163,9 +170,6 @@ async function callGroq(
         const data = await res.json()
         const text = data.choices?.[0]?.message?.content?.trim()
         if (text) return text
-      } else {
-        const errData = await res.json().catch(() => ({}))
-        if (errData?.error?.message?.includes('decommissioned')) continue
       }
     } catch (e) {
       console.error(`Groq model ${model} error:`, e)
