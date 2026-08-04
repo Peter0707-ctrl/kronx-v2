@@ -175,7 +175,7 @@ export default function InputBar({ onSend }: Props) {
             if (docEntryKey) {
               const docXml = await zip.files[docEntryKey].async('string')
               if (docXml) {
-                const tMatches = docXml.match(/<w:t[^>]*>([\s\S]*?)<\/w:t>/gi)
+                const tMatches = docXml.match(/<w:t[^>]*>([^<]*?)<\/w:t>/gi)
                 if (tMatches && tMatches.length > 0) {
                   textResult = tMatches.map(m => m.replace(/<[^>]+>/g, '').trim()).filter(Boolean).join(' ')
                 } else {
@@ -189,7 +189,7 @@ export default function InputBar({ onSend }: Props) {
         }
 
         if (textResult.startsWith('PK') || textResult.includes('[Content_Types].xml')) {
-          textResult = textResult.replace(/PK[\s\S]*?\[Content_Types\]\.xml/g, '').replace(/<[^>]+>/g, ' ').trim()
+          textResult = ''
         }
 
         const sanitized = sanitizeExtractedText(textResult)
@@ -232,7 +232,7 @@ export default function InputBar({ onSend }: Props) {
           let stringTable: string[] = []
           const sharedStrings = await zip.file('xl/sharedStrings.xml')?.async('string')
           if (sharedStrings) {
-            const matches = sharedStrings.match(/<t[^>]*>([\s\S]*?)<\/t>/gi)
+            const matches = sharedStrings.match(/<t[^>]*>([^<]*?)<\/t>/gi)
             if (matches) {
               stringTable = matches.map(m => m.replace(/<[^>]+>/g, '').trim())
             }
