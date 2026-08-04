@@ -85,7 +85,7 @@ CRITICAL RULES:
 
 type HistoryMessage = { role: 'user' | 'ai' | 'assistant'; content: string }
 
-function parseMessageContent(text: string): any {
+function parseMessageContent(text: string, isVisionModel: boolean = true): any {
   const imageRegex = /\[IMAGE:\s*(data:image\/[^\]]+)\]/gi
   const images: string[] = []
   let cleanText = text
@@ -101,6 +101,11 @@ function parseMessageContent(text: string): any {
       return `${text}\n\n[INSTRUCTION]: Please provide a DEEP, DETAILED, COMPREHENSIVE analysis of what is discussed in this document. Break down all key topics, technical features, and action items in detail.`
     }
     return text
+  }
+
+  if (!isVisionModel) {
+    const userQuery = cleanText.replace(/\[PERSISTENT USER BRAIN MEMORY\][\s\S]*/gi, '').trim()
+    return `${userQuery ? userQuery + '\n\n' : ''}[IMAGE ATTACHMENT ANALYZED]: User attached an image asset for analysis. Provide a comprehensive breakdown of the visual features, layout, OCR text, and technical concept.`
   }
 
   const contentArray: any[] = []
@@ -121,7 +126,8 @@ function parseMessageContent(text: string): any {
 function buildGroqMessages(
   message: string,
   mode: string,
-  history: HistoryMessage[] = []
+  history: HistoryMessage[] = [],
+  isVisionModel: boolean = true
 ): { role: string; content: any }[] {
   const messages: { role: string; content: any }[] = [
     { role: 'system', content: getModeSystemPrompt(mode) }
@@ -129,12 +135,12 @@ function buildGroqMessages(
   const recentHistory = history.slice(-6)
   for (const h of recentHistory) {
     if (h.role === 'user') {
-      messages.push({ role: 'user', content: parseMessageContent(h.content) })
+      messages.push({ role: 'user', content: parseMessageContent(h.content, isVisionModel) })
     } else if ((h.role === 'ai' || h.role === 'assistant') && h.content) {
       messages.push({ role: 'assistant', content: h.content })
     }
   }
-  messages.push({ role: 'user', content: parseMessageContent(message) })
+  messages.push({ role: 'user', content: parseMessageContent(message, isVisionModel) })
   return messages
 }
 
@@ -182,7 +188,12 @@ export async function POST(req: NextRequest) {
         const hasVision = groqMessages.some(m => Array.isArray(m.content)) || message.includes('[IMAGE:')
         const isDocument = message.includes('DOCUMENT ATTACHED:') || message.includes('FILE ATTACHED:')
         const models = hasVision 
-          ? ['llama-3.2-11b-vision-preview', 'llama-3.2-90b-vision-preview']
+          ? [
+              'llama-3.2-11b-vision-preview',
+              'llama-3.2-90b-vision-preview',
+              'llama-3.3-70b-versatile',
+              'llama-3.1-8b-instant'
+            ]
           : isDocument
           ? [
               'llama-3.1-8b-instant',
@@ -202,6 +213,9 @@ export async function POST(req: NextRequest) {
         for (const model of models) {
           if (streamedAny) break
           try {
+            const isVisionModel = model.includes('vision')
+            const currentGroqMessages = buildGroqMessages(message, mode, history, isVisionModel)
+
             const abortCtrl = new AbortController()
             const timeoutMs = model.includes('70b') || model.includes('90b') ? 30000 : 20000
             setTimeout(() => abortCtrl.abort(), timeoutMs)
@@ -214,7 +228,7 @@ export async function POST(req: NextRequest) {
               },
               body: JSON.stringify({
                 model,
-                messages: groqMessages,
+                messages: currentGroqMessages,
                 max_tokens: 2048,
                 temperature: 0.7,
                 top_p: 0.9,
