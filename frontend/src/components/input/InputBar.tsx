@@ -63,17 +63,60 @@ export default function InputBar({ onSend }: Props) {
     const fileName = file.name.toLowerCase()
     const reader = new FileReader()
 
-    // 1. IMAGE FILES (PNG, JPG, JPEG, WEBP, GIF)
+    // 1. IMAGE FILES (PNG, JPG, JPEG, WEBP, GIF, MOBILE PHOTOS)
     if (file.type.startsWith('image/')) {
       reader.onload = (e) => {
-        const result = e.target?.result as string
-        setAttachedFile({
-          name: file.name,
-          type: file.type,
-          preview: result,
-          content: result,
-          category: 'image',
-        })
+        const rawResult = e.target?.result as string
+        const img = new Image()
+        img.onload = () => {
+          const canvas = document.createElement('canvas')
+          let width = img.width
+          let height = img.height
+          const maxDim = 1024
+
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width)
+              width = maxDim
+            } else {
+              width = Math.round((width * maxDim) / height)
+              height = maxDim
+            }
+          }
+
+          canvas.width = width
+          canvas.height = height
+          const ctx = canvas.getContext('2d')
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height)
+            const compressed = canvas.toDataURL('image/jpeg', 0.85)
+            setAttachedFile({
+              name: file.name,
+              type: 'image/jpeg',
+              preview: compressed,
+              content: compressed,
+              category: 'image',
+            })
+          } else {
+            setAttachedFile({
+              name: file.name,
+              type: file.type,
+              preview: rawResult,
+              content: rawResult,
+              category: 'image',
+            })
+          }
+        }
+        img.onerror = () => {
+          setAttachedFile({
+            name: file.name,
+            type: file.type,
+            preview: rawResult,
+            content: rawResult,
+            category: 'image',
+          })
+        }
+        img.src = rawResult
       }
       reader.readAsDataURL(file)
       return
