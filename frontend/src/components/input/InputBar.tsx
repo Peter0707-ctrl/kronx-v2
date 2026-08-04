@@ -108,7 +108,7 @@ export default function InputBar({ onSend }: Props) {
         setAttachedFile({
           name: file.name,
           type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-          content: textResult.slice(0, 18000) || `[Word Document '${file.name}' - ${Math.round(file.size / 1024)} KB attached]`,
+          content: textResult.slice(0, 6000) || `[Word Document '${file.name}' - ${Math.round(file.size / 1024)} KB attached]`,
           category: 'word',
         })
       }
@@ -124,7 +124,7 @@ export default function InputBar({ onSend }: Props) {
           setAttachedFile({
             name: file.name,
             type: 'text/csv',
-            content: csvText.slice(0, 18000),
+            content: csvText.slice(0, 6000),
             category: 'excel',
           })
         }
@@ -150,7 +150,7 @@ export default function InputBar({ onSend }: Props) {
         setAttachedFile({
           name: file.name,
           type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          content: textResult.slice(0, 18000) || `[Excel Spreadsheet '${file.name}' - ${Math.round(file.size / 1024)} KB attached]`,
+          content: textResult.slice(0, 6000) || `[Excel Spreadsheet '${file.name}' - ${Math.round(file.size / 1024)} KB attached]`,
           category: 'excel',
         })
       }
@@ -176,7 +176,7 @@ export default function InputBar({ onSend }: Props) {
         setAttachedFile({
           name: file.name,
           type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-          content: textResult.slice(0, 18000) || `[PowerPoint Presentation '${file.name}' - ${Math.round(file.size / 1024)} KB attached]`,
+          content: textResult.slice(0, 6000) || `[PowerPoint Presentation '${file.name}' - ${Math.round(file.size / 1024)} KB attached]`,
           category: 'powerpoint',
         })
       }
@@ -212,7 +212,7 @@ export default function InputBar({ onSend }: Props) {
         setAttachedFile({
           name: file.name,
           type: 'application/pdf',
-          content: textResult.slice(0, 18000) || `[PDF Document '${file.name}' - ${Math.round(file.size / 1024)} KB attached]`,
+          content: textResult.slice(0, 6000) || `[PDF Document '${file.name}' - ${Math.round(file.size / 1024)} KB attached]`,
           category: 'pdf',
         })
       }

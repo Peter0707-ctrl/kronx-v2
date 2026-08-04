@@ -138,14 +138,22 @@ async function callGroq(
   const groqMessages = buildGroqMessages(message, mode, history)
   
   const hasVision = groqMessages.some(m => Array.isArray(m.content))
+  const isDocument = message.includes('DOCUMENT ATTACHED:') || message.includes('FILE ATTACHED:')
   const models = hasVision 
     ? ['llama-3.2-90b-vision-preview', 'llama-3.2-11b-vision-preview']
+    : isDocument
+    ? [
+        'llama-3.1-8b-instant',
+        'llama-3.3-70b-versatile',
+        'gemma2-9b-it',
+        'llama-3.2-3b-preview',
+        'mixtral-8x7b-32768'
+      ]
     : [
         'llama-3.3-70b-versatile',
         'llama-3.1-8b-instant',
         'gemma2-9b-it',
         'llama-3.2-3b-preview',
-        'llama-3.2-1b-preview',
         'mixtral-8x7b-32768'
       ]
 
