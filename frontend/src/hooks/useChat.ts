@@ -133,6 +133,28 @@ export function useChat() {
         }
       } finally {
         currentState.setStreaming(false)
+        if (typeof window !== 'undefined' && document.visibilityState === 'hidden') {
+          const isSw = currentState.language === 'sw'
+          const title = '📚 Copetra AI'
+          const body = isSw ? 'Majibu yako yako tayari! Fungua kuona.' : 'Your response is ready! Open to view.'
+          const options = {
+            body,
+            icon: '/kronx_logo.jpg',
+            badge: '/kronx_logo.jpg',
+            vibrate: [200, 100, 200]
+          }
+          if ('Notification' in window && Notification.permission === 'granted') {
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.ready.then(reg => {
+                reg.showNotification(title, options)
+              }).catch(() => {
+                new Notification(title, options)
+              })
+            } else {
+              new Notification(title, options)
+            }
+          }
+        }
       }
     },
     []
@@ -187,6 +209,28 @@ export function useChat() {
       currentState.updateLastAiMessage(fallbackMsg)
     } finally {
       currentState.setStreaming(false)
+      if (typeof window !== 'undefined' && document.visibilityState === 'hidden') {
+        const isSw = currentState.language === 'sw'
+        const title = '📚 Copetra AI'
+        const body = isSw ? 'Majibu yako yako tayari! Fungua kuona.' : 'Your response is ready! Open to view.'
+        const options = {
+          body,
+          icon: '/kronx_logo.jpg',
+          badge: '/kronx_logo.jpg',
+          vibrate: [200, 100, 200]
+        }
+        if ('Notification' in window && Notification.permission === 'granted') {
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.ready.then(reg => {
+              reg.showNotification(title, options)
+            }).catch(() => {
+              new Notification(title, options)
+            })
+          } else {
+            new Notification(title, options)
+          }
+        }
+      }
     }
   }, [])
 
@@ -222,6 +266,28 @@ export function useChat() {
         currentState.updateLastAiMessage(fallbackMsg)
       } finally {
         currentState.setStreaming(false)
+        if (typeof window !== 'undefined' && document.visibilityState === 'hidden') {
+          const isSw = currentState.language === 'sw'
+          const title = '📚 Copetra AI'
+          const body = isSw ? 'Majibu yako yako tayari! Fungua kuona.' : 'Your response is ready! Open to view.'
+          const options = {
+            body,
+            icon: '/kronx_logo.jpg',
+            badge: '/kronx_logo.jpg',
+            vibrate: [200, 100, 200]
+          }
+          if ('Notification' in window && Notification.permission === 'granted') {
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.ready.then(reg => {
+                reg.showNotification(title, options)
+              }).catch(() => {
+                new Notification(title, options)
+              })
+            } else {
+              new Notification(title, options)
+            }
+          }
+        }
       }
     },
     []

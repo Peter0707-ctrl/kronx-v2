@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useKronxStore } from '@/store/useKronxStore'
 
 // Payment provider logos (SVG inline for zero dependency)
@@ -88,6 +88,33 @@ export default function SettingsModal() {
   const [activeTab, setActiveTab] = useState<'menu'|'upgrade'|'account'|'support'|'developer'>('menu')
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
   const [selectedPlan, setSelectedPlan] = useState<'plus' | 'pro'>('plus')
+
+  const [notificationStatus, setNotificationStatus] = useState<string>('default')
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      setNotificationStatus(Notification.permission)
+    }
+  }, [])
+
+  const handleRequestNotificationPermission = async () => {
+    if (typeof window === 'undefined') return
+    if (!('Notification' in window)) {
+      alert(language === 'sw' ? 'Kifaa chako hakiauni arifa.' : 'Notifications are not supported on this device.')
+      return
+    }
+    try {
+      const permission = await Notification.requestPermission()
+      setNotificationStatus(permission)
+      if (permission === 'granted') {
+        alert(language === 'sw' ? 'Arifa zimeamilishwa kikamilifu! 🎉' : 'Notifications enabled successfully! 🎉')
+      } else {
+        alert(language === 'sw' ? 'Ruhusa ya arifa imekataliwa. Tafadhali ruhusu kwenye mipangilio ya kivinjari chako.' : 'Notification permission was denied. Please allow notifications in browser settings.')
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
   const [contactSent, setContactSent] = useState(false)
   const [feedbackType, setFeedbackType] = useState<'bug' | 'feature' | 'other'>('feature')
   const [feedbackText, setFeedbackText] = useState('')
@@ -280,6 +307,35 @@ export default function SettingsModal() {
                   </div>
                 </div>
                 <div style={{ color: '#0ea5e9' }}>➔</div>
+              </button>
+
+              <button
+                onClick={handleRequestNotificationPermission}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  background: '#f8fafc', padding: '16px 20px', borderRadius: '16px',
+                  border: '1px solid #e2e8f0', cursor: 'pointer', textAlign: 'left',
+                  transition: 'background 0.2s', width: '100%'
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = '#f1f5f9')}
+                onMouseLeave={e => (e.currentTarget.style.background = '#f8fafc')}
+              >
+                <div>
+                  <div style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', marginBottom: '4px' }}>
+                    {sw ? 'Arifa za PWA (Push)' : 'PWA Push Notifications'}
+                  </div>
+                  <div style={{ fontSize: '13px', color: '#64748b' }}>
+                    {notificationStatus === 'granted' ? 
+                      (sw ? 'Hali: Zimeamilishwa kikamilifu' : 'Status: Fully Activated') : 
+                      (sw ? 'Gusa kuwasha arifa za ujumbe' : 'Tap to enable chat response notifications')}
+                  </div>
+                </div>
+                <div style={{
+                  color: notificationStatus === 'granted' ? '#22c55e' : '#0ea5e9',
+                  fontWeight: 'bold', fontSize: '14px'
+                }}>
+                  {notificationStatus === 'granted' ? 'ON ✓' : 'OFF ➔'}
+                </div>
               </button>
 
               {user?.isDeveloper && (
