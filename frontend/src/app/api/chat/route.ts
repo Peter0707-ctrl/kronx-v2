@@ -73,28 +73,29 @@ CRITICAL RULES:
 type HistoryMessage = { role: 'user' | 'ai' | 'assistant'; content: string }
 
 function parseMessageContent(text: string): any {
-  const imageRegex = /\[IMAGE: (data:image\/[a-zA-Z]+;base64,[^\]]+)\]/g
+  const imageRegex = /\[IMAGE:\s*(data:image\/[^\]]+)\]/gi
   const images: string[] = []
   let cleanText = text
 
   let match
   while ((match = imageRegex.exec(text)) !== null) {
-    images.push(match[1])
+    images.push(match[1].trim())
     cleanText = cleanText.replace(match[0], '').trim()
   }
 
   if (images.length === 0) {
     if (text.includes('DOCUMENT ATTACHED:') && text.trim().startsWith('[')) {
-      return `${text}\n\n[INSTRUCTION]: Please analyze this document, explain the core concept inside, and execute all tasks, questions, or assignments found in this document.`
+      return `${text}\n\n[INSTRUCTION]: Please provide a DEEP, DETAILED, COMPREHENSIVE analysis of what is discussed in this document. Break down all key topics, technical features, and action items in detail.`
     }
     return text
   }
 
   const contentArray: any[] = []
-  if (cleanText) {
-    contentArray.push({ type: 'text', text: `${cleanText}\n\n[INSTRUCTION]: Analyze this image, explain the core concept, and solve/execute everything shown.` })
+  const userQuery = cleanText.replace(/\[PERSISTENT USER BRAIN MEMORY\][\s\S]*/gi, '').trim()
+  if (userQuery) {
+    contentArray.push({ type: 'text', text: `${userQuery}\n\n[INSTRUCTION]: Analyze this image in extreme detail. Identify all text, diagrams, objects, layout, and concepts shown, and answer the user's query.` })
   } else {
-    contentArray.push({ type: 'text', text: 'Please analyze this image, state the core concept inside, and solve/execute all questions, equations, or tasks shown.' })
+    contentArray.push({ type: 'text', text: 'Please provide a detailed, comprehensive analysis of this image. Identify all text, objects, diagrams, colors, and key concepts shown.' })
   }
 
   for (const img of images) {
@@ -137,10 +138,11 @@ async function callGroq(
 
   const groqMessages = buildGroqMessages(message, mode, history)
   
-  const hasVision = groqMessages.some(m => Array.isArray(m.content))
+  const hasVision = groqMessages.some(m => Array.isArray(m.content)) || message.includes('[IMAGE:')
   const isDocument = message.includes('DOCUMENT ATTACHED:') || message.includes('FILE ATTACHED:')
-  const models = hasVision 
-    ? ['llama-3.2-90b-vision-preview', 'llama-3.2-11b-vision-preview']
+
+  const models = hasVision
+    ? ['llama-3.2-11b-vision-preview', 'llama-3.2-90b-vision-preview']
     : isDocument
     ? [
         'llama-3.1-8b-instant',
