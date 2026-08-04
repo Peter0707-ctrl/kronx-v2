@@ -12,6 +12,11 @@ export function useChat() {
       const activeState = useKronxStore.getState()
       if (!text.trim() || activeState.isStreaming) return
 
+      // Auto-Request Push Notification permissions on direct user send click
+      if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission().catch(console.warn)
+      }
+
       if (!activeState.activeConversationId) {
         activeState.newConversation()
       }

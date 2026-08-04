@@ -67,8 +67,8 @@ export default function PwaInstallPrompt() {
     } else {
       alert(
         sw
-          ? 'Ili kupakua Programu:\n1. Fungua menyu ya kivinjari chako (⋮).\n2. Chagua "Sakinisha Programu (Install App)" au "Ongeza kwenye Skrini ya Nyumbani".'
-          : 'To download the App:\n1. Open your browser menu (⋮).\n2. Tap "Install App" or "Add to Home Screen".'
+          ? 'Ili kupakua Programu:\n1. Fungua menyu ya kivinjari chako (⋮).\n2. Chagua "Sakinisha Programu (Install App)" au "Pakua".'
+          : 'To download the App:\n1. Open your browser menu (⋮).\n2. Tap "Install App" or "Download".'
       )
     }
   }
