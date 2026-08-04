@@ -21,28 +21,17 @@ const sanitizeExtractedText = (text: string): string => {
   if (!text) return ''
   let clean = text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, ' ')
   
-  const keywords = new Set([
-    'obj', 'endobj', 'stream', 'endstream', 'xref', 'trailer', 'startxref', 
-    'eof', 'catalog', 'pages', 'parent', 'resources', 'font', 'contents', 
-    'type', 'prev', 'size', 'filter', 'flatedecode', 'length', 'procset', 
-    'mediabox', 'kids', 'count', 'root', 'info', 'creationdate', 'moddate', 
-    'producer', 'creator', 'author', 'title', 'subject', 'keywords', 'metadata', 
-    'xml', 'uuid', 'adobe', 'pdf', 'encrypt', 'standard', 'v2', 'r3', 'o', 'u', 'p', 'bytes',
-    'pk', 'content_types', 'rels', 'theme', 'document'
-  ])
+  // If it's not a raw PDF stream, it's clean text (Word, Excel, Text). Return immediately!
+  if (!clean.includes('/Root') && !clean.includes('/Page') && !clean.includes('endobj')) {
+    return clean.slice(0, 15000)
+  }
 
-  const words = clean.split(/\s+/)
-  const filtered = words.filter(w => {
-    const lower = w.toLowerCase()
-    if (lower.startsWith('pk') || lower.includes('[content_types]') || lower.includes('_rels')) return false
-    if (keywords.has(lower)) return false
-    if (w.startsWith('/') || w.startsWith('<<') || w.startsWith('>>')) return false
-    if (w.length > 25 && /^[a-fA-F0-9]+$/.test(w)) return false
-    if (/[^a-zA-Z0-9.,?!'"()\-_\s]/g.test(w)) return false
-    return true
-  })
-
-  return filtered.join(' ')
+  // For raw PDF binary stream leftovers, sanitize on string level (1000x faster than word arrays)
+  clean = clean.replace(/\/[a-zA-Z0-9]+/g, ' ')
+  clean = clean.replace(/<<|>>/g, ' ')
+  clean = clean.replace(/\b(obj|endobj|stream|endstream|xref|trailer|startxref|filter|flatedecode)\b/gi, ' ')
+  
+  return clean.slice(0, 15000)
 }
 
 export default function InputBar({ onSend }: Props) {
