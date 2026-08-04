@@ -15,6 +15,8 @@ interface KronxStore {
   authModalOpen: boolean
   settingsModalOpen: boolean
   sidebarOpen: boolean
+  userMemories: string[]
+  addMemory: (text: string) => void
 
   toggleSidebar: () => void
 
@@ -85,6 +87,8 @@ export const useKronxStore = create<KronxStore>()(
       authModalOpen: false,
       settingsModalOpen: false,
       sidebarOpen: false,
+      userMemories: [],
+      addMemory: (text: string) => set(s => ({ userMemories: Array.from(new Set([...(s.userMemories || []), text])) })),
 
       setSettingsModalOpen: (settingsModalOpen: boolean) => set({ settingsModalOpen }),
       toggleSidebar: () => set(s => ({ sidebarOpen: !s.sidebarOpen })),
@@ -205,6 +209,24 @@ export const useKronxStore = create<KronxStore>()(
           timestamp: new Date(),
           mode: get().mode,
           lang: get().language,
+        }
+
+        // Automatic Memory & Knowledge Extractor
+        if (role === 'user') {
+          const newMemories: string[] = []
+          const nameMatch = content.match(/(?:i am|my name is|mimi ni|jina langu ni)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i)
+          if (nameMatch && nameMatch[1]) {
+            newMemories.push(`User Name: ${nameMatch[1].trim()}`)
+          }
+          const projMatch = content.match(/(?:my project is|i work on|building|developing|my company is)\s+([^,.]+)/i)
+          if (projMatch && projMatch[1]) {
+            newMemories.push(`User Project/Work: ${projMatch[1].trim()}`)
+          }
+          if (newMemories.length > 0) {
+            set(s => ({
+              userMemories: Array.from(new Set([...(s.userMemories || []), ...newMemories]))
+            }))
+          }
         }
         set(s => {
           let currentId = s.activeConversationId

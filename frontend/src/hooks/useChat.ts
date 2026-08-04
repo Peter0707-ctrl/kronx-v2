@@ -89,9 +89,11 @@ export function useChat() {
 
       try {
         const history = buildHistory(currentState.activeMessages())
+        const memories = currentState.userMemories || []
+        const memoryPrompt = memories.length > 0 ? `\n\n[PERSISTENT USER BRAIN MEMORY]:\n${memories.map(m => `- ${m}`).join('\n')}` : ''
 
         const gen = streamMessage({
-          message: text,
+          message: `${text}${memoryPrompt}`,
           mode: currentState.mode,
           language: currentState.language,
           conversation_id: currentState.activeConversationId ?? 'new',

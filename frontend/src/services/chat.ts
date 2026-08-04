@@ -112,9 +112,10 @@ export async function* streamMessage(
 
 export function buildHistory(
   messages: Message[],
-  limit = 8
+  limit = 12
 ): { role: 'user' | 'ai'; content: string }[] {
-  return messages
-    .slice(-limit)
-    .map(m => ({ role: m.role, content: m.content }))
+  const docMessages = messages.filter(m => m.content.includes('DOCUMENT ATTACHED:') || m.content.includes('Document Content:'))
+  const recentMessages = messages.slice(-limit)
+  const combined = Array.from(new Set([...docMessages, ...recentMessages]))
+  return combined.map(m => ({ role: m.role, content: m.content }))
 }
