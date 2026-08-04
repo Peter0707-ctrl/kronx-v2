@@ -23,18 +23,33 @@ export default function Home() {
   useEffect(() => {
     setMounted(true)
 
-    // Force PWA Service Worker to check for live updates from Railway on launch
+    // Force PWA Service Worker to check for live updates and force reload instantly on activation
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
       navigator.serviceWorker.ready.then(registration => {
         registration.update()
       }).catch(err => console.warn('[PWA Update Check Error]', err))
+
+      let refreshing = false
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+          refreshing = true
+          window.location.reload()
+        }
+      })
+    }
+
+    // Start a new clean conversation on load if the current active conversation has messages
+    const store = useKronxStore.getState()
+    const activeMessages = store.activeMessages()
+    if (activeMessages && activeMessages.length > 0) {
+      store.newConversation()
     }
 
     // Purge old cached PWA bundles once so Chrome loads latest build
     if (typeof window !== 'undefined' && 'caches' in window) {
       caches.keys().then(names => {
         for (const name of names) {
-          if (name.includes('workbox-precache') || name.includes('kronx') || name.includes('copetra')) {
+          if (name.includes('workbox-precache') || name.includes('kronx') || name.includes('copetra') || name.includes('next-pwa')) {
             caches.delete(name)
           }
         }
