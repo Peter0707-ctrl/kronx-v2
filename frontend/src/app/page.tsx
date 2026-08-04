@@ -17,12 +17,34 @@ import { useKronxStore } from '@/store/useKronxStore'
 
 export default function Home() {
   const { send, regenerate, editAndResend } = useChat()
-  const { newConversation, activeConversationId, activeView, user, systemDisabled } = useKronxStore()
+  const { newConversation, activeConversationId, activeView, user, setUser, systemDisabled } = useKronxStore()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     setMounted(true)
-  }, [])
+
+    // Sync logged-in user profile & plan directly from PostgreSQL DB (assigned by Admin)
+    if (user?.email) {
+      fetch('/api/users')
+        .then(res => res.json())
+        .then(users => {
+          if (Array.isArray(users)) {
+            const dbUser = users.find((u: any) => u.email?.toLowerCase() === user.email.toLowerCase())
+            if (dbUser) {
+              if (dbUser.plan !== user.plan || dbUser.role !== user.role || dbUser.isDeveloper !== user.isDeveloper) {
+                setUser({
+                  ...user,
+                  plan: dbUser.plan || user.plan,
+                  role: dbUser.role || user.role,
+                  isDeveloper: dbUser.isDeveloper !== undefined ? dbUser.isDeveloper : user.isDeveloper
+                })
+              }
+            }
+          }
+        })
+        .catch(err => console.warn('[User DB Plan Sync Error]', err))
+    }
+  }, [user?.email])
 
   const handleSend = useCallback(
     async (text: string) => {
