@@ -15,18 +15,26 @@ export default function ChatArea({ onSend, onRegenerate, onEditAndResend }: Prop
   const { activeMessages, isStreaming } = useKronxStore()
   const messages = activeMessages()
   const bottomRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
 
-  // Automatic scroll to bottom: use 'auto' (instant) during active streaming to prevent animation thread choke
+  // Automatic scroll to bottom: only scroll if the user is already near the bottom or on new user query
   useEffect(() => {
-    if (bottomRef.current) {
-      bottomRef.current.scrollIntoView({
+    const container = containerRef.current
+    if (!container) return
+
+    const threshold = 200
+    const isAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < threshold
+    const isUserQuery = messages.length > 0 && messages[messages.length - 1]?.role === 'user'
+
+    if (isAtBottom || isUserQuery) {
+      bottomRef.current?.scrollIntoView({
         behavior: isStreaming ? 'auto' : 'smooth'
       })
     }
   }, [messages.length, messages[messages.length - 1]?.content, isStreaming])
 
   return (
-    <div className="chat-area" role="log" aria-live="polite" aria-label="Conversation stream" style={{ flex: 1, overflowY: 'auto' }}>
+    <div ref={containerRef} className="chat-area" role="log" aria-live="polite" aria-label="Conversation stream" style={{ flex: 1, overflowY: 'auto' }}>
       {messages.length === 0 ? (
         <WelcomeScreen onSend={onSend} />
       ) : (
