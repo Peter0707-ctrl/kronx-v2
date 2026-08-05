@@ -119,9 +119,24 @@ function buildGroqMessages(
   ]
 
   const recentHistory = history.slice(-6)
-  for (const h of recentHistory) {
+  const len = recentHistory.length
+  for (let i = 0; i < len; i++) {
+    const h = recentHistory[i]
     if (h.role === 'user') {
-      messages.push({ role: 'user', content: parseMessageContent(h.content) })
+      let content = h.content
+      // Prune massive document/image dumps from history if they are older than 2 turns to prevent topic confusion
+      const isRecent = (len - i) <= 2
+      if (!isRecent) {
+        const docIdx = content.indexOf('\nDocument Content:\n')
+        if (docIdx !== -1) {
+          content = content.substring(0, docIdx).trim() + '\n\n[Attached Document: Content omitted from historical memory for topic clarity]'
+        }
+        const imgIdx = content.indexOf('\n\n[IMAGE:')
+        if (imgIdx !== -1) {
+          content = content.substring(0, imgIdx).trim() + '\n\n[Attached Image: Content omitted from historical memory for topic clarity]'
+        }
+      }
+      messages.push({ role: 'user', content: parseMessageContent(content) })
     } else if ((h.role === 'ai' || h.role === 'assistant') && h.content) {
       messages.push({ role: 'assistant', content: h.content })
     }
