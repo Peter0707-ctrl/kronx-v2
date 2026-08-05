@@ -25,8 +25,8 @@ async def generate_image(req: ImageReq):
         raise HTTPException(status_code=400, detail="Prompt is required")
     
     encoded = httpx.URL(prompt).raw_path.decode('utf-8') if prompt else "artwork"
-    # Use Pollinations AI & Unsplash dynamic keyword search
-    pollinations_url = f"https://pollinations.ai/p/{httpx.URL(prompt).path}?width=1280&height=720&seed=42&nologo=true"
+    # Use Pollinations AI (forcing free flux model) & Unsplash dynamic keyword search
+    pollinations_url = f"https://image.pollinations.ai/prompt/{httpx.URL(prompt).path}?width=1280&height=720&model=flux&seed=42&nologo=true"
     unsplash_url = f"https://source.unsplash.com/1200x700/?{encoded}"
     
     return {
