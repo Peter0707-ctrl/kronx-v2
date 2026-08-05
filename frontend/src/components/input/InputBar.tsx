@@ -310,7 +310,7 @@ export default function InputBar({ onSend }: Props) {
           const loadingTask = pdfjs.getDocument({ data: new Uint8Array(buffer) })
           const pdf = await loadingTask.promise
           let extracted = ''
-          const maxPages = Math.min(pdf.numPages, 10)
+          const maxPages = Math.min(pdf.numPages, 35)
           for (let i = 1; i <= maxPages; i++) {
             const page = await pdf.getPage(i)
             const content = await page.getTextContent()
@@ -389,8 +389,9 @@ export default function InputBar({ onSend }: Props) {
     }
 
     try {
+      const currentState = useKronxStore.getState()
       const rec = new SpeechRecognition()
-      rec.lang = 'en-US'
+      rec.lang = currentState.language === 'sw' ? 'sw-TZ' : 'en-US'
       rec.continuous = false
       rec.interimResults = true
 
