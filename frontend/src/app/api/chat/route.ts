@@ -214,7 +214,7 @@ async function callGroq(
   for (const model of models) {
     try {
       const controller = new AbortController()
-      const timeoutMs = model.includes('70b') || model.includes('90b') ? 6000 : 3000
+      const timeoutMs = model.includes('70b') || model.includes('90b') ? 20000 : 8000
       setTimeout(() => controller.abort(), timeoutMs)
 
       const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {

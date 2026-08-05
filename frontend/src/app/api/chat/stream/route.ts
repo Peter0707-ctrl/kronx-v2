@@ -325,10 +325,10 @@ export async function POST(req: NextRequest) {
 
             const abortCtrl = new AbortController()
             const timeoutMs = isVisionModel 
-              ? 2000 
+              ? 15000 
               : isDocument 
-                ? (model.includes('70b') ? 8000 : 4000) 
-                : (model.includes('70b') ? 4000 : 2000)
+                ? (model.includes('70b') ? 25000 : 12000) 
+                : (model.includes('70b') ? 15000 : 8000)
             setTimeout(() => abortCtrl.abort(), timeoutMs)
 
             const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
