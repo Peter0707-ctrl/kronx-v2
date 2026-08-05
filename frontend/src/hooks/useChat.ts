@@ -41,6 +41,31 @@ export function useChat() {
           currentState.replaceLastAiMessage(cleanedText)
         }
       }
+
+      // 3. Process Visual Memory Retention (VISUAL_SUMMARY tag)
+      const visualSummaryMatch = finalMsg.content.match(/\[VISUAL_SUMMARY:\s*(.*?)\]/i)
+      if (visualSummaryMatch) {
+        const summary = visualSummaryMatch[1].trim()
+        if (summary) {
+          // Locate the user message that attached the image
+          const userMsg = msgs[msgs.length - 2]
+          if (userMsg && userMsg.role === 'user') {
+            const originalContent = userMsg.content
+            const imgIdx = originalContent.indexOf('\n\n[IMAGE:')
+            if (imgIdx !== -1) {
+              const query = originalContent.substring(0, imgIdx).trim()
+              const imgBlock = originalContent.substring(imgIdx)
+              // Store visual summary BEFORE the base64 image data block to survive pruning
+              const updatedContent = `${query}\n\n[Attached Image Content Summary: ${summary}]${imgBlock}`
+              currentState.editMessageInPlace(userMsg.id, updatedContent)
+              console.log('[Copetra Brain Saved Visual Memory Summary]:', summary)
+            }
+          }
+          // Strip the tag from the final message content to keep the UI clean
+          const cleanedText = finalMsg.content.replace(/\[VISUAL_SUMMARY:\s*.*?\]/gi, '').trim()
+          currentState.replaceLastAiMessage(cleanedText)
+        }
+      }
     }
   }
 
