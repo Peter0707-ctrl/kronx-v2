@@ -7,6 +7,30 @@ import { streamMessage, sendMessage, buildHistory } from '@/services/chat'
 export function useChat() {
   const store = useKronxStore()
 
+  const postProcessResponse = () => {
+    const currentState = useKronxStore.getState()
+    const msgs = currentState.activeMessages()
+    const finalMsg = msgs[msgs.length - 1]
+    if (finalMsg && finalMsg.role === 'ai') {
+      const imgMatch = finalMsg.content.match(/\[GENERATE_IMAGE:\s*(.*?)\]/i)
+      if (imgMatch) {
+        // Enforce picture limits before generating
+        if (!currentState.canGeneratePicture()) {
+          currentState.replaceLastAiMessage("You have reached your daily picture generation limit. Please upgrade your plan.")
+          currentState.setSettingsModalOpen(true)
+          return
+        }
+        currentState.incrementPictureUsage()
+
+        const imagePrompt = imgMatch[1].trim()
+        const encodedPrompt = encodeURIComponent(`${imagePrompt}, 8k resolution, highly detailed, photorealistic, cinematic lighting, masterpiece`)
+        const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&model=flux&seed=${Math.floor(Math.random()*100000)}&nologo=true`
+        const imageMarkdown = `Here is your high-fidelity generated image for **"${imagePrompt}"**:\n\n![Generated Image](${pollinationsUrl})`
+        currentState.replaceLastAiMessage(imageMarkdown)
+      }
+    }
+  }
+
   const send = useCallback(
     async (text: string) => {
       const activeState = useKronxStore.getState()
@@ -24,49 +48,9 @@ export function useChat() {
       // Re-read to guarantee we have the initialized activeConversationId
       const currentState = useKronxStore.getState()
 
-      // Instant Picture generation request handler (Skip if user is uploading/analyzing an image)
+      // Instant Picture generation request handler (Moved to AI Brain routing for 100% precision)
       const lower = text.toLowerCase()
       const isAttachedImage = text.includes('[IMAGE:') || text.includes('data:image/')
-
-      if (
-        !isAttachedImage &&
-        (
-          lower.startsWith('generate image') ||
-          lower.startsWith('create image') ||
-          lower.startsWith('draw') ||
-          lower.startsWith('generate picture') ||
-          lower.startsWith('make image') ||
-          lower.startsWith('tengeneza picha') ||
-          lower.includes('draw a ') ||
-          lower.includes('generate an image') ||
-          lower.includes('create an image')
-        )
-      ) {
-        if (!currentState.canGeneratePicture()) {
-          const limitMsg = `You have reached chat limit. Upgrade`
-          currentState.addMessage(text, 'user')
-          currentState.addMessage(limitMsg, 'ai')
-          currentState.setSettingsModalOpen(true)
-          return
-        }
-        currentState.incrementPictureUsage()
-
-        let subjectPrompt = text
-          .replace(/^(generate|create|draw|make|show)\s+(me\s+)?(an?\s+)?(image|picture|photo|illustration|art)\s+(of\s+)?/i, '')
-          .replace(/^(tengeneza|chora)\s+(picha)\s+(ya\s+)?/i, '')
-          .trim()
-        if (!subjectPrompt) subjectPrompt = text.trim()
-
-        const enhancedPrompt = `${subjectPrompt}, 8k resolution, highly detailed, photorealistic, cinematic lighting, masterpiece`
-        const encodedPrompt = encodeURIComponent(enhancedPrompt)
-        const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&model=flux&seed=${Math.floor(Math.random()*100000)}&nologo=true`
-
-        const imageMarkdown = `Here is your high-fidelity generated image for **"${subjectPrompt}"**:\n\n![Generated Image](${pollinationsUrl})`
-
-        currentState.addMessage(text, 'user')
-        currentState.addMessage(imageMarkdown, 'ai')
-        return
-      }
 
       // Video generation request handler
       if (
@@ -126,6 +110,7 @@ export function useChat() {
             currentState.updateLastAiMessage(chunk)
           }
         }
+        postProcessResponse()
       } catch (err) {
         console.warn('[Copetra AI stream fallback triggered]', err)
         try {
@@ -137,6 +122,7 @@ export function useChat() {
             history: buildHistory(currentState.activeMessages()),
           })
           currentState.replaceLastAiMessage(directText)
+          postProcessResponse()
         } catch (directErr) {
           console.error('[Copetra direct fetch error]', directErr)
         }
@@ -211,6 +197,7 @@ export function useChat() {
           currentState.updateLastAiMessage(chunk)
         }
       }
+      postProcessResponse()
     } catch (err) {
       const fallbackMsg = currentState.language === 'sw'
         ? '⚠️ Samahani, imeshindikana kupata majibu kwa sasa. Tafadhali jaribu tena.'
@@ -268,6 +255,7 @@ export function useChat() {
             currentState.updateLastAiMessage(chunk)
           }
         }
+        postProcessResponse()
       } catch (err) {
         const fallbackMsg = currentState.language === 'sw'
           ? '⚠️ Samahani, imeshindikana kupata majibu kwa sasa. Tafadhali jaribu tena.'
