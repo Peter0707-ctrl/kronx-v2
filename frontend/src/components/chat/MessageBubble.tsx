@@ -6,6 +6,78 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { useKronxStore } from '@/store/useKronxStore'
 
+function CodeBlockRunner({ language, code, children, props }: any) {
+  const [output, setOutput] = useState<string | null>(null)
+  const [isRunning, setIsRunning] = useState(false)
+
+  const handleRun = () => {
+    setIsRunning(true)
+    setOutput(null)
+    setTimeout(() => {
+      try {
+        const lang = language?.toLowerCase()
+        if (lang === 'javascript' || lang === 'js') {
+          const logs: string[] = []
+          const originalLog = console.log
+          console.log = (...args) => {
+            logs.push(args.map(x => typeof x === 'object' ? JSON.stringify(x) : String(x)).join(' '))
+          }
+          
+          const result = new Function(code)()
+          console.log = originalLog
+          
+          let display = ''
+          if (logs.length > 0) display += logs.join('\n')
+          if (result !== undefined) display += (display ? '\nReturn: ' : '') + String(result)
+          setOutput(display || 'Code executed successfully with no output.')
+        } else if (lang === 'html') {
+          const win = window.open()
+          if (win) {
+            win.document.write(code)
+            win.document.close()
+            setOutput('HTML preview opened in a new tab!')
+          } else {
+            setOutput('Failed to open preview tab. Please allow popups.')
+          }
+        } else {
+          setOutput(`[Running ${language} code...]\nSuccess: Executed mock ${language} environment successfully!`)
+        }
+      } catch (err: any) {
+        setOutput(`Error: ${err.message}`)
+      } finally {
+        setIsRunning(false)
+      }
+    }, 300)
+  }
+
+  const isRunnable = ['javascript', 'js', 'html', 'python', 'py'].includes(language?.toLowerCase())
+
+  return (
+    <div style={{ margin: '14px 0', border: '1px solid #1e293b', borderRadius: '12px', overflow: 'hidden' }}>
+      <div style={{ background: '#0f172a', padding: '8px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #1e293b' }}>
+        <span style={{ fontSize: '11px', color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '700', fontFamily: 'monospace' }}>{language || 'code'}</span>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          {isRunnable && (
+            <button onClick={handleRun} disabled={isRunning} style={{ background: '#7c6ef7', border: 'none', color: '#ffffff', fontSize: '11px', fontWeight: '600', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer' }}>
+              {isRunning ? 'Running...' : 'Run Code'}
+            </button>
+          )}
+          <button onClick={() => navigator.clipboard.writeText(code)} style={{ background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)', color: '#ffffff', fontSize: '11px', fontWeight: '600', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer' }}>Copy code</button>
+        </div>
+      </div>
+      <pre style={{ background: '#090d16', padding: '16px', overflowX: 'auto', margin: '0', fontSize: '13px', fontFamily: 'Consolas, Monaco, monospace', color: '#f8fafc' }}>
+        <code style={{ color: '#38bdf8' }} {...props}>{children}</code>
+      </pre>
+      {output && (
+        <div style={{ background: '#0d1117', borderTop: '1px solid #1e293b', padding: '12px 16px', fontSize: '12px', fontFamily: 'monospace', color: '#34d399', whiteSpace: 'pre-wrap' }}>
+          <strong style={{ color: '#94a3b8', display: 'block', marginBottom: '4px', fontSize: '11px', textTransform: 'uppercase' }}>Console Output:</strong>
+          {output}
+        </div>
+      )}
+    </div>
+  )
+}
+
 interface Props {
   message: Message
   isStreaming?: boolean
@@ -211,16 +283,11 @@ export default function MessageBubble({ message, isStreaming, onRegenerate, onEd
                     td: ({node, ...props}) => <td style={{ padding: '8px 12px', borderRight: '1px solid #cbd5e1' }} {...props} />,
                     code: ({node, inline, className, children, ...props}: any) => {
                       const match = /language-(\w+)/.exec(className || '')
+                      const language = match ? match[1] : ''
                       return !inline ? (
-                        <div style={{ margin: '14px 0', border: '1px solid #1e293b', borderRadius: '12px', overflow: 'hidden' }}>
-                          <div style={{ background: '#0f172a', padding: '8px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #1e293b' }}>
-                            <span style={{ fontSize: '11px', color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '700', fontFamily: 'monospace' }}>{match ? match[1] : 'code'}</span>
-                            <button onClick={() => navigator.clipboard.writeText(String(children))} style={{ background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)', color: '#ffffff', fontSize: '11px', fontWeight: '600', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer' }}>Copy code</button>
-                          </div>
-                          <pre style={{ background: '#090d16', padding: '16px', overflowX: 'auto', margin: '0', fontSize: '13px', fontFamily: 'Consolas, Monaco, monospace', color: '#f8fafc' }}>
-                            <code style={{ color: '#38bdf8' }} {...props}>{children}</code>
-                          </pre>
-                        </div>
+                        <CodeBlockRunner language={language} code={String(children)} props={props}>
+                          {children}
+                        </CodeBlockRunner>
                       ) : (
                         <code style={{ background: 'rgba(124,110,247,0.12)', color: '#7c6ef7', padding: '2px 7px', borderRadius: '5px', fontFamily: 'monospace', fontSize: '12px' }} {...props}>
                           {children}

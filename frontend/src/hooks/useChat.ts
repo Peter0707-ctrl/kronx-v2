@@ -123,6 +123,27 @@ export function useChat() {
       }
       currentState.incrementChatUsage()
 
+      // Dynamic LocalStorage Cache (zero-latency offline retrieval for duplicate questions)
+      const cacheKey = `kx_cache:${currentState.mode}:${currentState.language}:${text.toLowerCase().trim()}`
+      if (typeof window !== 'undefined') {
+        const cachedRes = localStorage.getItem(cacheKey)
+        if (cachedRes && !text.includes('[IMAGE:') && !text.includes('DOCUMENT ATTACHED:')) {
+          currentState.addMessage(text, 'user')
+          currentState.addMessage('', 'ai')
+          currentState.setStreaming(true)
+          
+          let currentText = ''
+          const words = cachedRes.split(' ')
+          for (let i = 0; i < words.length; i++) {
+            currentText += (i > 0 ? ' ' : '') + words[i]
+            currentState.replaceLastAiMessage(currentText)
+            await new Promise(resolve => setTimeout(resolve, 8))
+          }
+          currentState.setStreaming(false)
+          return
+        }
+      }
+
       currentState.addMessage(text, 'user')
       currentState.addMessage('', 'ai')
       currentState.setStreaming(true)
@@ -140,14 +161,23 @@ export function useChat() {
           history,
         })
 
+        let finalResponseText = ''
         for await (const chunk of gen) {
           if (chunk.startsWith('\x00REPLACE\x00')) {
             const fallback = chunk.slice('\x00REPLACE\x00'.length)
             currentState.replaceLastAiMessage(fallback)
+            finalResponseText = fallback
           } else {
             currentState.updateLastAiMessage(chunk)
+            finalResponseText += chunk
           }
         }
+        
+        // Save successfully streamed response to cache for future instant load
+        if (finalResponseText && !finalResponseText.includes('maintenance') && typeof window !== 'undefined') {
+          localStorage.setItem(cacheKey, finalResponseText)
+        }
+        
         postProcessResponse()
       } catch (err) {
         console.warn('[Copetra AI stream fallback triggered]', err)
