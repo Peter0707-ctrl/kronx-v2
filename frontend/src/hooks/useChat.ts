@@ -12,9 +12,9 @@ export function useChat() {
     const msgs = currentState.activeMessages()
     const finalMsg = msgs[msgs.length - 1]
     if (finalMsg && finalMsg.role === 'ai') {
+      // 1. Process Image Generation tag
       const imgMatch = finalMsg.content.match(/\[GENERATE_IMAGE:\s*(.*?)\]/i)
       if (imgMatch) {
-        // Enforce picture limits before generating
         if (!currentState.canGeneratePicture()) {
           currentState.replaceLastAiMessage("You have reached your daily picture generation limit. Please upgrade your plan.")
           currentState.setSettingsModalOpen(true)
@@ -27,6 +27,19 @@ export function useChat() {
         const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&model=flux&seed=${Math.floor(Math.random()*100000)}&nologo=true`
         const imageMarkdown = `Here is your high-fidelity generated image for **"${imagePrompt}"**:\n\n![Generated Image](${pollinationsUrl})`
         currentState.replaceLastAiMessage(imageMarkdown)
+      }
+
+      // 2. Process Adaptive Learning Correction tag
+      const memorizeMatch = finalMsg.content.match(/\[MEMORIZE:\s*(.*?)\]/i)
+      if (memorizeMatch) {
+        const fact = memorizeMatch[1].trim()
+        if (fact) {
+          currentState.addMemory(fact)
+          console.log('[Copetra Brain Auto-Learned Correction]:', fact)
+          // Strip the tag from the final message content to keep the UI clean
+          const cleanedText = finalMsg.content.replace(/\[MEMORIZE:\s*.*?\]/gi, '').trim()
+          currentState.replaceLastAiMessage(cleanedText)
+        }
       }
     }
   }
