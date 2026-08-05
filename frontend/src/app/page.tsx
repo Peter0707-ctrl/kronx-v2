@@ -23,6 +23,33 @@ export default function Home() {
   useEffect(() => {
     setMounted(true)
 
+    // Global keyboard shortcuts helper
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const store = useKronxStore.getState()
+      
+      // Ctrl + Alt + N: New conversation
+      if ((e.ctrlKey || e.metaKey) && e.altKey && e.key.toLowerCase() === 'n') {
+        e.preventDefault()
+        store.newConversation()
+        console.log('[Keyboard Shortcut]: Started new conversation')
+      }
+      // Ctrl + Alt + S: Toggle sidebar
+      if ((e.ctrlKey || e.metaKey) && e.altKey && e.key.toLowerCase() === 's') {
+        e.preventDefault()
+        store.toggleSidebar()
+        console.log('[Keyboard Shortcut]: Toggled sidebar')
+      }
+      // Ctrl + Alt + L: Toggle language
+      if ((e.ctrlKey || e.metaKey) && e.altKey && e.key.toLowerCase() === 'l') {
+        e.preventDefault()
+        const newLang = store.language === 'sw' ? 'en' : 'sw'
+        store.setLanguage(newLang)
+        console.log('[Keyboard Shortcut]: Toggled language to:', newLang)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+
     // Force PWA Service Worker to check for live updates and force reload instantly on activation
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
       navigator.serviceWorker.ready.then(registration => {
@@ -76,6 +103,10 @@ export default function Home() {
           }
         })
         .catch(err => console.warn('[User DB Plan Sync Error]', err))
+    }
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
     }
   }, [user?.email])
 

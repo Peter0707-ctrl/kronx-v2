@@ -154,7 +154,8 @@ export default function MessageBubble({ message, isStreaming, onRegenerate, onEd
     window.speechSynthesis.cancel()
     const textToSpeak = message.content.replace(/[*_#`~>]/g, '')
     const utterance = new SpeechSynthesisUtterance(textToSpeak)
-    utterance.lang = 'en-US'
+    const currentState = useKronxStore.getState()
+    utterance.lang = currentState.language === 'sw' ? 'sw-TZ' : 'en-US'
     utterance.rate = 1.0
 
     utterance.onstart = () => setIsSpeaking(true)
