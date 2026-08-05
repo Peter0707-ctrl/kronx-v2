@@ -37,7 +37,20 @@ export default function MessageBubble({ message, isStreaming, onRegenerate, onEd
   }
 
   const handleGoodResponse = () => {
-    setFeedback(feedback === 'good' ? null : 'good')
+    const isLiking = feedback !== 'good'
+    setFeedback(isLiking ? 'good' : null)
+    if (isLiking) {
+      const currentState = useKronxStore.getState()
+      const msgs = currentState.activeMessages()
+      const aiIdx = msgs.findIndex(m => m.id === message.id)
+      if (aiIdx > 0 && msgs[aiIdx - 1].role === 'user') {
+        const userQuery = getCleanUserQuery(msgs[aiIdx - 1].content)
+        const goodSnippet = message.content.slice(0, 120).replace(/\n/g, ' ')
+        const memoryItem = `User highly approved response to "${userQuery}". Preferred format starts like: "${goodSnippet}...". Prioritize this thorough and clear style of answer.`
+        currentState.addMemory(memoryItem)
+        console.log('[Copetra Brain Saved Reinforcement Memory]:', memoryItem)
+      }
+    }
   }
 
   const handleBadResponse = () => {
