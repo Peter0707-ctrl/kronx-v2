@@ -154,7 +154,8 @@ function buildGroqMessages(
   message: string,
   mode: string,
   history: HistoryMessage[] = [],
-  isVisionModel: boolean = true
+  isVisionModel: boolean = true,
+  webSearchResults: string | null = null
 ): { role: string; content: any }[] {
   const isDocument = message.includes('DOCUMENT ATTACHED:') || message.includes('FILE ATTACHED:')
   const isImage = message.includes('[IMAGE:')
@@ -168,8 +169,13 @@ function buildGroqMessages(
     routingContext = '\n\n[ROUTING SYSTEM CONTEXT]: The user has sent a plain TEXT query. Address their question directly, accurately, and rapidly as requested.'
   }
 
+  let webSearchContext = ''
+  if (webSearchResults) {
+    webSearchContext = `\n\n[LIVE WEB SEARCH DATA]: The following live web search results were retrieved for this query:\n${webSearchResults}\nUse this live data to verify your facts, dates, and names and provide a 100% accurate, up-to-date response.`
+  }
+
   const messages: { role: string; content: any }[] = [
-    { role: 'system', content: getModeSystemPrompt(mode) + routingContext }
+    { role: 'system', content: getModeSystemPrompt(mode) + routingContext + webSearchContext }
   ]
   const recentHistory = history.slice(-6)
   const len = recentHistory.length
@@ -198,6 +204,46 @@ function buildGroqMessages(
   return messages
 }
 
+async function fetchWebSearch(query: string): Promise<string | null> {
+  try {
+    const cleanQuery = query
+      .replace(/\[IMAGE:.*?\]/gi, '')
+      .replace(/\[(WORD|PDF|EXCEL|POWERPOINT|TEXT|CODE) DOCUMENT ATTACHED:.*?\][\s\S]*/gi, '')
+      .replace(/\[PERSISTENT USER BRAIN MEMORY\][\s\S]*/gi, '')
+      .trim()
+
+    if (!cleanQuery || cleanQuery.length < 5) return null
+
+    const lower = cleanQuery.toLowerCase()
+    const needsSearch = /\b(current|president|weather|news|today|latest|who is|what is|search|live|update|api code|release)\b/i.test(lower)
+    if (!needsSearch) return null
+
+    const res = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(cleanQuery)}&format=json&no_redirect=1&no_html=1&skip_disambig=1`, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
+      next: { revalidate: 3600 }
+    })
+    if (!res.ok) return null
+    const data = await res.json()
+    
+    let result = ''
+    const abstractText = data.AbstractText?.trim()
+    const directAnswer = data.Answer?.trim()
+    if (directAnswer) {
+      result += `Direct Answer: ${directAnswer}\n`
+    }
+    if (abstractText) {
+      result += `Abstract: ${abstractText}\n`
+      if (data.AbstractSource) {
+        result += `Source: ${data.AbstractSource} (${data.AbstractURL})\n`
+      }
+    }
+    return result ? result.trim() : null
+  } catch (e) {
+    console.error('Web search error:', e)
+    return null
+  }
+}
+
 export async function POST(req: NextRequest) {
   let message = '', mode = 'Friend'
   let history: HistoryMessage[] = []
@@ -212,6 +258,7 @@ export async function POST(req: NextRequest) {
   }
 
   const encoder = new TextEncoder()
+  const webSearchResults = await fetchWebSearch(message)
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -239,7 +286,7 @@ export async function POST(req: NextRequest) {
       let streamedAny = false
 
       if (apiKey) {
-        const groqMessages = buildGroqMessages(message, mode, history)
+        const groqMessages = buildGroqMessages(message, mode, history, true, webSearchResults)
         
         const hasVision = groqMessages.some(m => Array.isArray(m.content)) || message.includes('[IMAGE:')
         const isDocument = message.includes('DOCUMENT ATTACHED:') || message.includes('FILE ATTACHED:')
@@ -267,7 +314,7 @@ export async function POST(req: NextRequest) {
           if (streamedAny) break
           try {
             const isVisionModel = model.includes('vision')
-            const currentGroqMessages = buildGroqMessages(message, mode, history, isVisionModel)
+            const currentGroqMessages = buildGroqMessages(message, mode, history, isVisionModel, webSearchResults)
 
             const abortCtrl = new AbortController()
             const timeoutMs = isVisionModel 

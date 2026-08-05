@@ -228,6 +228,20 @@ export const useKronxStore = create<KronxStore>()(
             }))
           }
         }
+        const getCleanTitle = (text: string): string => {
+          let cleaned = text
+            .replace(/\[IMAGE:.*?\]/gi, '')
+            .replace(/\[(WORD|PDF|EXCEL|POWERPOINT|TEXT|CODE) DOCUMENT ATTACHED:.*?\][\s\S]*/gi, '')
+            .replace(/\[PERSISTENT USER BRAIN MEMORY\][\s\S]*/gi, '')
+            .trim()
+          if (!cleaned) {
+            const isDoc = text.includes('DOCUMENT ATTACHED:')
+            const isImg = text.includes('[IMAGE:')
+            cleaned = isDoc ? 'Document Analysis' : isImg ? 'Image Analysis' : 'New Chat'
+          }
+          return cleaned.length > 40 ? cleaned.slice(0, 40) + '...' : cleaned
+        }
+
         set(s => {
           let currentId = s.activeConversationId
           let convs = [...s.conversations]
@@ -236,7 +250,7 @@ export const useKronxStore = create<KronxStore>()(
           if (!targetConv) {
             targetConv = {
               id: uuid(),
-              title: role === 'user' ? content.slice(0, 48) : 'New Conversation',
+              title: role === 'user' ? getCleanTitle(content) : 'New Conversation',
               messages: [],
               createdAt: new Date(),
               updatedAt: new Date(),
@@ -252,7 +266,7 @@ export const useKronxStore = create<KronxStore>()(
             const updatedMsgs = [...c.messages, msg].slice(-50)
             return {
               ...c,
-              title: isFirst ? content.slice(0, 48) : c.title,
+              title: isFirst ? getCleanTitle(content) : c.title,
               messages: updatedMsgs,
               updatedAt: new Date(),
             }
