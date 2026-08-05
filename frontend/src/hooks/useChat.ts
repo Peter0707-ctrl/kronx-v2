@@ -51,13 +51,17 @@ export function useChat() {
         }
         currentState.incrementPictureUsage()
 
-        // Don't strip words blindly as it corrupts the prompt (e.g., removing 'a' from 'apple'). FLUX understands natural language perfectly.
-        const userPrompt = text.trim() || 'futuristic masterpiece'
-        const enhancedPrompt = `${userPrompt}, 8k resolution, highly detailed, photorealistic, cinematic lighting, masterpiece`
+        let subjectPrompt = text
+          .replace(/^(generate|create|draw|make|show)\s+(me\s+)?(an?\s+)?(image|picture|photo|illustration|art)\s+(of\s+)?/i, '')
+          .replace(/^(tengeneza|chora)\s+(picha)\s+(ya\s+)?/i, '')
+          .trim()
+        if (!subjectPrompt) subjectPrompt = text.trim()
+
+        const enhancedPrompt = `${subjectPrompt}, 8k resolution, highly detailed, photorealistic, cinematic lighting, masterpiece`
         const encodedPrompt = encodeURIComponent(enhancedPrompt)
         const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&model=flux&seed=${Math.floor(Math.random()*100000)}&nologo=true`
 
-        const imageMarkdown = `Here is your high-fidelity generated image for **"${userPrompt}"**:\n\n![Generated Image](${pollinationsUrl})`
+        const imageMarkdown = `Here is your high-fidelity generated image for **"${subjectPrompt}"**:\n\n![Generated Image](${pollinationsUrl})`
 
         currentState.addMessage(text, 'user')
         currentState.addMessage(imageMarkdown, 'ai')
