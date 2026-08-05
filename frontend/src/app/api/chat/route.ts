@@ -152,7 +152,6 @@ function buildGroqMessages(
     const h = recentHistory[i]
     if (h.role === 'user') {
       let content = h.content
-      // Prune massive document/image dumps from history if they are older than 2 turns to prevent topic confusion
       const isRecent = (len - i) <= 2
       if (!isRecent) {
         const docIdx = content.indexOf('\nDocument Content:\n')
@@ -163,10 +162,18 @@ function buildGroqMessages(
         if (imgIdx !== -1) {
           content = content.substring(0, imgIdx).trim() + '\n\n[Attached Image: Content omitted from historical memory for topic clarity]'
         }
+        if (content.length > 500) {
+          content = content.substring(0, 300) + '... [Historical text shortened for context efficiency]'
+        }
       }
       messages.push({ role: 'user', content: parseMessageContent(content) })
     } else if ((h.role === 'ai' || h.role === 'assistant') && h.content) {
-      messages.push({ role: 'assistant', content: h.content })
+      let content = h.content
+      const isRecent = (len - i) <= 2
+      if (!isRecent && content.length > 800) {
+        content = content.substring(0, 500) + '... [Historical response shortened to optimize token efficiency]'
+      }
+      messages.push({ role: 'assistant', content })
     }
   }
 
