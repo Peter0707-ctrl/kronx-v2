@@ -47,6 +47,11 @@ STRICT IDENTITY RULES:
 - NEVER state or mention underlying AI models or providers such as Llama, Ollama, Groq, Gemini, OpenAI, or ChatGPT.
 - ALWAYS identify yourself as Copetra AI, powered by PJ COPETRANOVA.
 
+REAL-TIME TEMPORAL ANCHOR RULE:
+- The current real-time year is 2026 (specifically August 2026).
+- Events such as the 2026 FIFA World Cup (which took place in June–July 2026 across Canada, Mexico, and the United States), major 2024–2026 tournaments, news, science breakthroughs, and political events up to August 2026 HAVE ALREADY OCCURRED.
+- NEVER state that 2026 events have not happened yet or are in the distant future. Always treat 2026 as the active current year.
+
 DOCUMENT & FILE ANALYSIS MANDATE:
 - ONLY when the user's current query explicitly asks to analyze, summarize, explain, or answer questions based on an uploaded Word document (.docx), PDF (.pdf), Excel spreadsheet (.xlsx/.csv), PowerPoint (.pptx), Code, or Image:
   1. Provide a DEEP, DETAILED, COMPREHENSIVE ANALYSIS of what is discussed in the document.
@@ -138,13 +143,16 @@ function parseMessageContent(text: string, isVisionModel: boolean = true): any {
   const contentArray: any[] = []
   const userQuery = cleanText.replace(/\[PERSISTENT USER BRAIN MEMORY\][\s\S]*/gi, '').trim()
   if (userQuery) {
-    contentArray.push({ type: 'text', text: `${userQuery}\n\n[INSTRUCTION]: Analyze this image in extreme detail. Identify all text, diagrams, objects, layout, and concepts shown, and answer the user's query.` })
+    contentArray.push({ type: 'text', text: userQuery })
   } else {
-    contentArray.push({ type: 'text', text: 'Please provide a detailed, comprehensive analysis of this image. Identify all text, objects, diagrams, colors, and key concepts shown.' })
+    contentArray.push({ type: 'text', text: 'Please analyze this attached image in detail. Extract all OCR text, diagrams, labels, charts, and technical information.' })
   }
 
-  for (const img of images) {
-    contentArray.push({ type: 'image_url', image_url: { url: img } })
+  for (const imgUrl of images) {
+    contentArray.push({
+      type: 'image_url',
+      image_url: { url: imgUrl }
+    })
   }
 
   return contentArray
@@ -153,46 +161,28 @@ function parseMessageContent(text: string, isVisionModel: boolean = true): any {
 function buildGroqMessages(
   message: string,
   mode: string,
-  history: HistoryMessage[] = [],
+  history: HistoryMessage[],
   isVisionModel: boolean = true,
   webSearchResults: string | null = null
-): { role: string; content: any }[] {
-  const isDocument = message.includes('DOCUMENT ATTACHED:') || message.includes('FILE ATTACHED:')
-  const isImage = message.includes('[IMAGE:')
-  
-  let routingContext = ''
-  if (isImage) {
-    routingContext = '\n\n[ROUTING SYSTEM CONTEXT]: The user has attached an IMAGE. Use the high-precision vision-processing context to analyze the visual layout, OCR text, and content in extreme detail.'
-  } else if (isDocument) {
-    routingContext = '\n\n[ROUTING SYSTEM CONTEXT]: The user has attached a DOCUMENT. Use the deep document-processing engine context to analyze all extracted text, datasets, tables, and sections, and provide an extremely detailed, comprehensive response based strictly on the text provided.'
-  } else {
-    routingContext = '\n\n[ROUTING SYSTEM CONTEXT]: The user has sent a plain TEXT query. Address their question directly, accurately, and rapidly as requested.'
-  }
-
-  let webSearchContext = ''
+): any[] {
+  let systemPrompt = getModeSystemPrompt(mode)
   if (webSearchResults) {
-    webSearchContext = `\n\n[LIVE WEB SEARCH DATA]: The following live web search results were retrieved for this query:\n${webSearchResults}\nUse this live data to verify your facts, dates, and names and provide a 100% accurate, up-to-date response.`
+    systemPrompt += `\n\n[REAL-TIME VERIFIED WEB SEARCH DATA]:\n${webSearchResults}\n\nUse the above real-time verified search data to answer the user query with 100% factual accuracy.`
   }
 
-  const messages: { role: string; content: any }[] = [
-    { role: 'system', content: getModeSystemPrompt(mode) + routingContext + webSearchContext }
+  const messages: any[] = [
+    { role: 'system', content: systemPrompt }
   ]
-  const recentHistory = history.slice(-6)
-  const len = recentHistory.length
+
+  const len = history.length
   for (let i = 0; i < len; i++) {
-    const h = recentHistory[i]
-    if (h.role === 'user') {
+    const h = history[i]
+    if (h.role === 'user' && h.content) {
       let content = h.content
       const isRecent = (len - i) <= 2
       if (!isRecent) {
-        const docIdx = content.indexOf('\nDocument Content:\n')
-        if (docIdx !== -1) {
-          content = content.substring(0, docIdx).trim() + '\n\n[Attached Document: Content omitted from historical memory for topic clarity]'
-        }
-        const imgIdx = content.indexOf('\n\n[IMAGE:')
-        if (imgIdx !== -1) {
-          content = content.substring(0, imgIdx).trim() + '\n\n[Attached Image: Content omitted from historical memory for topic clarity]'
-        }
+        content = content.replace(/DOCUMENT ATTACHED:[\s\S]*?(?=\n\n|\n[A-Z]|$)/gi, '[Document attached - content pruned for conversation history efficiency]')
+        content = content.replace(/\[IMAGE:\s*data:image\/[^\]]+\]/gi, '[Image attached - base64 pixels pruned for conversation history efficiency]')
         if (content.length > 500) {
           content = content.substring(0, 300) + '... [Historical text shortened for context efficiency]'
         }
@@ -219,10 +209,10 @@ async function fetchWebSearch(query: string): Promise<string | null> {
       .replace(/\[PERSISTENT USER BRAIN MEMORY\][\s\S]*/gi, '')
       .trim()
 
-    if (!cleanQuery || cleanQuery.length < 5) return null
+    if (!cleanQuery || cleanQuery.length < 3) return null
 
     const lower = cleanQuery.toLowerCase()
-    const needsSearch = /\b(current|president|weather|news|today|latest|who is|what is|search|live|update|api code|release)\b/i.test(lower)
+    const needsSearch = /\b(current|president|weather|news|today|latest|who is|what is|search|live|update|api code|release|2024|2025|2026|world cup|fifa|winner|champion|score|match|tournament|election|result|when|where|happened)\b/i.test(lower)
     if (!needsSearch) return null
 
     const res = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(cleanQuery)}&format=json&no_redirect=1&no_html=1&skip_disambig=1`, {
