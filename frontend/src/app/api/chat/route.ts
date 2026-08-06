@@ -3,39 +3,9 @@ import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-const KNOWLEDGE_BASE: Record<string, string> = {
-  "president of tanzania": `**President of Tanzania (2025/2026):**\n\nThe current President of the United Republic of Tanzania is **Samia Suluhu Hassan**, who took office on **March 19, 2021**, following the death of President John Pombe Magufuli. She is the **first female president** in Tanzania's history and in East Africa.\n\n**Cabinet & Key Ministers:**\n- **Vice President:** Philip Mpango\n- **Prime Minister:** Kassim Majaliwa\n- **Minister of Finance:** Dr. Mwigulu Nchemba\n- **Minister of Foreign Affairs:** January Makamba\n- **Minister of Health:** Ummy Mwalimu\n- **Minister of Education:** Prof. Adolf Mkenda\n\n*Source: Copetra Knowledge Engine*`,
-  "rais wa tanzania": `**Rais wa Tanzania (2025/2026):**\n\nRais wa sasa ni **Samia Suluhu Hassan**, aliyeapishwa tarehe **19 Machi 2021**. Ni rais wa kwanza mwanamke katika historia ya Tanzania na Afrika Mashariki.\n\n*Chanzo: Copetra Knowledge Engine*`,
-  "capital of tanzania": `**Capital of Tanzania:**\n\n- **Dodoma** – Official legislative capital (since 1996)\n- **Dar es Salaam** – Largest city and commercial hub`,
-  "samia suluhu": `**Samia Suluhu Hassan** is the **6th President of Tanzania**, born January 27, 1960 in Zanzibar. She is the first female president in East Africa, serving since March 19, 2021.`,
-  "waziri mkuu": `**Waziri Mkuu wa Tanzania:** Kassim Majaliwa Majaliwa, akishikilia wadhifu huu tangu 2015.`,
-}
+// All responses are handled naturally by the AI model — no hardcoded lookup tables.
+// The AI understands and answers based on what the user actually needs.
 
-const GREETINGS: Record<string, string> = {
-  "hello": `Hello! 👋 Welcome to **Copetra AI**!\n\nI'm your AI Assistant and Academic Companion, powered by **PJ COPETRANOVA**. What would you like to explore today?`,
-  "hi": `Hi there! 👋 I am **Copetra AI**, powered by **PJ COPETRANOVA**. What can I help you with today?`,
-  "hey": `Hey! 👋 Welcome to **Copetra AI**! How can I assist?`,
-  "habari": `Habari njema! 👋 Karibu sana **Copetra AI**!\n\nNinaweza kukusaidia katika masomo, mradi, programu, na maswali ya utafiti. Una swali gani leo?`,
-  "habari yako": `Nzuri sana! 👋 Karibu **Copetra AI**! Uko tayari kuanza masomo au mradi leo?`,
-  "habari za leo": `Salama kabisa! 👋 Karibu **Copetra AI**! Una swali gani leo?`,
-  "mambo": `Poa sana! 🚀 Karibu **Copetra AI**! Mambo vipi? Una swali gani nikutatulie leo?`,
-  "mambo vipi": `Poa kabisa! 👋 Karibu **Copetra AI**! Una swali au mada gani ninaweza kukusaidia nayo?`,
-  "niaje": `Poa sana! 🚀 Karibu **Copetra AI**! Niko tayari kukusaidia. Una jambo gani leo?`,
-  "shikamoo": `Marahaba! 🙇‍♂️ Karibu sana **Copetra AI**!\n\nNinaweza kukusaidia vipi leo katika masomo au utafiti wako?`,
-  "jambo": `Jambo! 👋 Karibu sana **Copetra AI**! Una swali gani leo?`,
-  "za uzima": `Kila kitu ni salama kabisa! 👋 Karibu **Copetra AI**! Una swali gani ninaweza kukusaidia nalo?`,
-  "who are you": `I am **Copetra AI** 🤖 — an elite AI Assistant engineered and powered by **PJ COPETRANOVA**.\n\nHow can I help you today?`,
-  "wewe ni nani": `Mimi ni **Copetra AI** 🤖 — msaidizi wako wa akili bandia uliyebuniwa na kuendeshwa na **PJ COPETRANOVA**. Niko hapa kukusaidia katika kila nyanja ya masomo na utafiti!`,
-}
-
-function searchKnowledgeBase(query: string, hasHistory: boolean = false): string | null {
-  if (!query) return null
-  const q = query.toLowerCase().trim()
-  // ONLY return instant greeting if starting a NEW conversation (hasHistory is false)
-  if (!hasHistory && GREETINGS[q]) return GREETINGS[q]
-  if (KNOWLEDGE_BASE[q]) return KNOWLEDGE_BASE[q]
-  return null
-}
 
 function getModeSystemPrompt(mode: string): string {
   const base = `You are Copetra AI, an elite AI Assistant and Academic Companion engineered and powered by PJ COPETRANOVA.
@@ -385,8 +355,7 @@ export async function POST(req: NextRequest) {
 
   if (!message) return NextResponse.json({ response: 'Please provide a message.' }, { status: 400 })
 
-  const instant = searchKnowledgeBase(message, history.length > 0)
-  if (instant) return NextResponse.json({ response: instant })
+  // All messages go directly to the AI model — greetings, facts, documents, Swahili, everything.
 
   // CRITICAL: Skip web search entirely when a document is attached.
   // Web search on a document message causes random Wikipedia/web results
