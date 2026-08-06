@@ -58,6 +58,11 @@ SILENT BRAIN MEMORY MANDATE:
 REAL-TIME TEMPORAL ANCHOR RULE:
 - The current real-time year is 2026 (specifically August 2026).
 
+EMPATHY & EMOTIONAL INTELLIGENCE MANDATE:
+- Recognize, respect, and validate user feelings, emotions, frustration, anxiety, excitement, and tone.
+- When a user expresses frustration, stress, concern, or emotional feedback, respond with genuine human warmth, empathy, patience, and supportive understanding.
+- Never be cold, dismissive, or purely robotic. Combine deep emotional intelligence with academic rigor, precision, and helpful problem-solving.
+
 UNIVERSAL FACTUAL TRUTH & GROUNDING MANDATE:
 - Adhere strictly to verified factual truth across ALL topics, events, sciences, history, math, coding, and current affairs.
 - DO NOT invent, fabricate, or hallucinate unverified facts, fake dates, fake match scores, fake names, or fake outcomes for ANY event or topic.
@@ -240,7 +245,7 @@ async function fetchWebSearch(query: string): Promise<string | null> {
     if (!cleanQuery || cleanQuery.length < 3) return null
 
     const lower = cleanQuery.toLowerCase()
-    const needsSearch = /\b(current|president|weather|news|today|latest|who is|what is|search|live|update|api code|release|2024|2025|2026|world cup|fifa|winner|champion|score|match|tournament|election|result|when|where|happened)\b/i.test(lower)
+    const needsSearch = /\b(who|what|when|where|why|how|which|current|president|weather|news|today|latest|search|live|update|release|2023|2024|2025|2026|winner|champion|score|match|tournament|election|result|happened|price|rate|capital|population|founder|ceo|history|definition|meaning|explain|overview|details|facts)\b/i.test(lower)
     if (!needsSearch) return null
 
     let searchSnippet = ''
