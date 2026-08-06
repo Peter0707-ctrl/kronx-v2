@@ -82,7 +82,7 @@ export default function WelcomeScreen({ onSend }: Props) {
   ]
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '65vh', width: '100%', fontFamily: "Calibri, 'Calibri Light', sans-serif" }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 16px', width: '100%', fontFamily: "Calibri, 'Calibri Light', sans-serif" }}>
       {/* Title */}
       <h1 style={{ fontSize: '32px', fontWeight: '500', color: '#0f172a', marginBottom: '32px', letterSpacing: '-0.3px', textAlign: 'center' }}>
         {greeting}

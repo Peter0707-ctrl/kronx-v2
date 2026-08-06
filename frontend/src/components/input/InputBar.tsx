@@ -503,7 +503,19 @@ export default function InputBar({ onSend }: Props) {
   }
 
   return (
-    <div style={{ width: '100%', maxWidth: '760px', margin: '0 auto 28px auto', padding: '0 16px' }}>
+    <div
+      style={{
+        width: '100%',
+        maxWidth: '760px',
+        margin: '0 auto',
+        padding: '0 16px 16px 16px',
+        position: 'sticky',
+        bottom: 0,
+        zIndex: 50,
+        flexShrink: 0,
+        background: 'var(--primary-bg)',
+      }}
+    >
       {/* Attached File Preview Badge */}
       {attachedFile && (
         <div
