@@ -123,10 +123,18 @@ export function useChat() {
       }
       currentState.incrementChatUsage()
 
-      // Dynamic LocalStorage Cache (zero-latency offline retrieval for duplicate questions)
-      const cacheKey = `kx_cache:${currentState.mode}:${currentState.language}:${text.toLowerCase().trim()}`
+      // Dynamic LocalStorage Cache (v3 preamble-free zero-latency offline retrieval)
+      const cacheKey = `kx_cache_v3:${currentState.mode}:${currentState.language}:${text.toLowerCase().trim()}`
       if (typeof window !== 'undefined') {
-        const cachedRes = localStorage.getItem(cacheKey)
+        let cachedRes = localStorage.getItem(cacheKey) || localStorage.getItem(`kx_cache:${currentState.mode}:${currentState.language}:${text.toLowerCase().trim()}`)
+        
+        // Invalidate cache if it contains old preambles or identity strings
+        if (cachedRes && (cachedRes.toLowerCase().includes('hello! i am copetra ai') || cachedRes.toLowerCase().includes('welcome to copetra ai') || cachedRes.toLowerCase().includes('hi there! i am copetra ai'))) {
+          localStorage.removeItem(cacheKey)
+          localStorage.removeItem(`kx_cache:${currentState.mode}:${currentState.language}:${text.toLowerCase().trim()}`)
+          cachedRes = null
+        }
+
         if (cachedRes && !text.includes('[IMAGE:') && !text.includes('DOCUMENT ATTACHED:')) {
           currentState.addMessage(text, 'user')
           currentState.addMessage('', 'ai')

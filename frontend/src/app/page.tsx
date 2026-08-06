@@ -23,6 +23,34 @@ export default function Home() {
   useEffect(() => {
     setMounted(true)
 
+    // Force PWA Service Worker auto-update on load
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(registrations => {
+        for (let registration of registrations) {
+          registration.update()
+        }
+      })
+    }
+
+    // Auto-wipe old preamble-containing local cache items
+    if (typeof window !== 'undefined') {
+      try {
+        const keysToRemove: string[] = []
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i)
+          if (key && (key.startsWith('kx_cache:') || key.startsWith('kx_cache_v2:'))) {
+            const val = localStorage.getItem(key) || ''
+            if (val.toLowerCase().includes('hello! i am copetra ai') || val.toLowerCase().includes('welcome to copetra ai')) {
+              keysToRemove.push(key)
+            }
+          }
+        }
+        keysToRemove.forEach(k => localStorage.removeItem(k))
+      } catch (e) {
+        console.warn('LocalStorage cleanup warning:', e)
+      }
+    }
+
     // Global keyboard shortcuts helper
     const handleKeyDown = (e: KeyboardEvent) => {
       const store = useKronxStore.getState()
