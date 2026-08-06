@@ -3,8 +3,33 @@ import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-// All greetings and responses are handled naturally by the AI model below.
-// No hardcoded lookup tables - the AI understands and answers based on what the user actually needs.
+// Greetings-only hardcoded table — fires ONLY when the message is a pure standalone greeting.
+// Any message with a question, topic, or extra content goes directly to the LLM.
+const GREETINGS: Record<string, string> = {
+  "hello":        `Hello! 👋 Welcome to **Copetra AI**! How can I help you today?`,
+  "hi":           `Hi there! 👋 How can I assist you today?`,
+  "hey":          `Hey! 👋 What can I do for you?`,
+  "habari":       `Habari njema! 👋 Karibu **Copetra AI**! Ninaweza kukusaidia nini leo?`,
+  "habari yako":  `Nzuri sana! 👋 Karibu! Una swali gani leo?`,
+  "habari za leo":`Salama! 👋 Karibu **Copetra AI**! Una swali gani leo?`,
+  "mambo":        `Poa sana! 🤙 Karibu **Copetra AI**! Unaweza kuniuliza chochote.`,
+  "mambo vipi":   `Poa kabisa! 🤙 Karibu! Nikusaidie nini?`,
+  "niaje":        `Poa! 🤙 Nikusaidie nini leo?`,
+  "shikamoo":     `Marahaba! 🙇 Karibu sana **Copetra AI**! Nikusaidie nini?`,
+  "jambo":        `Jambo! 👋 Karibu **Copetra AI**! Una swali gani?`,
+  "sasa":         `Sasa hivi! 👋 Nikusaidie nini leo?`,
+  "sasa hivi":    `Fiti! 👋 Karibu **Copetra AI**! Nikusaidie nini?`,
+  "za uzima":     `Salama kabisa! 👋 Nikusaidie nini leo?`,
+  "who are you":  `I am **Copetra AI** 🤖, your AI Assistant powered by **PJ COPETRANOVA**. How can I help you?`,
+  "wewe ni nani": `Mimi ni **Copetra AI** 🤖, msaidizi wako wa AI uliotengenezwa na **PJ COPETRANOVA**. Nikusaidie nini?`,
+}
+
+// Returns a greeting ONLY if the entire message is a pure greeting — no questions, no topics attached.
+function matchGreeting(query: string): string | null {
+  if (!query) return null
+  const q = query.toLowerCase().trim().replace(/[!?.،,]+$/, '').trim()
+  return GREETINGS[q] ?? null
+}
 
 function getModeSystemPrompt(mode: string): string {
   const base = `You are Copetra AI, an elite AI Assistant and Academic Companion engineered and powered by PJ COPETRANOVA.
@@ -312,8 +337,19 @@ export async function POST(req: NextRequest) {
 
       controller.enqueue(encoder.encode(': pjkronx-stream-open\n\n'))
 
-      // All messages — including greetings, Swahili, documents, and factual questions —
-      // go directly to the AI model which naturally understands and answers based on user needs.
+      // Greetings-only instant response: fires ONLY when message is a pure greeting.
+      // If user adds a question or topic after the greeting, it goes to the LLM instead.
+      const greetingReply = matchGreeting(message)
+      if (greetingReply) {
+        const clean = greetingReply.replace(/\r/g, '').replace(/\n/g, '\\n')
+        controller.enqueue(encoder.encode(`data: ${clean}\n\n`))
+        controller.enqueue(encoder.encode('data: [DONE]\n\n'))
+        controller.close()
+        return
+      }
+
+      // All other messages — questions, documents, Swahili topics, facts, math, etc. —
+      // go directly to the LLM which genuinely understands and answers based on user needs.
 
 
       const apiKey = process.env.GROQ_API_KEY
