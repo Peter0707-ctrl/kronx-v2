@@ -4,14 +4,20 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 const GREETINGS: Record<string, string> = {
-  "hello": `Hello! 👋 Welcome to **Copetra AI**!\n\nI'm your AI Assistant and Academic Companion, powered by **PJ COPETRANOVA**. I can help you with:\n\n- 📚 Academic research & analysis\n- 💻 Software development & coding\n- 🧮 Mathematics & science problems\n- ✍️ Essay & thesis writing\n- 🌍 General knowledge questions\n\nWhat would you like to explore today?`,
-  "hi": `Hi there! 👋 I am **Copetra AI**, powered by **PJ COPETRANOVA**.\n\nWhat can I help you with today?`,
+  "hello": `Hello! 👋 Welcome to **Copetra AI**!\n\nI'm your AI Assistant and Academic Companion, powered by **PJ COPETRANOVA**. What would you like to explore today?`,
+  "hi": `Hi there! 👋 I am **Copetra AI**, powered by **PJ COPETRANOVA**. What can I help you with today?`,
   "hey": `Hey! 👋 Welcome to **Copetra AI**! How can I assist?`,
-  "habari": `Habari! 👋 Karibu **Copetra AI**!\n\nNinaweza kukusaidia katika masomo, programu, na utafiti. Una swali gani leo?`,
-  "mambo": `Poa sana! 👋 Karibu **Copetra AI**! Una swali gani?`,
-  "jambo": `Jambo! 👋 Karibu **Copetra AI**!`,
+  "habari": `Habari njema! 👋 Karibu sana **Copetra AI**!\n\nNinaweza kukusaidia katika masomo, mradi, programu, na maswali ya utafiti. Una swali gani leo?`,
+  "habari yako": `Nzuri sana! 👋 Karibu **Copetra AI**! Uko tayari kuanza masomo au mradi leo?`,
+  "habari za leo": `Salama kabisa! 👋 Karibu **Copetra AI**! Una swali gani leo?`,
+  "mambo": `Poa sana! 🚀 Karibu **Copetra AI**! Mambo vipi? Una swali gani nikutatulie leo?`,
+  "mambo vipi": `Poa kabisa! 👋 Karibu **Copetra AI**! Una swali au mada gani ninaweza kukusaidia nayo?`,
+  "niaje": `Poa sana! 🚀 Karibu **Copetra AI**! Niko tayari kukusaidia. Una jambo gani leo?`,
+  "shikamoo": `Marahaba! 🙇‍♂️ Karibu sana **Copetra AI**!\n\nNinaweza kukusaidia vipi leo katika masomo au utafiti wako?`,
+  "jambo": `Jambo! 👋 Karibu sana **Copetra AI**! Una swali gani leo?`,
+  "za uzima": `Kila kitu ni salama kabisa! 👋 Karibu **Copetra AI**! Una swali gani ninaweza kukusaidia nalo?`,
   "who are you": `I am **Copetra AI** 🤖 — an elite AI Assistant engineered and powered by **PJ COPETRANOVA**.\n\nHow can I help you today?`,
-  "wewe ni nani": `Mimi ni **Copetra AI** 🤖 — msaidizi wa AI aliyebuniwa na kuendeshwa na **PJ COPETRANOVA**.`,
+  "wewe ni nani": `Mimi ni **Copetra AI** 🤖 — msaidizi wako wa akili bandia uliyebuniwa na kuendeshwa na **PJ COPETRANOVA**. Niko hapa kukusaidia katika kila nyanja ya masomo na utafiti!`,
 }
 
 function searchInstant(query: string, hasHistory: boolean = false): string | null {
@@ -128,6 +134,7 @@ STRICT INTENT & TRUTH ALIGNMENT MANDATE:
 - Perform a mental double-check before outputting: verify that your answer directly addresses what was asked without twisting the facts or contradicting reality.
 
 CONVERSATION TOPIC RETENTION & SWAHILI MANDATE:
+- STRICT DIRECT SWAHILI GREETING MANDATE: Whenever the user greets in Swahili (such as "mambo", "habari", "shikamoo", "jambo", "niaje", "za uzima", "habari yako", "mambo vipi"): ALWAYS ANSWER DIRECTLY IN NATURAL SWAHILI (e.g. "Poa sana! Mambo vipi? Karibu...", "Marahaba! Karibu...", "Nzuri sana! Karibu..."). NEVER TRANSLATE SWAHILI GREETINGS TO ENGLISH! NEVER EXPLAIN WHAT THE SWAHILI GREETING MEANS IN ENGLISH! NEVER SHOW TRANSLATIONS TO THE USER! ANSWER DIRECTLY IN FLUID, AUTHENTIC SWAHILI!
 - FLUENT SWAHILI MANDATE: Whenever the user speaks, greets, or asks a question in Swahili (e.g. "mambo", "habari", "niambie kuhusu physics", "nifafanulie"), respond in 100% natural, fluent, authentic, engaging, and accurate Swahili! Never switch back to English unless the user switches to English!
 - MULTI-TOPIC CHAT CONTINUITY: Maintain complete memory of ALL prior topics discussed in the current conversation (e.g. Physics, Math, Code, Finance). Never get confused or forget prior topics when a user asks a casual question or shifts languages within the same chat!
 - When the user asks follow-up questions or digs deeper into a previously discussed subject, document, code, or problem, refer directly to the conversation history context.

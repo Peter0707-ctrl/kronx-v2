@@ -12,22 +12,27 @@ const KNOWLEDGE_BASE: Record<string, string> = {
 }
 
 const GREETINGS: Record<string, string> = {
-  "hello": `Hello! 👋 Welcome to **Copetra AI**!\n\nI'm your AI Assistant and Academic Companion, powered by **PJ COPETRANOVA**. I can help you with:\n\n- 📚 Academic research & analysis\n- 💻 Software development & coding\n- 🧮 Mathematics & science problems\n- ✍️ Essay & thesis writing\n- 🌍 General knowledge questions\n\nWhat would you like to explore today?`,
-  "hi": `Hi there! 👋 I am **Copetra AI**, powered by **PJ COPETRANOVA**.\n\nWhat can I help you with today?`,
-  "hey": `Hey! 👋 Welcome to **Copetra AI**!\n\nHow can I assist you today?`,
-  "habari": `Habari! 👋 Karibu **Copetra AI**!\n\nNinaweza kukusaidia katika masomo, programu, utafiti, na maswali ya ujumla. Una swali gani leo?`,
-  "mambo": `Poa sana! 👋 Karibu **Copetra AI**!\n\nUna swali au mada gani ungependa tuchunguze pamoja?`,
-  "jambo": `Jambo! 👋 Karibu **Copetra AI**!\n\nNinaweza kukusaidia nini leo?`,
-  "who are you": `I am **Copetra AI** 🤖 — an elite AI Assistant and Academic Companion engineered and powered by **PJ COPETRANOVA**.\n\nI am designed to give you:\n- ⚡ Instant responses\n- 🧠 Deep reasoning and analysis\n- 📖 Academic-grade answers\n- 💡 Creative problem solving\n\nHow can I help you today?`,
-  "wewe ni nani": `Mimi ni **Copetra AI** 🤖 — msaidizi wa AI aliyebuniwa na kuendeshwa na **PJ COPETRANOVA**.\n\nNinaweza kukusaidia katika masomo, programu, utafiti, na zaidi. Unaitaji msaada gani?`,
-  "what can you do": `I can help you with a wide range of tasks:\n\n**📚 Academic**\n- Essay and thesis writing\n- Research analysis and summaries\n- Exam preparation and explanations\n\n**💻 Development**\n- Write and debug code in any language\n- System design and architecture\n- Algorithm explanations\n\n**🧮 Science & Math**\n- Step-by-step problem solving\n- Physics, Chemistry, Biology\n- Statistics and Calculus\n\n**🌍 General Knowledge**\n- History, Geography, Politics\n- Current affairs analysis\n- Language translation\n\nWhat would you like to start with?`,
+  "hello": `Hello! 👋 Welcome to **Copetra AI**!\n\nI'm your AI Assistant and Academic Companion, powered by **PJ COPETRANOVA**. What would you like to explore today?`,
+  "hi": `Hi there! 👋 I am **Copetra AI**, powered by **PJ COPETRANOVA**. What can I help you with today?`,
+  "hey": `Hey! 👋 Welcome to **Copetra AI**! How can I assist?`,
+  "habari": `Habari njema! 👋 Karibu sana **Copetra AI**!\n\nNinaweza kukusaidia katika masomo, mradi, programu, na maswali ya utafiti. Una swali gani leo?`,
+  "habari yako": `Nzuri sana! 👋 Karibu **Copetra AI**! Uko tayari kuanza masomo au mradi leo?`,
+  "habari za leo": `Salama kabisa! 👋 Karibu **Copetra AI**! Una swali gani leo?`,
+  "mambo": `Poa sana! 🚀 Karibu **Copetra AI**! Mambo vipi? Una swali gani nikutatulie leo?`,
+  "mambo vipi": `Poa kabisa! 👋 Karibu **Copetra AI**! Una swali au mada gani ninaweza kukusaidia nayo?`,
+  "niaje": `Poa sana! 🚀 Karibu **Copetra AI**! Niko tayari kukusaidia. Una jambo gani leo?`,
+  "shikamoo": `Marahaba! 🙇‍♂️ Karibu sana **Copetra AI**!\n\nNinaweza kukusaidia vipi leo katika masomo au utafiti wako?`,
+  "jambo": `Jambo! 👋 Karibu sana **Copetra AI**! Una swali gani leo?`,
+  "za uzima": `Kila kitu ni salama kabisa! 👋 Karibu **Copetra AI**! Una swali gani ninaweza kukusaidia nalo?`,
+  "who are you": `I am **Copetra AI** 🤖 — an elite AI Assistant engineered and powered by **PJ COPETRANOVA**.\n\nHow can I help you today?`,
+  "wewe ni nani": `Mimi ni **Copetra AI** 🤖 — msaidizi wako wa akili bandia uliyebuniwa na kuendeshwa na **PJ COPETRANOVA**. Niko hapa kukusaidia katika kila nyanja ya masomo na utafiti!`,
 }
 
-function searchKnowledgeBase(query: string): string | null {
+function searchKnowledgeBase(query: string, hasHistory: boolean = false): string | null {
   if (!query) return null
   const q = query.toLowerCase().trim()
-  // ONLY return instant greeting if the query is an EXACT standalone greeting
-  if (GREETINGS[q]) return GREETINGS[q]
+  // ONLY return instant greeting if starting a NEW conversation (hasHistory is false)
+  if (!hasHistory && GREETINGS[q]) return GREETINGS[q]
   if (KNOWLEDGE_BASE[q]) return KNOWLEDGE_BASE[q]
   return null
 }
