@@ -15,6 +15,8 @@ import ErrorBoundary from '@/components/ErrorBoundary'
 import { useChat } from '@/hooks/useChat'
 import { useKronxStore } from '@/store/useKronxStore'
 
+const CURRENT_APP_VERSION = 'v2026.08.06.1050'
+
 export default function Home() {
   const { send, regenerate, editAndResend } = useChat()
   const { newConversation, activeConversationId, activeView, user, setUser, systemDisabled } = useKronxStore()
@@ -23,31 +25,45 @@ export default function Home() {
   useEffect(() => {
     setMounted(true)
 
-    // Force PWA Service Worker auto-update on load
-    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(registrations => {
-        for (let registration of registrations) {
-          registration.update()
-        }
-      })
-    }
-
-    // Auto-wipe old preamble-containing local cache items
+    // PWA Force-Sync Engine: Guarantees mobile PWAs and browsers immediately purge stale assets and load new Railway deployments
     if (typeof window !== 'undefined') {
       try {
-        const keysToRemove: string[] = []
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i)
-          if (key && (key.startsWith('kx_cache:') || key.startsWith('kx_cache_v2:'))) {
-            const val = localStorage.getItem(key) || ''
-            if (val.toLowerCase().includes('hello! i am copetra ai') || val.toLowerCase().includes('welcome to copetra ai')) {
-              keysToRemove.push(key)
+        const lastVersion = localStorage.getItem('kx_version_stamp')
+        if (lastVersion !== CURRENT_APP_VERSION) {
+          console.log('[PWA Sync]: New deployment detected! Purging old phone caches...')
+          
+          // Clear all local query caches
+          const keysToRemove: string[] = []
+          for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i)
+            if (k && k.startsWith('kx_cache')) {
+              keysToRemove.push(k)
             }
           }
+          keysToRemove.forEach(k => localStorage.removeItem(k))
+
+          // Clear Service Worker CacheStorage
+          if ('caches' in window) {
+            caches.keys().then(names => {
+              names.forEach(name => caches.delete(name))
+            })
+          }
+
+          // Unregister old Service Workers to force fresh fetch
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(registrations => {
+              for (let reg of registrations) {
+                reg.unregister()
+              }
+            })
+          }
+
+          localStorage.setItem('kx_version_stamp', CURRENT_APP_VERSION)
+          window.location.reload()
+          return
         }
-        keysToRemove.forEach(k => localStorage.removeItem(k))
-      } catch (e) {
-        console.warn('LocalStorage cleanup warning:', e)
+      } catch (err) {
+        console.warn('[PWA Sync Error]:', err)
       }
     }
 
