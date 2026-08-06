@@ -16,11 +16,16 @@ export default function ChatArea({ onSend, onRegenerate, onEditAndResend }: Prop
   const messages = activeMessages()
   const bottomRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const lastScrollTime = useRef(0)
 
-  // Automatic scroll to bottom: only scroll if the user is already near the bottom or on new user query
+  // Automatic scroll to bottom: throttled to 100ms during streaming to prevent layout reflow choke
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
+
+    const now = Date.now()
+    if (isStreaming && now - lastScrollTime.current < 100) return
+    lastScrollTime.current = now
 
     const threshold = 200
     const isAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < threshold

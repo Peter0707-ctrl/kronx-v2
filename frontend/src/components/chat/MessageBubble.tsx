@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { memo, useState } from 'react'
 import { Message } from '@/types'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -85,7 +85,7 @@ interface Props {
   onEditAndResend?: (messageId: string, newContent: string) => void
 }
 
-export default function MessageBubble({ message, isStreaming, onRegenerate, onEditAndResend }: Props) {
+const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRegenerate, onEditAndResend }: Props) {
   const isAi = message.role === 'ai'
   const [copied, setCopied] = useState(false)
   const [feedback, setFeedback] = useState<'good' | 'bad' | null>(null)
@@ -432,4 +432,6 @@ export default function MessageBubble({ message, isStreaming, onRegenerate, onEd
       </div>
     </div>
   )
-}
+})
+
+export default MessageBubble

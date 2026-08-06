@@ -134,11 +134,14 @@ export function useChat() {
           
           let currentText = ''
           const words = cachedRes.split(' ')
-          for (let i = 0; i < words.length; i++) {
-            currentText += (i > 0 ? ' ' : '') + words[i]
+          const stepSize = Math.max(1, Math.floor(words.length / 30))
+          for (let i = 0; i < words.length; i += stepSize) {
+            const chunkWords = words.slice(i, i + stepSize).join(' ')
+            currentText += (i > 0 ? ' ' : '') + chunkWords
             currentState.replaceLastAiMessage(currentText)
-            await new Promise(resolve => setTimeout(resolve, 8))
+            await new Promise(resolve => setTimeout(resolve, 20))
           }
+          currentState.replaceLastAiMessage(cachedRes)
           currentState.setStreaming(false)
           return
         }
@@ -162,15 +165,29 @@ export function useChat() {
         })
 
         let finalResponseText = ''
+        let bufferChunk = ''
+        let lastFlushTime = Date.now()
+
         for await (const chunk of gen) {
           if (chunk.startsWith('\x00REPLACE\x00')) {
             const fallback = chunk.slice('\x00REPLACE\x00'.length)
             currentState.replaceLastAiMessage(fallback)
             finalResponseText = fallback
+            bufferChunk = ''
           } else {
-            currentState.updateLastAiMessage(chunk)
+            bufferChunk += chunk
             finalResponseText += chunk
+
+            const now = Date.now()
+            if (now - lastFlushTime > 30) {
+              currentState.updateLastAiMessage(bufferChunk)
+              bufferChunk = ''
+              lastFlushTime = now
+            }
           }
+        }
+        if (bufferChunk) {
+          currentState.updateLastAiMessage(bufferChunk)
         }
         
         // Save successfully streamed response to cache for future instant load
