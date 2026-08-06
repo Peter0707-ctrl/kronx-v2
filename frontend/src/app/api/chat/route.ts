@@ -226,7 +226,12 @@ function buildGroqMessages(
     }
   }
 
-  messages.push({ role: 'user', content: parseMessageContent(message) })
+  const isPersonalQuery = /\b(my name|who am i|my project|my background|my memory|remember|my email)\b/i.test(message)
+  let cleanMessage = message
+  if (!isPersonalQuery) {
+    cleanMessage = cleanMessage.replace(/\[PERSISTENT USER BRAIN MEMORY\][\s\S]*/gi, '').trim()
+  }
+  messages.push({ role: 'user', content: parseMessageContent(cleanMessage) })
   return messages
 }
 

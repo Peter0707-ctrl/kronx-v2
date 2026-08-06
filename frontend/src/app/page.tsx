@@ -15,7 +15,7 @@ import ErrorBoundary from '@/components/ErrorBoundary'
 import { useChat } from '@/hooks/useChat'
 import { useKronxStore } from '@/store/useKronxStore'
 
-const CURRENT_APP_VERSION = 'v2026.08.06.1452'
+const CURRENT_APP_VERSION = 'v2026.08.06.1510'
 
 export default function Home() {
   const { send, regenerate, editAndResend } = useChat()
@@ -30,13 +30,13 @@ export default function Home() {
       try {
         const lastVersion = localStorage.getItem('kx_version_stamp')
         if (lastVersion !== CURRENT_APP_VERSION) {
-          console.log('[PWA Sync]: New deployment detected! Purging old phone caches...')
+          console.log('[PWA Sync]: New deployment detected! Purging old phone caches and stuck memory...')
           
-          // Clear all local query caches
+          // Clear all local query caches and stuck memory items
           const keysToRemove: string[] = []
           for (let i = 0; i < localStorage.length; i++) {
             const k = localStorage.key(i)
-            if (k && k.startsWith('kx_cache')) {
+            if (k && (k.startsWith('kx_cache') || k.includes('memory') || k.includes('memories'))) {
               keysToRemove.push(k)
             }
           }

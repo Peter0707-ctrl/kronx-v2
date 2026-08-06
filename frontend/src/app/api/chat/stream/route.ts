@@ -161,7 +161,13 @@ type HistoryMessage = { role: 'user' | 'ai' | 'assistant'; content: string }
 function parseMessageContent(text: string, isVisionModel: boolean = true): any {
   const imageRegex = /\[IMAGE:\s*(data:image\/[^\]]+)\]/gi
   const images: string[] = []
+  
+  // Always sanitize memory blocks from non-personal queries to prevent memory stickiness
+  const isPersonalQuery = /\b(my name|who am i|my project|my background|my memory|remember|my email)\b/i.test(text)
   let cleanText = text
+  if (!isPersonalQuery) {
+    cleanText = cleanText.replace(/\[PERSISTENT USER BRAIN MEMORY\][\s\S]*/gi, '').trim()
+  }
 
   let match
   while ((match = imageRegex.exec(text)) !== null) {
@@ -171,9 +177,9 @@ function parseMessageContent(text: string, isVisionModel: boolean = true): any {
 
   if (images.length === 0) {
     if (text.includes('DOCUMENT ATTACHED:') && text.trim().startsWith('[')) {
-      return `${text}\n\n[INSTRUCTION]: Please provide a DEEP, DETAILED, COMPREHENSIVE analysis of what is discussed in this document. Break down all key topics, technical features, and action items in detail.`
+      return `${cleanText}\n\n[INSTRUCTION]: Please provide a DEEP, DETAILED, COMPREHENSIVE analysis of what is discussed in this document. Break down all key topics, technical features, and action items in detail.`
     }
-    return text
+    return cleanText
   }
 
   if (!isVisionModel) {
