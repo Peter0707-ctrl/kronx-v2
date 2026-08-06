@@ -227,26 +227,43 @@ async function fetchWebSearch(query: string): Promise<string | null> {
     const needsSearch = /\b(current|president|weather|news|today|latest|who is|what is|search|live|update|api code|release|2024|2025|2026|world cup|fifa|winner|champion|score|match|tournament|election|result|when|where|happened)\b/i.test(lower)
     if (!needsSearch) return null
 
-    const res = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(cleanQuery)}&format=json&no_redirect=1&no_html=1&skip_disambig=1`, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
-      next: { revalidate: 3600 }
-    })
-    if (!res.ok) return null
-    const data = await res.json()
-    
-    let result = ''
-    const abstractText = data.AbstractText?.trim()
-    const directAnswer = data.Answer?.trim()
-    if (directAnswer) {
-      result += `Direct Answer: ${directAnswer}\n`
-    }
-    if (abstractText) {
-      result += `Abstract: ${abstractText}\n`
-      if (data.AbstractSource) {
-        result += `Source: ${data.AbstractSource} (${data.AbstractURL})\n`
+    let searchSnippet = ''
+
+    // 1. Wikipedia API Search for live encyclopedia accuracy
+    try {
+      const wikiRes = await fetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(cleanQuery)}&utf8=&format=json&origin=*`, {
+        headers: { 'User-Agent': 'CopetraAI/2.0 (Academic Search Engine)' }
+      })
+      if (wikiRes.ok) {
+        const wikiData = await wikiRes.json()
+        const searchResults = wikiData?.query?.search || []
+        if (searchResults.length > 0) {
+          searchSnippet += searchResults.slice(0, 3).map((s: any) => {
+            const cleanSnippet = s.snippet.replace(/<[^>]*>?/gm, '')
+            return `[Fact Context - ${s.title}]: ${cleanSnippet}`
+          }).join('\n\n')
+        }
       }
+    } catch (e) {
+      console.warn('Wikipedia API fetch warning:', e)
     }
-    return result ? result.trim() : null
+
+    // 2. DuckDuckGo Instant API Search
+    try {
+      const ddgRes = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(cleanQuery)}&format=json&no_redirect=1&no_html=1&skip_disambig=1`, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
+      })
+      if (ddgRes.ok) {
+        const ddgData = await ddgRes.json()
+        if (ddgData.AbstractText) {
+          searchSnippet += `\n\n[Live Context - ${ddgData.Heading || 'DuckDuckGo'}]: ${ddgData.AbstractText}`
+        }
+      }
+    } catch (e) {
+      console.warn('DuckDuckGo fetch warning:', e)
+    }
+
+    return searchSnippet ? searchSnippet.trim() : null
   } catch (e) {
     console.error('Web search error:', e)
     return null
