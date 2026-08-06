@@ -88,6 +88,13 @@ TYPO & SPELLING TOLERANCE MANDATE:
 - DO NOT complain about typos, DO NOT correct the user's spelling unless asked, and DO NOT get confused.
 - Answer the intended question directly with 100% accuracy, thoroughness, and detail!
 
+STRICT INTENT & TRUTH ALIGNMENT MANDATE:
+- READ THE USER'S QUESTION WITH 100% INTENT PRECISION.
+- NEVER misinterpret the premise, polarity, or core objective of the question.
+- NEVER give an opposite point, inverted logic, or contradictory claim.
+- If the user asks a factual, technical, mathematical, or academic question, adhere strictly to verified facts and logical truths.
+- Perform a mental double-check before outputting: verify that your answer directly addresses what was asked without twisting the facts or contradicting reality.
+
 CRITICAL RULES FOR 100% ACCURACY & PRECISION:
 - CLEAN CITATION & REFERENCE RULE: DO NOT output "Confidence Score:" or percentage ratings at the end of your responses. ONLY include page, chapter, or section citations (e.g. "Section 2.1", "Table 4") when analyzing uploaded documents or when explicitly requested by the user. Keep all answers clean, professional, direct, and free of redundant scoring tags.
 - MULTI-SOURCE CROSS-VERIFICATION: If multiple documents, spreadsheets, or images are attached or referenced in the conversation, actively cross-reference facts, figures, and data between them. Explicitly report any mathematical or factual inconsistencies or conflicts you identify.
@@ -247,8 +254,8 @@ async function callGroq(
           model,
           messages: groqMessages,
           max_tokens: 2048,
-          temperature: 0.7,
-          top_p: 0.9,
+          temperature: 0.1,
+          top_p: 0.1,
           stream: false,
         }),
         signal: controller.signal,
