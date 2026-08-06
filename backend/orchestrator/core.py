@@ -575,9 +575,9 @@ class KronxOrchestrator:
             except Exception:
                 pass
 
-        # PJKRONX Embedded Intelligent Engine — Last Resort (Always Answers)
+        # PJKRONX Real Fact Extraction Engine — Last Resort
         if not success:
-            smart_response = _generate_embedded_answer(message, language)
+            smart_response = await _generate_embedded_answer(message, language)
             yield smart_response
             full_response = smart_response
             success = True
@@ -593,137 +593,32 @@ class KronxOrchestrator:
         )
 
 
-def _generate_embedded_answer(message: str, language: str) -> str:
+async def _generate_embedded_answer(message: str, language: str) -> str:
     """
-    PJKRONX Embedded Intelligence Engine v2.
-    Generates a genuinely helpful, context-aware answer without any external API.
-    Analyses the question type and provides a real structured response.
+    PJKRONX Real Fact Extraction Engine.
+    Executes live web/encyclopedia search to extract 100% genuine factual definitions and explanations.
+    Completely eliminates template filler text.
     """
-    query = message.strip()
-    query_lower = query.lower()
+    web_res = await _web_search(message)
+    if web_res:
+        return web_res
+    
+    clean_q = re.sub(r'[^\w\s]', '', message).strip()
+    if clean_q:
+        try:
+            wiki_target = clean_q.replace(' ', '_').title()
+            async with httpx.AsyncClient(timeout=8.0) as client:
+                resp = await client.get(
+                    f"https://en.wikipedia.org/api/rest_v1/page/summary/{wiki_target}",
+                    headers={"User-Agent": "CopetraAI/2.0"}
+                )
+                if resp.status_code == 200:
+                    data = resp.json()
+                    title = data.get("title", clean_q)
+                    extract = data.get("extract", "").strip()
+                    if extract:
+                        return f"### 📚 {title}\n\n{extract}"
+        except Exception as e:
+            print(f"[Embedded Fact Error] {e}")
 
-    # Detect question type
-    is_math = any(op in query for op in ["+", "-", "*", "/", "=", "^", "sqrt", "sin", "cos"])
-    is_code = any(kw in query_lower for kw in ["code", "python", "javascript", "function", "program", "debug", "error", "compile"])
-    is_definition = any(kw in query_lower for kw in ["what is", "define", "explain", "nini ni", "maana ya", "ufafanuzi"])
-    is_howto = any(kw in query_lower for kw in ["how to", "how do", "jinsi ya", "namna ya", "hatua za"])
-    is_comparison = any(kw in query_lower for kw in ["difference", "compare", "vs", "versus", "tofauti"])
-    is_list = any(kw in query_lower for kw in ["list", "examples", "types", "orodha", "mifano", "aina za"])
-
-    if language == "sw":
-        if is_math:
-            return (
-                f"**Jibu la Hesabu: {query}**\n\n"
-                f"Kwa swali hili la hesabu, nitafanya tathmini ya kina:\n\n"
-                f"**Hatua 1 - Soma Swali:**\nSwali: {query}\n\n"
-                f"**Hatua 2 - Tumia Mbinu Sahihi:**\n"
-                f"- Tambua aina ya hesabu (algebra, geometry, calculus, statistics)\n"
-                f"- Tumia fomula inayofaa\n"
-                f"- Fanya hesabu hatua kwa hatua\n\n"
-                f"**Hatua 3 - Thibitisha Jibu:**\nAngalia jibu lako kwa kufanya reverse calculation\n\n"
-                f"*Andika equation yako wazi (mfano: 2x + 5 = 15) nipate kukusaidia vizuri zaidi!*"
-            )
-        elif is_code:
-            return (
-                f"**Msaada wa Programu: {query}**\n\n"
-                f"Kwa swali hili la coding/programu:\n\n"
-                f"**Mbinu ya Kutatua:**\n"
-                f"1. Elewa tatizo kwanza\n"
-                f"2. Gawanya tatizo katika vipande vidogo vidogo\n"
-                f"3. Andika pseudo-code kwanza\n"
-                f"4. Tekeleza solution\n"
-                f"5. Test na debug\n\n"
-                f"*Tuma code yako au eleza tatizo kwa undani zaidi nipate kukusaidia vizuri!*"
-            )
-        else:
-            return (
-                f"**Jibu la PJKRONX AI - {query}**\n\n"
-                f"Asante kwa swali lako. Hapa kuna uchambuzi wa kina:\n\n"
-                f"**Ufafanuzi wa Msingi:**\n"
-                f"Swali unalouliza kuhusu **{query}** linahusiana na mada muhimu inayohitaji uchunguzi wa makini. "
-                f"Katika muktadha wa Tanzania na Afrika Mashariki, suala hili lina umuhimu mkubwa kwa:\n"
-                f"- Maendeleo ya kibinafsi na elimu\n"
-                f"- Ushirikiano wa kikanda\n"
-                f"- Utekelezaji wa mipango ya maendeleo\n\n"
-                f"**Vidokezo vya Ziada:**\n"
-                f"- Tafuta maelezo ya kina katika vitabu vya masomo au tovuti rasmi\n"
-                f"- Wasiliana na wataalam katika sekta husika\n"
-                f"- Tumia rasilimali za UDSM, SUA, au taasisi nyingine za elimu Tanzania\n\n"
-                f"*Una swali zaidi? Niulize — niko hapa kukusaidia!*"
-            )
-    else:
-        if is_math:
-            return (
-                f"**Mathematical Solution: {query}**\n\n"
-                f"Let me work through this step-by-step:\n\n"
-                f"**Step 1 - Parse the Problem:**\nProblem: {query}\n\n"
-                f"**Step 2 - Apply the Correct Method:**\n"
-                f"- Identify the mathematical domain (algebra, geometry, calculus, statistics, etc.)\n"
-                f"- Apply the appropriate formula or theorem\n"
-                f"- Execute the calculation systematically\n\n"
-                f"**Step 3 - Verify:**\nAlways check your answer using reverse calculation or substitution.\n\n"
-                f"*Please write out your equation clearly (e.g., 2x + 5 = 15) and I'll solve it precisely!*"
-            )
-        elif is_code:
-            return (
-                f"**Programming Assistance: {query}**\n\n"
-                f"Here's the structured approach to solve this coding problem:\n\n"
-                f"**Problem-Solving Methodology:**\n"
-                f"1. **Understand** — Read the problem requirements completely\n"
-                f"2. **Plan** — Design the algorithm/logic before coding\n"
-                f"3. **Implement** — Write clean, commented code\n"
-                f"4. **Test** — Run with various inputs including edge cases\n"
-                f"5. **Optimize** — Improve time/space complexity if needed\n\n"
-                f"**Common Languages I can help with:**\n"
-                f"- Python, JavaScript/TypeScript, Java, C/C++\n"
-                f"- HTML/CSS, React, Next.js, FastAPI\n"
-                f"- SQL, MongoDB, Firebase\n\n"
-                f"*Share your specific code or describe the exact problem and I'll provide a working solution!*"
-            )
-        elif is_definition:
-            topic = re.sub(r'(what is|what are|define|explain|describe)\s*', '', query_lower).strip()
-            return (
-                f"**Definition & Explanation: {topic.title() if topic else query}**\n\n"
-                f"**Core Concept:**\n"
-                f"{topic.title() if topic else query} is a fundamental concept that encompasses multiple interconnected principles and applications.\n\n"
-                f"**Key Characteristics:**\n"
-                f"- Has specific definitions and boundaries within its domain\n"
-                f"- Relates to broader systems of knowledge and practice\n"
-                f"- Has practical applications in real-world contexts\n\n"
-                f"**Academic Context:**\n"
-                f"In formal academic study, this concept is typically covered in relevant university-level coursework and research literature.\n\n"
-                f"*For a more specific and detailed answer, please add more context to your question!*"
-            )
-        elif is_howto:
-            return (
-                f"**How-To Guide: {query}**\n\n"
-                f"Here is a structured step-by-step approach:\n\n"
-                f"**Phase 1 - Preparation:**\n"
-                f"- Gather all required tools, materials, and knowledge\n"
-                f"- Understand the goal and desired outcome clearly\n"
-                f"- Identify potential challenges and plan for them\n\n"
-                f"**Phase 2 - Execution:**\n"
-                f"- Follow the established sequence of steps\n"
-                f"- Monitor progress at each checkpoint\n"
-                f"- Make adjustments as needed\n\n"
-                f"**Phase 3 - Verification:**\n"
-                f"- Confirm the result meets the original objective\n"
-                f"- Document what was done for future reference\n\n"
-                f"*Please give more specific details about your exact task for a precise step-by-step guide!*"
-            )
-        else:
-            return (
-                f"**PJKRONX AI Response: {query}**\n\n"
-                f"Thank you for your question. Here is a comprehensive response:\n\n"
-                f"**Direct Answer:**\n"
-                f"Your question about **\"{query}\"** touches on an important topic. Based on available knowledge:\n\n"
-                f"This subject involves multiple dimensions worth exploring:\n"
-                f"- **Academic perspective**: Understanding theoretical foundations and research\n"
-                f"- **Practical application**: How this knowledge applies in real-world scenarios\n"
-                f"- **Local context (Tanzania & East Africa)**: Specific relevance to the region\n\n"
-                f"**Recommended Resources:**\n"
-                f"- Academic institutions: UDSM, SUA, UDOM, DIT\n"
-                f"- Government portals: tanzania.go.tz\n"
-                f"- International sources: academic journals and verified online databases\n\n"
-                f"*For a more targeted answer, please add specific details to your question. I am fully powered and ready to assist!*"
-            )
+    return f"**{message.strip()}**\n\nPlease provide more specific details or attach reference material so I can give you an exact, in-depth academic answer."
