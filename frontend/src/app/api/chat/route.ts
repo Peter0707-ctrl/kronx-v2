@@ -385,16 +385,24 @@ export async function POST(req: NextRequest) {
 
   if (!message) return NextResponse.json({ response: 'Please provide a message.' }, { status: 400 })
 
-  const instant = searchKnowledgeBase(message)
+  const instant = searchKnowledgeBase(message, history.length > 0)
   if (instant) return NextResponse.json({ response: instant })
 
-  const webSearchResults = await fetchWebSearch(message)
+  // CRITICAL: Skip web search entirely when a document is attached.
+  // Web search on a document message causes random Wikipedia/web results
+  // instead of the AI deeply analyzing the actual uploaded document.
+  const isDocumentMessage = /\[(WORD|PDF|EXCEL|POWERPOINT|TEXT|CODE)\s+DOCUMENT ATTACHED:/i.test(message) ||
+    message.includes('DOCUMENT ATTACHED:') || message.includes('FILE ATTACHED:')
 
+  const webSearchResults = isDocumentMessage ? null : await fetchWebSearch(message)
   const groqAnswer = await callGroq(message, mode, history, webSearchResults)
   if (groqAnswer) return NextResponse.json({ response: groqAnswer })
 
-  const wikiAnswer = await fetchWikipedia(message)
-  if (wikiAnswer) return NextResponse.json({ response: wikiAnswer })
+  // Also skip Wikipedia fallback for documents - the AI must analyze the doc itself
+  if (!isDocumentMessage) {
+    const wikiAnswer = await fetchWikipedia(message)
+    if (wikiAnswer) return NextResponse.json({ response: wikiAnswer })
+  }
 
   return NextResponse.json({
     response: `**Copetra AI** is experiencing a temporary issue. Please try again in a moment.`

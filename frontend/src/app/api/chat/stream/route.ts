@@ -331,7 +331,13 @@ export async function POST(req: NextRequest) {
   }
 
   const encoder = new TextEncoder()
-  const webSearchResults = await fetchWebSearch(message)
+
+  // CRITICAL: Skip web search entirely when a document is attached.
+  // Running web search on a document message causes random Wikipedia/web results
+  // to be injected instead of the AI analyzing the actual uploaded document.
+  const isDocumentMessage = /\[(WORD|PDF|EXCEL|POWERPOINT|TEXT|CODE)\s+DOCUMENT ATTACHED:/i.test(message) ||
+    message.includes('DOCUMENT ATTACHED:') || message.includes('FILE ATTACHED:')
+  const webSearchResults = isDocumentMessage ? null : await fetchWebSearch(message)
 
   const stream = new ReadableStream({
     async start(controller) {
