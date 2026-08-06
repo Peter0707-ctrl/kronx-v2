@@ -26,13 +26,9 @@ const GREETINGS: Record<string, string> = {
 function searchKnowledgeBase(query: string): string | null {
   if (!query) return null
   const q = query.toLowerCase().trim()
+  // ONLY return instant greeting if the query is an EXACT standalone greeting
   if (GREETINGS[q]) return GREETINGS[q]
-  for (const [k, v] of Object.entries(GREETINGS)) {
-    if (q === k || q.startsWith(k + ' ') || q.endsWith(' ' + k)) return v
-  }
-  for (const [k, v] of Object.entries(KNOWLEDGE_BASE)) {
-    if (q.includes(k)) return v
-  }
+  if (KNOWLEDGE_BASE[q]) return KNOWLEDGE_BASE[q]
   return null
 }
 
