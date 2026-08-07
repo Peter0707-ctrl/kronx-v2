@@ -54,13 +54,17 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
       chatsUsedToday: 0,
       provider: 'email',
       createdAt: new Date().toISOString(),
+      ...(isMasterAdmin ? { adminKey: passHash } : {}),
     }
 
     if (tab === 'register') {
       // Create user but don't log them in yet
       fetch('/api/users', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-key': isMasterAdmin ? passHash : ''
+        },
         body: JSON.stringify(user)
       }).catch(e => console.warn('Could not register user to DB:', e));
       

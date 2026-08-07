@@ -33,6 +33,14 @@ async function initDb() {
     await client.query(`
       ALTER TABLE users ADD COLUMN IF NOT EXISTS expires_at TIMESTAMP NULL;
     `)
+    
+    // Ensure api_key and callback_url columns exist
+    await client.query(`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS api_key VARCHAR(255);
+    `)
+    await client.query(`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS callback_url VARCHAR(255);
+    `)
 
     // Insert default admin if not exists
     const checkAdmin = await client.query(`SELECT id FROM users WHERE id = 'u-admin-master'`)
@@ -94,6 +102,8 @@ export async function GET() {
       conversationCount: row.conversation_count,
       isDeveloper: row.is_developer,
       expiresAt: row.expires_at,
+      apiKey: row.api_key,
+      callbackUrl: row.callback_url,
     }))
     
     return NextResponse.json(users)
@@ -108,17 +118,48 @@ export async function POST(req: NextRequest) {
     await ensureDb()
     const user = await req.json()
 
+    const adminKeyHeader = req.headers.get('x-admin-key')
+    // Master Admin Password Hash: Admin@123
+    const isAdminRequest = adminKeyHeader === 'e86f78a8a3caf0b60d8e74e5942aa6d86dc150cd3c03338aef25b7d2d7e3acc7'
+
+    const emailLower = (user.email || '').toLowerCase().trim()
+    const isMasterAdminEmail = emailLower === 'pj0040280@gmail.com'
+
+    let targetRole = user.role || 'user'
+    let targetPlan = user.plan || 'free'
+    let targetIsDeveloper = user.isDeveloper || false
+
+    if (isMasterAdminEmail) {
+      targetRole = 'admin'
+      targetPlan = 'premium'
+      targetIsDeveloper = true
+    } else if (!isAdminRequest) {
+      // Not master admin email, and not an approved admin request
+      // Check if user already exists in DB to prevent escalation
+      const existing = await pool.query('SELECT role, plan, is_developer FROM users WHERE LOWER(email) = $1', [emailLower])
+      if (existing.rows.length > 0) {
+        // Preserve existing values to prevent any modification to role/plan/developer status
+        targetRole = existing.rows[0].role || 'user'
+        targetPlan = existing.rows[0].plan || 'free'
+        targetIsDeveloper = existing.rows[0].is_developer || false
+      } else {
+        // New user registration - force free tier and user role
+        targetRole = 'user'
+        targetPlan = 'free'
+        targetIsDeveloper = false
+      }
+    }
+
     // Calculate 30-day monthly expiration date for paid subscriptions
     let expiresAt: Date | null = null
-    if (user.plan && user.plan !== 'free') {
-      // Set expiration to 30 days from now (end of monthly billing period)
+    if (targetPlan && targetPlan !== 'free') {
       expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
     }
     
-    // UPSERT logic
+    // UPSERT logic with api_key and callback_url
     const query = `
-      INSERT INTO users (id, name, email, role, plan, avatar, last_active, conversation_count, is_developer, expires_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      INSERT INTO users (id, name, email, role, plan, avatar, last_active, conversation_count, is_developer, expires_at, api_key, callback_url)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
       ON CONFLICT (email) DO UPDATE SET
         name = EXCLUDED.name,
         role = EXCLUDED.role,
@@ -126,21 +167,25 @@ export async function POST(req: NextRequest) {
         avatar = EXCLUDED.avatar,
         last_active = EXCLUDED.last_active,
         is_developer = EXCLUDED.is_developer,
-        expires_at = EXCLUDED.expires_at
+        expires_at = EXCLUDED.expires_at,
+        api_key = EXCLUDED.api_key,
+        callback_url = EXCLUDED.callback_url
       RETURNING *;
     `
     
     const values = [
       user.id,
       user.name,
-      user.email,
-      user.role || 'user',
-      user.plan || 'free',
+      emailLower,
+      targetRole,
+      targetPlan,
       user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.name || 'User')}`,
       user.lastActive || 'Just now',
       user.conversationCount || 0,
-      user.isDeveloper || false,
-      expiresAt
+      targetIsDeveloper,
+      expiresAt,
+      user.apiKey || null,
+      user.callbackUrl || null
     ]
     
     const result = await pool.query(query, values)
@@ -156,7 +201,9 @@ export async function POST(req: NextRequest) {
       lastActive: row.last_active,
       conversationCount: row.conversation_count,
       isDeveloper: row.is_developer,
-      expiresAt: row.expires_at
+      expiresAt: row.expires_at,
+      apiKey: row.api_key,
+      callbackUrl: row.callback_url
     }
     
     return NextResponse.json({ success: true, user: savedUser })

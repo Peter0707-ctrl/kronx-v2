@@ -16,6 +16,7 @@ export interface UserProfile {
   role: UserRole
   plan: SubscriptionPlan
   apiKey?: string
+  adminKey?: string
   isDeveloper?: boolean
   callbackUrl?: string
   picturesUsedToday: number

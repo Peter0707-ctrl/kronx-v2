@@ -910,7 +910,14 @@ export default function SettingsModal() {
                       const { generateApiKey } = useKronxStore.getState()
                       const key = generateApiKey()
                       const updatedUser = { ...user, apiKey: key }
-                      await fetch('/api/users', { method: 'POST', body: JSON.stringify(updatedUser) })
+                      await fetch('/api/users', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'x-admin-key': user?.adminKey || ''
+                        },
+                        body: JSON.stringify(updatedUser)
+                      })
                     }}
                     style={{
                       padding: '0 20px', borderRadius: '12px',
@@ -944,7 +951,14 @@ export default function SettingsModal() {
                   <button
                     onClick={async () => {
                       const updatedUser = { ...user }
-                      await fetch('/api/users', { method: 'POST', body: JSON.stringify(updatedUser) })
+                      await fetch('/api/users', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'x-admin-key': user?.adminKey || ''
+                        },
+                        body: JSON.stringify(updatedUser)
+                      })
                       alert(sw ? 'Callback URL imehifadhiwa!' : 'Callback URL saved!')
                     }}
                     style={{

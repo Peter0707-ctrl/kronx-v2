@@ -149,7 +149,10 @@ export const useKronxStore = create<KronxStore>()(
         // Automatically save new user to our admin users JSON endpoint
         fetch('/api/users', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-key': user.adminKey || ''
+          },
           body: JSON.stringify(user)
         }).catch(e => console.warn('Could not register user to DB:', e));
 

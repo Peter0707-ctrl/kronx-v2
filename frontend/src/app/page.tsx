@@ -234,7 +234,7 @@ export default function Home() {
         <Sidebar />
         <div className="main-panel">
           <TopBar />
-          {activeView === 'admin' ? (
+          {activeView === 'admin' && isAdmin ? (
             <AdminDashboard />
           ) : (
             <>
