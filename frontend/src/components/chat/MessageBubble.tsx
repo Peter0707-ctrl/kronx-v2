@@ -4,18 +4,135 @@ import { memo, useState } from 'react'
 import { Message } from '@/types'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import JSZip from 'jszip'
 import { useKronxStore } from '@/store/useKronxStore'
+
+function getExtensionForLang(lang?: string): string {
+  const l = (lang || '').toLowerCase()
+  switch (l) {
+    case 'html': case 'htm': return 'html'
+    case 'css': return 'css'
+    case 'javascript': case 'js': return 'js'
+    case 'typescript': case 'ts': return 'ts'
+    case 'jsx': return 'jsx'
+    case 'tsx': return 'tsx'
+    case 'python': case 'py': return 'py'
+    case 'json': return 'json'
+    case 'sql': return 'sql'
+    case 'sh': case 'bash': return 'sh'
+    case 'markdown': case 'md': return 'md'
+    case 'svg': return 'svg'
+    case 'xml': return 'xml'
+    case 'java': return 'java'
+    case 'c': return 'c'
+    case 'cpp': case 'c++': return 'cpp'
+    case 'go': return 'go'
+    case 'rust': case 'rs': return 'rs'
+    case 'php': return 'php'
+    default: return 'txt'
+  }
+}
+
+function downloadCodeFile(code: string, language: string, customFilename?: string) {
+  const ext = getExtensionForLang(language)
+  const name = customFilename || `copetra-code-${Date.now()}.${ext}`
+  const blob = new Blob([code], { type: 'text/plain;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = name
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
+
+async function downloadCodeAsZip(code: string, language: string, customFilename?: string) {
+  const zip = new JSZip()
+  const ext = getExtensionForLang(language)
+  const fileName = customFilename || `index.${ext}`
+  zip.file(fileName, code)
+  zip.file('README.md', `# Exported from Copetra AI\n\nFile: ${fileName}\nLanguage: ${language}\nDate: ${new Date().toLocaleString()}\nPowered by PJ COPETRANOVA`)
+  const zipBlob = await zip.generateAsync({ type: 'blob' })
+  const url = URL.createObjectURL(zipBlob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `${fileName.replace(/\.[^/.]+$/, '')}.zip`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
+
+async function downloadAllCodeAsProjectZip(markdownContent: string, projectTitle: string = 'copetra-project') {
+  const zip = new JSZip()
+  const codeBlockRegex = /```(\w+)?(?:\s+([^\n]+))?\n([\s\S]*?)```/g
+  let match
+  let fileIndex = 1
+  const usedNames = new Set<string>()
+
+  while ((match = codeBlockRegex.exec(markdownContent)) !== null) {
+    const rawLang = (match[1] || '').trim().toLowerCase()
+    const headerInfo = (match[2] || '').trim()
+    const codeContent = match[3] || ''
+
+    let filename = ''
+    if (headerInfo && headerInfo.includes('.')) {
+      filename = headerInfo
+    } else {
+      const ext = getExtensionForLang(rawLang)
+      if (ext === 'html' && !usedNames.has('index.html')) filename = 'index.html'
+      else if (ext === 'css' && !usedNames.has('style.css')) filename = 'style.css'
+      else if (ext === 'js' && !usedNames.has('app.js')) filename = 'app.js'
+      else if (ext === 'py' && !usedNames.has('main.py')) filename = 'main.py'
+      else filename = `code_${fileIndex}.${ext}`
+    }
+
+    if (usedNames.has(filename)) {
+      filename = `file_${fileIndex}_${filename}`
+    }
+    usedNames.add(filename)
+    zip.file(filename, codeContent)
+    fileIndex++
+  }
+
+  if (!usedNames.has('README.md')) {
+    zip.file('README.md', `# Copetra AI Project Export\n\nExported on: ${new Date().toLocaleString()}\nTotal Generated Files: ${fileIndex - 1}\n\nPowered by PJ COPETRANOVA`)
+  }
+
+  const zipBlob = await zip.generateAsync({ type: 'blob' })
+  const url = URL.createObjectURL(zipBlob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `${projectTitle.toLowerCase().replace(/[^a-z0-9]/g, '-')}.zip`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
 
 function CodeBlockRunner({ language, code, children, props }: any) {
   const [output, setOutput] = useState<string | null>(null)
   const [isRunning, setIsRunning] = useState(false)
+  const [activeTab, setActiveTab] = useState<'code' | 'preview'>('code')
+  const [copied, setCopied] = useState(false)
+  const [iframeKey, setIframeKey] = useState(0)
+
+  const lang = (language || '').toLowerCase()
+  const isHtmlPreviewable = ['html', 'htm', 'svg', 'xml'].includes(lang) || code.includes('<!DOCTYPE html>') || code.includes('<html') || code.includes('<svg')
+  const isRunnable = ['javascript', 'js', 'python', 'py'].includes(lang)
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(code)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   const handleRun = () => {
     setIsRunning(true)
     setOutput(null)
     setTimeout(() => {
       try {
-        const lang = language?.toLowerCase()
         if (lang === 'javascript' || lang === 'js') {
           const logs: string[] = []
           const originalLog = console.log
@@ -30,15 +147,6 @@ function CodeBlockRunner({ language, code, children, props }: any) {
           if (logs.length > 0) display += logs.join('\n')
           if (result !== undefined) display += (display ? '\nReturn: ' : '') + String(result)
           setOutput(display || 'Code executed successfully with no output.')
-        } else if (lang === 'html') {
-          const win = window.open()
-          if (win) {
-            win.document.write(code)
-            win.document.close()
-            setOutput('HTML preview opened in a new tab!')
-          } else {
-            setOutput('Failed to open preview tab. Please allow popups.')
-          }
         } else {
           setOutput(`[Running ${language} code...]\nSuccess: Executed mock ${language} environment successfully!`)
         }
@@ -50,24 +158,138 @@ function CodeBlockRunner({ language, code, children, props }: any) {
     }, 300)
   }
 
-  const isRunnable = ['javascript', 'js', 'html', 'python', 'py'].includes(language?.toLowerCase())
+  const handlePopout = () => {
+    const blob = new Blob([code], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank')
+  }
 
   return (
-    <div style={{ margin: '14px 0', border: '1px solid #1e293b', borderRadius: '12px', overflow: 'hidden' }}>
-      <div style={{ background: '#0f172a', padding: '8px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #1e293b' }}>
-        <span style={{ fontSize: '11px', color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '700', fontFamily: 'monospace' }}>{language || 'code'}</span>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          {isRunnable && (
-            <button onClick={handleRun} disabled={isRunning} style={{ background: '#7c6ef7', border: 'none', color: '#ffffff', fontSize: '11px', fontWeight: '600', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer' }}>
-              {isRunning ? 'Running...' : 'Run Code'}
+    <div style={{ margin: '16px 0', border: '1px solid #1e293b', borderRadius: '14px', overflow: 'hidden', boxShadow: '0 4px 16px rgba(0,0,0,0.1)' }}>
+      {/* Code Header Bar */}
+      <div style={{ background: '#0f172a', padding: '8px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #1e293b', flexWrap: 'wrap', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '11px', color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: '800', fontFamily: 'monospace' }}>
+            {language || 'code'}
+          </span>
+          {isHtmlPreviewable && (
+            <div style={{ display: 'inline-flex', background: 'rgba(255, 255, 255, 0.08)', borderRadius: '8px', padding: '2px' }}>
+              <button
+                onClick={() => setActiveTab('code')}
+                style={{
+                  background: activeTab === 'code' ? '#0284c7' : 'transparent',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '3px 9px',
+                  fontSize: '11px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s'
+                }}
+              >
+                &lt;/&gt; Code
+              </button>
+              <button
+                onClick={() => setActiveTab('preview')}
+                style={{
+                  background: activeTab === 'preview' ? '#10b981' : 'transparent',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '3px 9px',
+                  fontSize: '11px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s'
+                }}
+              >
+                👁️ Live Preview
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Action Controls */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+          {isHtmlPreviewable && activeTab === 'preview' && (
+            <>
+              <button
+                onClick={() => setIframeKey(k => k + 1)}
+                title="Reload Preview"
+                style={{ background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)', color: '#ffffff', fontSize: '11px', fontWeight: '600', padding: '4px 8px', borderRadius: '6px', cursor: 'pointer' }}
+              >
+                🔄 Refresh
+              </button>
+              <button
+                onClick={handlePopout}
+                title="Open Preview in Fullscreen Tab"
+                style={{ background: 'rgba(56, 189, 248, 0.2)', border: '1px solid rgba(56, 189, 248, 0.4)', color: '#38bdf8', fontSize: '11px', fontWeight: '700', padding: '4px 9px', borderRadius: '6px', cursor: 'pointer' }}
+              >
+                ⤢ Popout
+              </button>
+            </>
+          )}
+
+          {isRunnable && activeTab === 'code' && (
+            <button
+              onClick={handleRun}
+              disabled={isRunning}
+              style={{ background: '#7c6ef7', border: 'none', color: '#ffffff', fontSize: '11px', fontWeight: '700', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer' }}
+            >
+              {isRunning ? 'Running...' : '▶ Run'}
             </button>
           )}
-          <button onClick={() => navigator.clipboard.writeText(code)} style={{ background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)', color: '#ffffff', fontSize: '11px', fontWeight: '600', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer' }}>Copy code</button>
+
+          <button
+            onClick={() => downloadCodeFile(code, language)}
+            title="Download Code File"
+            style={{ background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)', color: '#ffffff', fontSize: '11px', fontWeight: '600', padding: '4px 9px', borderRadius: '6px', cursor: 'pointer' }}
+          >
+            📥 Download
+          </button>
+
+          <button
+            onClick={() => downloadCodeAsZip(code, language)}
+            title="Download as ZIP Archive"
+            style={{ background: 'rgba(16, 185, 129, 0.2)', border: '1px solid rgba(16, 185, 129, 0.4)', color: '#34d399', fontSize: '11px', fontWeight: '700', padding: '4px 9px', borderRadius: '6px', cursor: 'pointer' }}
+          >
+            📦 ZIP
+          </button>
+
+          <button
+            onClick={handleCopy}
+            style={{ background: copied ? '#10b981' : 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)', color: '#ffffff', fontSize: '11px', fontWeight: '600', padding: '4px 9px', borderRadius: '6px', cursor: 'pointer' }}
+          >
+            {copied ? '✓ Copied' : 'Copy'}
+          </button>
         </div>
       </div>
-      <pre style={{ background: '#090d16', padding: '16px', overflowX: 'auto', margin: '0', fontSize: '13px', fontFamily: 'Consolas, Monaco, monospace', color: '#f8fafc' }}>
-        <code style={{ color: '#38bdf8' }} {...props}>{children}</code>
-      </pre>
+
+      {/* Code View vs Live Preview Content */}
+      {isHtmlPreviewable && activeTab === 'preview' ? (
+        <div style={{ background: '#ffffff', width: '100%', minHeight: '340px', position: 'relative' }}>
+          <iframe
+            key={iframeKey}
+            srcDoc={code}
+            title="Live HTML Sandbox Preview"
+            sandbox="allow-scripts allow-modals allow-same-origin"
+            style={{
+              width: '100%',
+              minHeight: '340px',
+              height: '420px',
+              border: 'none',
+              display: 'block',
+              background: '#ffffff'
+            }}
+          />
+        </div>
+      ) : (
+        <pre style={{ background: '#090d16', padding: '16px', overflowX: 'auto', margin: '0', fontSize: '13px', fontFamily: 'Consolas, Monaco, monospace', color: '#f8fafc' }}>
+          <code style={{ color: '#38bdf8' }} {...props}>{children}</code>
+        </pre>
+      )}
+
       {output && (
         <div style={{ background: '#0d1117', borderTop: '1px solid #1e293b', padding: '12px 16px', fontSize: '12px', fontFamily: 'monospace', color: '#34d399', whiteSpace: 'pre-wrap' }}>
           <strong style={{ color: '#94a3b8', display: 'block', marginBottom: '4px', fontSize: '11px', textTransform: 'uppercase' }}>Console Output:</strong>
@@ -93,6 +315,7 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [editText, setEditText] = useState(message.content)
+  const [previewModalImg, setPreviewModalImg] = useState<string | null>(null)
 
   const handleCopy = () => {
     navigator.clipboard.writeText(message.content)
@@ -120,7 +343,6 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
         const goodSnippet = message.content.slice(0, 120).replace(/\n/g, ' ')
         const memoryItem = `User highly approved response to "${userQuery}". Preferred format starts like: "${goodSnippet}...". Prioritize this thorough and clear style of answer.`
         currentState.addMemory(memoryItem)
-        console.log('[Copetra Brain Saved Reinforcement Memory]:', memoryItem)
       }
     }
   }
@@ -135,7 +357,6 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
       const badSnippet = message.content.slice(0, 120).replace(/\n/g, ' ')
       const memoryItem = `User disliked response to "${userQuery}". Avoid answering like: "${badSnippet}...". Be more detailed, thorough, follow all instructions, and explain clearly.`
       currentState.addMemory(memoryItem)
-      console.log('[Copetra Brain Saved Reinforcement Memory]:', memoryItem)
     }
     if (onRegenerate) {
       onRegenerate()
@@ -183,13 +404,33 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
     }
   }
 
-  // Format user messages cleanly: hide raw Base64 images & raw document text dumps behind sleek badges
+  // Extract attached images & documents from user message
+  const attachedImages: string[] = []
+  const attachedDocs: string[] = []
+
   let displayContent = message.content.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+  
   if (!isAi) {
+    const imageRegex = /\[IMAGE:\s*(data:image\/[a-zA-Z]+;base64,[^\]]+)\]/g
+    let imgMatch
+    while ((imgMatch = imageRegex.exec(message.content)) !== null) {
+      attachedImages.push(imgMatch[1])
+    }
+
+    const docRegex = /\[(WORD|PDF|EXCEL|POWERPOINT|TEXT|CODE)\s+DOCUMENT ATTACHED:\s*([^\]]+)\]/gi
+    let docMatch
+    while ((docMatch = docRegex.exec(message.content)) !== null) {
+      attachedDocs.push(`${docMatch[1]}: ${docMatch[2]}`)
+    }
+
     displayContent = displayContent
-      .replace(/\[IMAGE: data:image\/[a-zA-Z]+;base64,.*?\]/g, '🖼️ [Attached Image]')
-      .replace(/\[(WORD|PDF|EXCEL|POWERPOINT|TEXT|CODE) DOCUMENT ATTACHED:\s*([^\]]+)\][\s\S]*/gi, '📄 [Attached Document: $2]')
+      .replace(/\[IMAGE:\s*data:image\/[a-zA-Z]+;base64,[^\]]+\]/g, '')
+      .replace(/\[(WORD|PDF|EXCEL|POWERPOINT|TEXT|CODE)\s+DOCUMENT ATTACHED:\s*([^\]]+)\][\s\S]*/gi, '')
+      .trim()
   }
+
+  // Check if AI response has multiple/any code blocks for project ZIP download
+  const hasCodeBlocks = isAi && /```\w+/i.test(message.content)
 
   return (
     <div className={`msg-row ${isAi ? 'msg-ai' : 'msg-user'}`}>
@@ -260,7 +501,78 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
           </div>
         ) : (
           <>
-            {message.content ? (
+            {/* User Attached Images Render View */}
+            {!isAi && attachedImages.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: displayContent ? '10px' : '0' }}>
+                {attachedImages.map((imgSrc, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      position: 'relative',
+                      borderRadius: '12px',
+                      overflow: 'hidden',
+                      border: '1px solid rgba(2, 132, 199, 0.2)',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                      maxWidth: '260px',
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => setPreviewModalImg(imgSrc)}
+                  >
+                    <img
+                      src={imgSrc}
+                      alt={`Attached image ${idx + 1}`}
+                      style={{ width: '100%', height: 'auto', display: 'block', maxHeight: '220px', objectFit: 'cover' }}
+                    />
+                    <div style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      background: 'linear-gradient(to top, rgba(15, 23, 42, 0.8), transparent)',
+                      padding: '6px 8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      color: '#ffffff',
+                      fontSize: '11px',
+                      fontWeight: '600'
+                    }}>
+                      <span>🔍 Click to Zoom</span>
+                      <span>Image #{idx + 1}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* User Attached Document Badges */}
+            {!isAi && attachedDocs.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: displayContent ? '10px' : '0' }}>
+                {attachedDocs.map((docTitle, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      background: 'rgba(2, 132, 199, 0.08)',
+                      border: '1px solid rgba(2, 132, 199, 0.25)',
+                      borderRadius: '10px',
+                      padding: '6px 12px',
+                      fontSize: '12.5px',
+                      fontWeight: '700',
+                      color: '#0369a1'
+                    }}
+                  >
+                    <span>📄</span>
+                    <span>{docTitle}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Markdown Message Body */}
+            {displayContent ? (
               <div className="markdown-body" style={{ color: '#000000', fontSize: '14.5px', lineHeight: '1.5', fontFamily: 'Calibri, sans-serif' }}>
                 <ReactMarkdown 
                   remarkPlugins={[remarkGfm]}
@@ -297,7 +609,7 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
                     },
                     img: ({node, src, alt, ...props}) => (
                       <span style={{ display: 'inline-block', margin: '14px 0', position: 'relative', maxWidth: '512px', width: '100%' }}>
-                        <img src={src} alt={alt} style={{ width: '100%', maxWidth: '512px', height: 'auto', borderRadius: '16px', border: '1px solid #bae6fd', boxShadow: '0 8px 24px rgba(2, 132, 199, 0.12)', display: 'block' }} />
+                        <img src={src} alt={alt} style={{ width: '100%', maxWidth: '512px', height: 'auto', borderRadius: '16px', border: '1px solid #bae6fd', boxShadow: '0 8px 24px rgba(2, 132, 199, 0.12)', display: 'block', cursor: 'pointer' }} onClick={() => src && setPreviewModalImg(src)} />
                         <a href={src} target="_blank" rel="noopener noreferrer" style={{ position: 'absolute', bottom: '12px', right: '12px', background: 'rgba(15, 23, 42, 0.85)', color: '#ffffff', padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px', backdropFilter: 'blur(8px)', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)', transition: 'all 0.2s ease-in-out' }} onMouseOver={e => e.currentTarget.style.background = '#0f172a'} onMouseOut={e => e.currentTarget.style.background = 'rgba(15, 23, 42, 0.85)'}>
                           <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -321,12 +633,41 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
               </div>
             ) : (
               <div style={{ color: '#94a3b8', fontSize: '13px', fontStyle: 'italic', padding: '4px 0' }}>
-                Response pending. Please resend your question.
+                {attachedImages.length > 0 || attachedDocs.length > 0 ? '' : 'Response pending. Please resend your question.'}
               </div>
             )}{isStreaming && isAi && message.content && (
               <span className="cursor-blink" aria-hidden="true">▌</span>
             )}
           </>
+        )}
+
+        {/* Global Multi-file Project ZIP Download Button */}
+        {hasCodeBlocks && !isStreaming && (
+          <div style={{ marginTop: '14px', paddingTop: '10px', borderTop: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+            <div style={{ fontSize: '12px', color: '#64748b', fontWeight: '600' }}>
+              📁 Generated Project Code Bundle:
+            </div>
+            <button
+              onClick={() => downloadAllCodeAsProjectZip(message.content)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                background: 'linear-gradient(135deg, #0284c7, #0369a1)',
+                color: '#ffffff',
+                border: 'none',
+                padding: '6px 14px',
+                borderRadius: '10px',
+                fontSize: '12px',
+                fontWeight: '700',
+                cursor: 'pointer',
+                boxShadow: '0 2px 8px rgba(2, 132, 199, 0.25)'
+              }}
+            >
+              <span>📦</span>
+              <span>Download Project as ZIP (.zip)</span>
+            </button>
+          </div>
         )}
 
         {/* 4 Action Buttons Bar on AI responses */}
@@ -430,6 +771,68 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
           </div>
         )}
       </div>
+
+      {/* Lightbox Modal for Zooming Attached/Generated Images */}
+      {previewModalImg && (
+        <div
+          onClick={() => setPreviewModalImg(null)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15, 23, 42, 0.9)',
+            backdropFilter: 'blur(8px)',
+            zIndex: 9999,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '24px'
+          }}
+        >
+          <div style={{ position: 'relative', maxWidth: '90vw', maxHeight: '85vh', display: 'flex', flexDirection: 'column', alignItems: 'center' }} onClick={e => e.stopPropagation()}>
+            <img
+              src={previewModalImg}
+              alt="Fullscreen Zoomed Preview"
+              style={{ maxWidth: '100%', maxHeight: '75vh', borderRadius: '16px', boxShadow: '0 20px 60px rgba(0,0,0,0.5)', objectFit: 'contain' }}
+            />
+            <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+              <a
+                href={previewModalImg}
+                download={`copetra-image-${Date.now()}.png`}
+                style={{
+                  background: '#0284c7',
+                  color: '#ffffff',
+                  padding: '10px 20px',
+                  borderRadius: '12px',
+                  fontSize: '13px',
+                  fontWeight: '700',
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                📥 Download Full Image
+              </a>
+              <button
+                onClick={() => setPreviewModalImg(null)}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  color: '#ffffff',
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  padding: '10px 18px',
+                  borderRadius: '12px',
+                  fontSize: '13px',
+                  fontWeight: '700',
+                  cursor: 'pointer'
+                }}
+              >
+                ✕ Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 })

@@ -93,6 +93,14 @@ export default function SettingsModal() {
   const [feedbackType, setFeedbackType] = useState<'bug' | 'feature' | 'other'>('feature')
   const [feedbackText, setFeedbackText] = useState('')
 
+  const [copiedKey, setCopiedKey] = useState(false)
+  const [savedWebhook, setSavedWebhook] = useState(false)
+  const [codeSnippetTab, setCodeSnippetTab] = useState<'curl' | 'js' | 'python'>('curl')
+  const [testPrompt, setTestPrompt] = useState('Explain artificial intelligence in one clear sentence.')
+  const [testOutput, setTestOutput] = useState<string | null>(null)
+  const [isTestingApi, setIsTestingApi] = useState(false)
+  const [testLatency, setTestLatency] = useState<number | null>(null)
+
   if (!settingsModalOpen) return null
 
   const isPremium = user?.plan === 'premium'
@@ -283,29 +291,28 @@ export default function SettingsModal() {
                 <div style={{ color: '#0ea5e9' }}>➔</div>
               </button>
 
-              {user?.isDeveloper && (
-                <button
-                  onClick={() => setActiveTab('developer')}
-                  style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    background: '#f8fafc', padding: '16px 20px', borderRadius: '16px',
-                    border: '1px solid #e2e8f0', cursor: 'pointer', textAlign: 'left',
-                    transition: 'background 0.2s', width: '100%'
-                  }}
-                  onMouseEnter={e => (e.currentTarget.style.background = '#f1f5f9')}
-                  onMouseLeave={e => (e.currentTarget.style.background = '#f8fafc')}
-                >
-                  <div>
-                    <div style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', marginBottom: '4px' }}>
-                      Developer API & Integrations
-                    </div>
-                    <div style={{ fontSize: '13px', color: '#64748b' }}>
-                      {sw ? 'Dhibiti API key na Webhooks' : 'Manage your API keys and Webhooks'}
-                    </div>
+              <button
+                onClick={() => setActiveTab('developer')}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  background: '#f8fafc', padding: '16px 20px', borderRadius: '16px',
+                  border: '1px solid #e2e8f0', cursor: 'pointer', textAlign: 'left',
+                  transition: 'background 0.2s', width: '100%'
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = '#f1f5f9')}
+                onMouseLeave={e => (e.currentTarget.style.background = '#f8fafc')}
+              >
+                <div>
+                  <div style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span>Developer API & Integrations</span>
+                    <span style={{ fontSize: '11px', background: 'linear-gradient(135deg, #0ea5e9, #0284c7)', color: '#fff', padding: '2px 8px', borderRadius: '12px', fontWeight: '700' }}>API v2</span>
                   </div>
-                  <div style={{ color: '#0ea5e9' }}>➔</div>
-                </button>
-              )}
+                  <div style={{ fontSize: '13px', color: '#64748b' }}>
+                    {sw ? 'Dhibiti API key, Webhooks na majaribio ya Moja kwa Moja' : 'Manage API keys, Webhooks, and Live In-App Gateway Testing'}
+                  </div>
+                </div>
+                <div style={{ color: '#0ea5e9' }}>➔</div>
+              </button>
             </div>
           )}
 
@@ -873,110 +880,346 @@ export default function SettingsModal() {
           {/* ═══════════════════════════════════════════
               TAB 4: DEVELOPER & API INTEGRATION
           ═══════════════════════════════════════════ */}
-          {activeTab === 'developer' && user?.isDeveloper && (
+          {activeTab === 'developer' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <div style={{
                 background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
                 borderRadius: '20px', padding: '24px',
                 border: '1px solid #bae6fd'
               }}>
-                <h3 style={{ margin: '0 0 8px 0', color: '#0c4a6e', fontSize: '18px', fontWeight: '800' }}>
-                  {sw ? 'PJKRONX Developer Gateway' : 'PJKRONX Developer Gateway'}
-                </h3>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <h3 style={{ margin: 0, color: '#0c4a6e', fontSize: '18px', fontWeight: '800' }}>
+                    PJ COPETRANOVA Developer Gateway
+                  </h3>
+                  <span style={{ fontSize: '12px', background: user?.isDeveloper ? '#10b981' : '#64748b', color: '#fff', padding: '3px 10px', borderRadius: '12px', fontWeight: '700' }}>
+                    {user?.isDeveloper ? (sw ? '✓ Imeamilishwa' : '✓ Active') : (sw ? 'Hijaamilishwa' : 'Inactive')}
+                  </span>
+                </div>
                 <p style={{ margin: 0, color: '#0369a1', fontSize: '13px', lineHeight: '1.6' }}>
                   {sw 
-                    ? 'Tumia API zetu kuziunganisha na mifumo yako mingine. Tunatumia Bearer Token authentication na asynchronous webhooks.'
-                    : 'Integrate PJKRONX into your own systems using our Developer API. We use Bearer Token authentication and asynchronous webhooks.'}
+                    ? 'Unganisha akili bandia ya Copetra AI kwenye tovuti, programu za simu, mifumo ya chuo kikuu au roboti zako kwa kutumia REST API na Webhooks.'
+                    : 'Integrate Copetra AI into your websites, mobile apps, university portals, backend systems, or automated bots using REST API & Webhooks.'}
                 </p>
               </div>
 
+              {/* Developer Mode Toggle */}
+              <div style={{
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderRadius: '16px',
+                padding: '16px 20px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '12px'
+              }}>
+                <div>
+                  <div style={{ fontSize: '14px', fontWeight: '800', color: '#0f172a', marginBottom: '2px' }}>
+                    {sw ? 'Hali ya Kidiwelopa (Developer Mode)' : 'Developer Mode'}
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#64748b' }}>
+                    {sw ? 'Washa ili kupata funguo za API na huduma za kujiunganisha' : 'Enable to generate API keys, configure webhooks, and call endpoints'}
+                  </div>
+                </div>
+                <button
+                  onClick={async () => {
+                    const newDevState = !user?.isDeveloper
+                    useKronxStore.getState().setDeveloperMode(newDevState)
+                    if (newDevState && !user?.apiKey) {
+                      useKronxStore.getState().generateApiKey()
+                    }
+                    const latestUser = useKronxStore.getState().user
+                    await fetch('/api/users', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'x-admin-key': user?.adminKey || ''
+                      },
+                      body: JSON.stringify(latestUser)
+                    })
+                  }}
+                  style={{
+                    background: user?.isDeveloper ? '#0284c7' : '#e2e8f0',
+                    color: user?.isDeveloper ? '#ffffff' : '#475569',
+                    border: 'none',
+                    borderRadius: '20px',
+                    padding: '8px 18px',
+                    fontSize: '13px',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  {user?.isDeveloper ? (sw ? 'Imewashwa (Zima)' : 'Enabled (Turn Off)') : (sw ? '⚡ Washa Hali ya Developer' : '⚡ Enable Developer Mode')}
+                </button>
+              </div>
+
+              {/* API Key Section */}
               <div>
                 <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#0f172a', marginBottom: '8px' }}>
-                  {sw ? 'Ufunguo wa API (API Key)' : 'Your API Key'}
+                  {sw ? 'Ufunguo wa API (API Key)' : 'Your API Key (Bearer Token)'}
                 </label>
-                <div style={{ display: 'flex', gap: '10px' }}>
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                   <input
                     type="text"
                     readOnly
-                    value={user?.apiKey || '••••••••••••••••••••••••••••'}
+                    value={user?.apiKey || (user?.isDeveloper ? 'Click Generate to create API Key' : 'Enable Developer Mode first')}
                     style={{
-                      flex: 1, padding: '14px', borderRadius: '12px',
+                      flex: 1, minWidth: '220px', padding: '12px 14px', borderRadius: '12px',
                       border: '1px solid #cbd5e1', background: '#f8fafc',
-                      color: '#475569', fontSize: '14px', fontFamily: 'monospace'
+                      color: user?.apiKey ? '#0f172a' : '#94a3b8', fontSize: '13px', fontFamily: 'monospace'
                     }}
                   />
+                  {user?.apiKey && (
+                    <button
+                      onClick={() => {
+                        if (user?.apiKey) {
+                          navigator.clipboard.writeText(user.apiKey)
+                          setCopiedKey(true)
+                          setTimeout(() => setCopiedKey(false), 2000)
+                        }
+                      }}
+                      style={{
+                        padding: '0 16px', borderRadius: '12px',
+                        background: copiedKey ? '#10b981' : '#f1f5f9',
+                        color: copiedKey ? '#fff' : '#0f172a',
+                        border: '1px solid #cbd5e1',
+                        fontWeight: '700', fontSize: '12px', cursor: 'pointer', transition: '0.2s'
+                      }}
+                    >
+                      {copiedKey ? '✓ Copied' : '📋 Copy'}
+                    </button>
+                  )}
                   <button
                     onClick={async () => {
-                      const { generateApiKey } = useKronxStore.getState()
+                      const { generateApiKey, setDeveloperMode } = useKronxStore.getState()
+                      setDeveloperMode(true)
                       const key = generateApiKey()
-                      const updatedUser = { ...user, apiKey: key }
+                      const latestUser = useKronxStore.getState().user
                       await fetch('/api/users', {
                         method: 'POST',
                         headers: {
                           'Content-Type': 'application/json',
                           'x-admin-key': user?.adminKey || ''
                         },
-                        body: JSON.stringify(updatedUser)
+                        body: JSON.stringify(latestUser)
                       })
+                      alert(sw ? 'API Key mpya imetengenezwa na kuhifadhiwa!' : 'New API Key generated and saved successfully!')
                     }}
                     style={{
-                      padding: '0 20px', borderRadius: '12px',
-                      background: '#0ea5e9', color: '#fff', border: 'none',
-                      fontWeight: '700', cursor: 'pointer', transition: '0.2s'
+                      padding: '0 18px', borderRadius: '12px',
+                      background: 'linear-gradient(135deg, #0284c7, #0369a1)', color: '#fff', border: 'none',
+                      fontWeight: '700', fontSize: '12px', cursor: 'pointer', transition: '0.2s',
+                      boxShadow: '0 2px 8px rgba(2, 132, 199, 0.25)'
                     }}
-                    onMouseEnter={e => e.currentTarget.style.background = '#0284c7'}
-                    onMouseLeave={e => e.currentTarget.style.background = '#0ea5e9'}
                   >
-                    {sw ? 'Tengeneza Mpya' : 'Generate'}
+                    ⚡ {user?.apiKey ? (sw ? 'Tengeneza Mpya' : 'Regenerate') : (sw ? 'Tengeneza Key' : 'Generate Key')}
                   </button>
                 </div>
               </div>
 
+              {/* Callback Webhook URL */}
               <div>
                 <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#0f172a', marginBottom: '8px' }}>
-                  {sw ? 'URL ya Kurudisha Majibu (Callback URL)' : 'Callback URL (Webhook)'}
+                  {sw ? 'URL ya Kurudisha Majibu (Webhook Callback URL)' : 'Callback Webhook URL (Optional for Async)'}
                 </label>
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <input
                     type="url"
-                    placeholder="https://your-system.com/api/webhook"
+                    placeholder="https://your-domain.com/api/webhook"
                     value={user?.callbackUrl || ''}
                     onChange={(e) => useKronxStore.getState().updateCallbackUrl(e.target.value)}
                     style={{
-                      flex: 1, padding: '14px', borderRadius: '12px',
+                      flex: 1, padding: '12px 14px', borderRadius: '12px',
                       border: '1px solid #cbd5e1', background: '#fff',
-                      color: '#0f172a', fontSize: '14px'
+                      color: '#0f172a', fontSize: '13px'
                     }}
                   />
                   <button
                     onClick={async () => {
-                      const updatedUser = { ...user }
+                      const latestUser = useKronxStore.getState().user
                       await fetch('/api/users', {
                         method: 'POST',
                         headers: {
                           'Content-Type': 'application/json',
                           'x-admin-key': user?.adminKey || ''
                         },
-                        body: JSON.stringify(updatedUser)
+                        body: JSON.stringify(latestUser)
                       })
-                      alert(sw ? 'Callback URL imehifadhiwa!' : 'Callback URL saved!')
+                      setSavedWebhook(true)
+                      setTimeout(() => setSavedWebhook(false), 2500)
                     }}
                     style={{
                       padding: '0 20px', borderRadius: '12px',
-                      background: '#10b981', color: '#fff', border: 'none',
-                      fontWeight: '700', cursor: 'pointer', transition: '0.2s'
+                      background: savedWebhook ? '#10b981' : '#059669', color: '#fff', border: 'none',
+                      fontWeight: '700', fontSize: '12px', cursor: 'pointer', transition: '0.2s'
                     }}
-                    onMouseEnter={e => e.currentTarget.style.background = '#059669'}
-                    onMouseLeave={e => e.currentTarget.style.background = '#10b981'}
                   >
-                    {sw ? 'Hifadhi' : 'Save'}
+                    {savedWebhook ? (sw ? '✓ Imehifadhiwa' : '✓ Saved') : (sw ? 'Hifadhi' : 'Save')}
                   </button>
                 </div>
-                <p style={{ fontSize: '12px', color: '#64748b', marginTop: '8px' }}>
-                  {sw 
-                    ? 'Tutatumia URL hii kurudisha majibu ya AI yako (POST request).'
-                    : 'We will POST asynchronous AI responses to this URL.'}
-                </p>
+              </div>
+
+              {/* Code Snippets Section */}
+              <div style={{ background: '#090d16', borderRadius: '16px', border: '1px solid #1e293b', overflow: 'hidden' }}>
+                <div style={{ background: '#0f172a', padding: '8px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #1e293b' }}>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    {(['curl', 'js', 'python'] as const).map(tab => (
+                      <button
+                        key={tab}
+                        onClick={() => setCodeSnippetTab(tab)}
+                        style={{
+                          background: codeSnippetTab === tab ? '#0284c7' : 'transparent',
+                          color: '#ffffff',
+                          border: 'none',
+                          borderRadius: '6px',
+                          padding: '4px 10px',
+                          fontSize: '11px',
+                          fontWeight: '700',
+                          textTransform: 'uppercase',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {tab}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => {
+                      const key = user?.apiKey || 'YOUR_API_KEY'
+                      const snippets = {
+                        curl: `curl -X POST https://kronx-v2-production.up.railway.app/api/gateway \\\n  -H "Authorization: Bearer ${key}" \\\n  -H "Content-Type: application/json" \\\n  -d '{"message": "Hello Copetra AI", "mode": "Developer"}'`,
+                        js: `const res = await fetch("https://kronx-v2-production.up.railway.app/api/gateway", {\n  method: "POST",\n  headers: {\n    "Authorization": "Bearer ${key}",\n    "Content-Type": "application/json"\n  },\n  body: JSON.stringify({\n    message: "Hello Copetra AI",\n    mode: "Developer"\n  })\n});\nconst data = await res.json();\nconsole.log(data);`,
+                        python: `import requests\n\nurl = "https://kronx-v2-production.up.railway.app/api/gateway"\nheaders = {\n    "Authorization": "Bearer ${key}",\n    "Content-Type": "application/json"\n}\npayload = {\n    "message": "Hello Copetra AI",\n    "mode": "Developer"\n}\n\nresponse = requests.post(url, json=payload, headers=headers)\nprint(response.json())`
+                      }
+                      navigator.clipboard.writeText(snippets[codeSnippetTab])
+                      alert(sw ? 'Msimbo umenakiliwa!' : 'Code snippet copied to clipboard!')
+                    }}
+                    style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '3px 8px', borderRadius: '6px', fontSize: '11px', cursor: 'pointer' }}
+                  >
+                    📋 Copy Snippet
+                  </button>
+                </div>
+                <pre style={{ margin: 0, padding: '14px', color: '#38bdf8', fontSize: '12px', fontFamily: 'Consolas, Monaco, monospace', overflowX: 'auto' }}>
+                  {codeSnippetTab === 'curl' && (
+`curl -X POST https://kronx-v2-production.up.railway.app/api/gateway \\
+  -H "Authorization: Bearer ${user?.apiKey || 'YOUR_API_KEY'}" \\
+  -H "Content-Type: application/json" \\
+  -d '{"message": "Hello Copetra AI", "mode": "Developer"}'`
+                  )}
+                  {codeSnippetTab === 'js' && (
+`const res = await fetch("https://kronx-v2-production.up.railway.app/api/gateway", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer ${user?.apiKey || 'YOUR_API_KEY'}",
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    message: "Hello Copetra AI",
+    mode: "Developer"
+  })
+});
+const data = await res.json();
+console.log(data);`
+                  )}
+                  {codeSnippetTab === 'python' && (
+`import requests
+
+url = "https://kronx-v2-production.up.railway.app/api/gateway"
+headers = {
+    "Authorization": "Bearer ${user?.apiKey || 'YOUR_API_KEY'}",
+    "Content-Type": "application/json"
+}
+payload = {
+    "message": "Hello Copetra AI",
+    "mode": "Developer"
+}
+
+response = requests.post(url, json=payload, headers=headers)
+print(response.json())`
+                  )}
+                </pre>
+              </div>
+
+              {/* Live In-App Gateway Tester */}
+              <div style={{ background: '#f0fdf4', border: '1.5px solid #86efac', borderRadius: '16px', padding: '18px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                  <div style={{ fontWeight: '800', color: '#166534', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span>⚡ Live In-App Gateway Test Runner</span>
+                    {testLatency !== null && (
+                      <span style={{ fontSize: '11px', background: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: '8px', border: '1px solid #86efac' }}>
+                        ⚡ {testLatency}ms
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+                  <input
+                    type="text"
+                    value={testPrompt}
+                    onChange={e => setTestPrompt(e.target.value)}
+                    placeholder="Enter test prompt..."
+                    style={{ flex: 1, padding: '10px 12px', borderRadius: '10px', border: '1px solid #86efac', background: '#ffffff', fontSize: '13px', color: '#0f172a' }}
+                  />
+                  <button
+                    disabled={isTestingApi || !testPrompt.trim()}
+                    onClick={async () => {
+                      setIsTestingApi(true)
+                      setTestOutput(null)
+                      const start = Date.now()
+                      try {
+                        const key = user?.apiKey || 'kx-live-tester'
+                        const res = await fetch('/api/gateway', {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${key}`
+                          },
+                          body: JSON.stringify({
+                            message: testPrompt,
+                            mode: 'Developer'
+                          })
+                        })
+                        const latency = Date.now() - start
+                        setTestLatency(latency)
+                        const data = await res.json()
+                        setTestOutput(JSON.stringify(data, null, 2))
+                      } catch (err: any) {
+                        setTestOutput(`Error testing gateway: ${err.message}`)
+                      } finally {
+                        setIsTestingApi(false)
+                      }
+                    }}
+                    style={{
+                      background: '#16a34a',
+                      color: '#ffffff',
+                      border: 'none',
+                      padding: '0 16px',
+                      borderRadius: '10px',
+                      fontSize: '12px',
+                      fontWeight: '700',
+                      cursor: isTestingApi ? 'wait' : 'pointer'
+                    }}
+                  >
+                    {isTestingApi ? 'Testing...' : '🚀 Test Gateway'}
+                  </button>
+                </div>
+
+                {testOutput && (
+                  <pre style={{
+                    margin: 0,
+                    padding: '12px',
+                    borderRadius: '10px',
+                    background: '#090d16',
+                    color: '#4ade80',
+                    fontSize: '12px',
+                    fontFamily: 'Consolas, Monaco, monospace',
+                    maxHeight: '220px',
+                    overflowY: 'auto'
+                  }}>
+                    {testOutput}
+                  </pre>
+                )}
               </div>
             </div>
           )}

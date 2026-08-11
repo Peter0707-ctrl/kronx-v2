@@ -516,46 +516,67 @@ export default function InputBar({ onSend }: Props) {
         background: 'var(--primary-bg)',
       }}
     >
-      {/* Attached File Preview Badge */}
+      {/* Attached File Preview Card */}
       {attachedFile && (
         <div
           style={{
             display: 'inline-flex',
             alignItems: 'center',
-            gap: '8px',
-            background: 'rgba(37, 99, 235, 0.08)',
-            border: '1px solid rgba(37, 99, 235, 0.2)',
+            gap: '12px',
+            background: 'rgba(2, 132, 199, 0.08)',
+            border: '1.5px solid rgba(2, 132, 199, 0.3)',
             borderRadius: '16px',
-            padding: '6px 12px',
-            marginBottom: '8px',
+            padding: '8px 14px',
+            marginBottom: '10px',
             fontSize: '13px',
-            color: '#1e40af',
-            fontWeight: 500,
+            color: '#0369a1',
+            boxShadow: '0 4px 14px rgba(2, 132, 199, 0.1)',
+            backdropFilter: 'blur(10px)',
+            maxWidth: '100%'
           }}
         >
           {attachedFile.preview ? (
-            <img
-              src={attachedFile.preview}
-              alt="Uploaded file preview"
-              style={{ width: '24px', height: '24px', borderRadius: '4px', objectFit: 'cover' }}
-            />
+            <div style={{ position: 'relative', width: '48px', height: '48px', borderRadius: '10px', overflow: 'hidden', border: '1px solid #bae6fd', flexShrink: 0 }}>
+              <img
+                src={attachedFile.preview}
+                alt="Uploaded file preview"
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            </div>
           ) : (
-            <span>{getCategoryIcon(attachedFile.category)}</span>
+            <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(2, 132, 199, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', flexShrink: 0 }}>
+              {getCategoryIcon(attachedFile.category)}
+            </div>
           )}
-          <span style={{ maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {attachedFile.name} ({attachedFile.category.toUpperCase()})
-          </span>
+          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+            <span style={{ maxWidth: '280px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: '700', color: '#0f172a', fontSize: '13px' }}>
+              {attachedFile.name}
+            </span>
+            <span style={{ fontSize: '11px', color: '#0284c7', fontWeight: '600' }}>
+              {attachedFile.category === 'image' ? '🖼️ Image attached for AI Vision analysis' : `📄 ${attachedFile.category.toUpperCase()} Document ready`}
+            </span>
+          </div>
           <button
             onClick={() => setAttachedFile(null)}
             style={{
-              background: 'none',
+              background: 'rgba(15, 23, 42, 0.06)',
               border: 'none',
-              color: '#1e40af',
+              borderRadius: '50%',
+              width: '24px',
+              height: '24px',
+              color: '#475569',
               cursor: 'pointer',
               fontWeight: 'bold',
-              padding: '0 4px',
-              fontSize: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '12px',
+              marginLeft: '4px',
+              flexShrink: 0,
+              transition: 'background 0.2s'
             }}
+            onMouseOver={e => (e.currentTarget.style.background = 'rgba(239, 68, 68, 0.15)', e.currentTarget.style.color = '#ef4444')}
+            onMouseOut={e => (e.currentTarget.style.background = 'rgba(15, 23, 42, 0.06)', e.currentTarget.style.color = '#475569')}
             title="Remove attachment"
           >
             ✕

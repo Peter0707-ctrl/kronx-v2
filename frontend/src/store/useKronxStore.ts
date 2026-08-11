@@ -38,6 +38,7 @@ interface KronxStore {
   upgradeSubscription: (plan: 'free' | 'plus' | 'premium') => void
   generateApiKey: () => string
   updateCallbackUrl: (url: string) => void
+  setDeveloperMode: (isDev: boolean) => void
   canGeneratePicture: () => boolean
   canGenerateVideo: () => boolean
   canSendMessage: () => boolean
@@ -184,6 +185,11 @@ export const useKronxStore = create<KronxStore>()(
       updateCallbackUrl: (url: string) => {
         set(s => ({
           user: s.user ? { ...s.user, callbackUrl: url } : null
+        }))
+      },
+      setDeveloperMode: (isDev: boolean) => {
+        set(s => ({
+          user: s.user ? { ...s.user, isDeveloper: isDev } : null
         }))
       },
       systemDisabled: false,

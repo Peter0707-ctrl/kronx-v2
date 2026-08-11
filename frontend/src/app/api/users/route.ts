@@ -138,15 +138,15 @@ export async function POST(req: NextRequest) {
       // Check if user already exists in DB to prevent escalation
       const existing = await pool.query('SELECT role, plan, is_developer FROM users WHERE LOWER(email) = $1', [emailLower])
       if (existing.rows.length > 0) {
-        // Preserve existing values to prevent any modification to role/plan/developer status
+        // Preserve existing values to prevent any modification to role/plan
         targetRole = existing.rows[0].role || 'user'
         targetPlan = existing.rows[0].plan || 'free'
-        targetIsDeveloper = existing.rows[0].is_developer || false
+        targetIsDeveloper = user.isDeveloper !== undefined ? Boolean(user.isDeveloper) : (existing.rows[0].is_developer || false)
       } else {
         // New user registration - force free tier and user role
         targetRole = 'user'
         targetPlan = 'free'
-        targetIsDeveloper = false
+        targetIsDeveloper = user.isDeveloper ? true : false
       }
     }
 
