@@ -100,6 +100,7 @@ export default function SettingsModal() {
   const [testOutput, setTestOutput] = useState<string | null>(null)
   const [isTestingApi, setIsTestingApi] = useState(false)
   const [testLatency, setTestLatency] = useState<number | null>(null)
+  const [streamChecked, setStreamChecked] = useState(true)
 
   if (!settingsModalOpen) return null
 
@@ -1088,12 +1089,12 @@ export default function SettingsModal() {
                     onClick={() => {
                       const key = user?.apiKey || 'YOUR_API_KEY'
                       const snippets = {
-                        curl: `curl -X POST https://kronx-v2-production.up.railway.app/api/gateway \\\n  -H "Authorization: Bearer ${key}" \\\n  -H "Content-Type: application/json" \\\n  -d '{"message": "Hello Copetra AI", "mode": "Developer"}'`,
-                        js: `const res = await fetch("https://kronx-v2-production.up.railway.app/api/gateway", {\n  method: "POST",\n  headers: {\n    "Authorization": "Bearer ${key}",\n    "Content-Type": "application/json"\n  },\n  body: JSON.stringify({\n    message: "Hello Copetra AI",\n    mode: "Developer"\n  })\n});\nconst data = await res.json();\nconsole.log(data);`,
-                        python: `import requests\n\nurl = "https://kronx-v2-production.up.railway.app/api/gateway"\nheaders = {\n    "Authorization": "Bearer ${key}",\n    "Content-Type": "application/json"\n}\npayload = {\n    "message": "Hello Copetra AI",\n    "mode": "Developer"\n}\n\nresponse = requests.post(url, json=payload, headers=headers)\nprint(response.json())`
+                        curl: `curl -X POST https://kronx-v2-production.up.railway.app/api/gateway \\\n  -H "Authorization: Bearer ${key}" \\\n  -H "Content-Type: application/json" \\\n  -d '{\n    "model": "copetra-ai",\n    "messages": [{"role": "user", "content": "Explain quantum computing in one sentence."}],\n    "stream": true\n  }'`,
+                        js: `import OpenAI from 'openai';\n\nconst openai = new OpenAI({\n  apiKey: '${key}',\n  baseURL: 'https://kronx-v2-production.up.railway.app/api' // Points to Copetra Gateway\n});\n\nconst stream = await openai.chat.completions.create({\n  model: 'copetra-ai',\n  messages: [{ role: 'user', content: 'Explain coding.' }],\n  stream: true,\n});\n\nfor await (const chunk of stream) {\n  process.stdout.write(chunk.choices[0]?.delta?.content || '');\n}`,
+                        python: `from openai import OpenAI\n\nclient = OpenAI(\n    api_key="${key}",\n    base_url="https://kronx-v2-production.up.railway.app/api" # Points to Copetra Gateway\n)\n\nstream = client.chat.completions.create(\n    model="copetra-ai",\n    messages=[{"role": "user", "content": "Explain AI."}],\n    stream=True\n)\n\nfor chunk in stream:\n    print(chunk.choices[0].delta.content or "", end="")`
                       }
                       navigator.clipboard.writeText(snippets[codeSnippetTab])
-                      alert(sw ? 'Msimbo umenakiliwa!' : 'Code snippet copied to clipboard!')
+                      alert(sw ? 'Msimbo umenakiliwa!' : 'OpenAI-compatible code snippet copied to clipboard!')
                     }}
                     style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '3px 8px', borderRadius: '6px', fontSize: '11px', cursor: 'pointer' }}
                   >
@@ -1105,38 +1106,46 @@ export default function SettingsModal() {
 `curl -X POST https://kronx-v2-production.up.railway.app/api/gateway \\
   -H "Authorization: Bearer ${user?.apiKey || 'YOUR_API_KEY'}" \\
   -H "Content-Type: application/json" \\
-  -d '{"message": "Hello Copetra AI", "mode": "Developer"}'`
+  -d '{
+    "model": "copetra-ai",
+    "messages": [{"role": "user", "content": "Explain quantum computing in one sentence."}],
+    "stream": true
+  }'`
                   )}
                   {codeSnippetTab === 'js' && (
-`const res = await fetch("https://kronx-v2-production.up.railway.app/api/gateway", {
-  method: "POST",
-  headers: {
-    "Authorization": "Bearer ${user?.apiKey || 'YOUR_API_KEY'}",
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-    message: "Hello Copetra AI",
-    mode: "Developer"
-  })
+`import OpenAI from 'openai';
+
+const openai = new OpenAI({
+  apiKey: '${user?.apiKey || 'YOUR_API_KEY'}',
+  baseURL: 'https://kronx-v2-production.up.railway.app/api' // Points to Copetra Gateway
 });
-const data = await res.json();
-console.log(data);`
+
+const stream = await openai.chat.completions.create({
+  model: 'copetra-ai',
+  messages: [{ role: 'user', content: 'Explain coding.' }],
+  stream: true,
+});
+
+for await (const chunk of stream) {
+  process.stdout.write(chunk.choices[0]?.delta?.content || '');
+}`
                   )}
                   {codeSnippetTab === 'python' && (
-`import requests
+`from openai import OpenAI
 
-url = "https://kronx-v2-production.up.railway.app/api/gateway"
-headers = {
-    "Authorization": "Bearer ${user?.apiKey || 'YOUR_API_KEY'}",
-    "Content-Type": "application/json"
-}
-payload = {
-    "message": "Hello Copetra AI",
-    "mode": "Developer"
-}
+client = OpenAI(
+    api_key="${user?.apiKey || 'YOUR_API_KEY'}",
+    base_url="https://kronx-v2-production.up.railway.app/api" # Points to Copetra Gateway
+)
 
-response = requests.post(url, json=payload, headers=headers)
-print(response.json())`
+stream = client.chat.completions.create(
+    model="copetra-ai",
+    messages=[{"role": "user", "content": "Explain AI."}],
+    stream=True
+)
+
+for chunk in stream:
+    print(chunk.choices[0].delta.content or "", end="")`
                   )}
                 </pre>
               </div>
@@ -1152,6 +1161,15 @@ print(response.json())`
                       </span>
                     )}
                   </div>
+                  <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#166534', fontWeight: '700', cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={streamChecked}
+                      onChange={e => setStreamChecked(e.target.checked)}
+                      style={{ cursor: 'pointer' }}
+                    />
+                    Stream Response (SSE)
+                  </label>
                 </div>
                 <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
                   <input
@@ -1176,14 +1194,58 @@ print(response.json())`
                             'Authorization': `Bearer ${key}`
                           },
                           body: JSON.stringify({
-                            message: testPrompt,
-                            mode: 'Developer'
+                            messages: [{ role: 'user', content: testPrompt }],
+                            model: 'copetra-ai',
+                            stream: streamChecked
                           })
                         })
+                        
                         const latency = Date.now() - start
                         setTestLatency(latency)
-                        const data = await res.json()
-                        setTestOutput(JSON.stringify(data, null, 2))
+
+                        if (!res.ok) {
+                          const errJson = await res.json().catch(() => ({}))
+                          setTestOutput(JSON.stringify(errJson, null, 2))
+                          setIsTestingApi(false)
+                          return
+                        }
+
+                        if (streamChecked && res.body) {
+                          const reader = res.body.getReader()
+                          const decoder = new TextDecoder()
+                          let buffer = ''
+                          setTestOutput('')
+                          
+                          while (true) {
+                            const { done, value } = await reader.read()
+                            if (done) break
+                            
+                            buffer += decoder.decode(value, { stream: true })
+                            const lines = buffer.split('\n')
+                            buffer = lines.pop() || ''
+                            
+                            for (const line of lines) {
+                              const cleanLine = line.trim()
+                              if (cleanLine.startsWith('data: ')) {
+                                const dataStr = cleanLine.slice(6)
+                                if (dataStr === '[DONE]') {
+                                  setTestOutput(prev => prev + '\n\n[DONE]')
+                                  continue
+                                }
+                                try {
+                                  const parsed = JSON.parse(dataStr)
+                                  const token = parsed.choices?.[0]?.delta?.content || ''
+                                  setTestOutput(prev => prev + token)
+                                } catch (e) {
+                                  // skip
+                                }
+                              }
+                            }
+                          }
+                        } else {
+                          const data = await res.json()
+                          setTestOutput(JSON.stringify(data, null, 2))
+                        }
                       } catch (err: any) {
                         setTestOutput(`Error testing gateway: ${err.message}`)
                       } finally {
@@ -1215,7 +1277,8 @@ print(response.json())`
                     fontSize: '12px',
                     fontFamily: 'Consolas, Monaco, monospace',
                     maxHeight: '220px',
-                    overflowY: 'auto'
+                    overflowY: 'auto',
+                    whiteSpace: 'pre-wrap'
                   }}>
                     {testOutput}
                   </pre>

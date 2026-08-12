@@ -323,6 +323,135 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
     setTimeout(() => setCopied(false), 2000)
   }
 
+  const markdownToHtml = (md: string): string => {
+    if (!md) return ''
+    return md
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+      .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+      .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/^\s*-\s+(.*$)/gim, '<ul><li>$1</li></ul>')
+      .replace(/<\/ul>\s*<ul>/g, '')
+      .replace(/```([\s\S]+?)```/g, '<pre>$1</pre>')
+      .replace(/\|(.+?)\|/g, (match) => {
+        if (/^\|[ :-|]+?\|$/.test(match)) return ''
+        const cells = match.split('|').slice(1, -1).map(c => c.trim())
+        return `<tr>${cells.map(c => `<td>${c}</td>`).join('')}</tr>`
+      })
+      .replace(/(<tr>[\s\S]+?<\/tr>)/g, '<table>$1</table>')
+      .replace(/<\/table>\s*<table>/g, '')
+      .replace(/\n/g, '<br/>')
+  }
+
+  const handleExportDocx = () => {
+    const htmlContent = `
+      <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+      <head>
+        <title>Copetra AI Export</title>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; }
+          h1, h2, h3 { color: #0284c7; margin-top: 18px; margin-bottom: 8px; }
+          strong { color: #0f172a; }
+          pre { background-color: #f1f5f9; padding: 12px; border-radius: 6px; font-family: Courier New, Courier, monospace; }
+          table { border-collapse: collapse; width: 100%; margin: 15px 0; }
+          th, td { border: 1px solid #cbd5e1; padding: 8px; text-align: left; }
+          th { background-color: #f8fafc; font-weight: bold; }
+        </style>
+      </head>
+      <body>
+        <div style="border-bottom: 2px solid #0284c7; padding-bottom: 10px; margin-bottom: 20px;">
+          <h2 style="margin: 0; color: #0284c7;">Copetra AI - Deep Research Report</h2>
+          <p style="margin: 4px 0 0 0; color: #64748b; font-size: 12px;">Exported on ${new Date().toLocaleString()}</p>
+        </div>
+        ${markdownToHtml(message.content)}
+      </body>
+      </html>
+    `
+    const blob = new Blob(['\ufeff' + htmlContent], { type: 'application/msword' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `copetra_export_${Date.now()}.doc`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
+  const handleExportPdf = () => {
+    const printWindow = window.open('', '_blank')
+    if (!printWindow) return
+    printWindow.document.write(`
+      <html>
+      <head>
+        <title>Copetra AI - Deep Research Export</title>
+        <style>
+          body { font-family: system-ui, -apple-system, sans-serif; padding: 40px; color: #0f172a; line-height: 1.6; }
+          h1, h2, h3 { color: #0284c7; margin-top: 24px; }
+          pre { background: #f1f5f9; padding: 14px; border-radius: 8px; font-family: monospace; overflow-x: auto; white-space: pre-wrap; }
+          table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+          th, td { border: 1px solid #cbd5e1; padding: 10px; text-align: left; }
+          th { background: #f8fafc; font-weight: bold; }
+          ul, ol { padding-left: 20px; }
+          li { margin-bottom: 6px; }
+          @media print {
+            body { padding: 0; }
+            button { display: none; }
+          }
+        </style>
+      </head>
+      <body>
+        <div style="margin-bottom: 24px; border-bottom: 2.5px solid #0284c7; padding-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-end;">
+          <div>
+            <span style="font-weight: 900; color: #0284c7; font-size: 22px; letter-spacing: 0.5px;">PJ COPETRANOVA</span>
+            <div style="color: #64748b; font-size: 12px; margin-top: 4px;">Copetra AI Deep Research Document</div>
+          </div>
+          <span style="color: #64748b; font-size: 12px;">Exported: ${new Date().toLocaleDateString()}</span>
+        </div>
+        ${markdownToHtml(message.content)}
+      </body>
+      </html>
+    `)
+    printWindow.document.close()
+    printWindow.focus()
+    setTimeout(() => {
+      printWindow.print()
+      printWindow.close()
+    }, 600)
+  }
+
+  const handleExportExcel = () => {
+    const tableRegex = /\|[\s\S]+?\|\r?\n\|[ :-|]+?\|\r?\n(\|[\s\S]+?\|\r?\n)*/g
+    const tables = message.content.match(tableRegex)
+    
+    if (!tables || tables.length === 0) {
+      alert('No tabular data found in this message to export to Excel.')
+      return
+    }
+
+    const lines = tables[0].trim().split('\n')
+    const csvRows = lines
+      .map(line => {
+        const cols = line.split('|').map(c => c.trim()).filter((_, idx, arr) => idx > 0 && idx < arr.length - 1)
+        return cols.map(c => `"${c.replace(/"/g, '""')}"`).join(',')
+      })
+      .filter(row => !row.includes('---') && row.trim().length > 0)
+
+    const csvContent = csvRows.join('\n')
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `copetra_excel_export_${Date.now()}.csv`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
   const getCleanUserQuery = (content: string): string => {
     const docIdx = content.indexOf('\n\n[')
     if (docIdx !== -1) return content.substring(0, docIdx).trim()
@@ -766,6 +895,47 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
                   </svg>
                   <span>{isSpeaking ? 'Stop reading' : 'Read aloud'}</span>
                 </button>
+
+                <button
+                  onClick={() => {
+                    setMoreMenuOpen(false)
+                    handleExportDocx()
+                  }}
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', borderRadius: '8px', border: 'none', background: 'transparent', color: '#0f172a', fontSize: '13px', fontWeight: '500', cursor: 'pointer', textAlign: 'left' }}
+                  onMouseOver={e => (e.currentTarget.style.background = '#f1f5f9')}
+                  onMouseOut={e => (e.currentTarget.style.background = 'transparent')}
+                >
+                  <span style={{ fontSize: '14px' }}>📄</span>
+                  <span>Export to Word (.doc)</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setMoreMenuOpen(false)
+                    handleExportPdf()
+                  }}
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', borderRadius: '8px', border: 'none', background: 'transparent', color: '#0f172a', fontSize: '13px', fontWeight: '500', cursor: 'pointer', textAlign: 'left' }}
+                  onMouseOver={e => (e.currentTarget.style.background = '#f1f5f9')}
+                  onMouseOut={e => (e.currentTarget.style.background = 'transparent')}
+                >
+                  <span style={{ fontSize: '14px' }}>📕</span>
+                  <span>Export to PDF (.pdf)</span>
+                </button>
+
+                {message.content.includes('|') && (
+                  <button
+                    onClick={() => {
+                      setMoreMenuOpen(false)
+                      handleExportExcel()
+                    }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', borderRadius: '8px', border: 'none', background: 'transparent', color: '#0f172a', fontSize: '13px', fontWeight: '500', cursor: 'pointer', textAlign: 'left' }}
+                    onMouseOver={e => (e.currentTarget.style.background = '#f1f5f9')}
+                    onMouseOut={e => (e.currentTarget.style.background = 'transparent')}
+                  >
+                    <span style={{ fontSize: '14px' }}>📊</span>
+                    <span>Export Table to Excel</span>
+                  </button>
+                )}
               </div>
             )}
           </div>
