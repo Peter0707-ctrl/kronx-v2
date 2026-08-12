@@ -317,6 +317,59 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
   const [editText, setEditText] = useState(message.content)
   const [previewModalImg, setPreviewModalImg] = useState<string | null>(null)
 
+  // Image Editor States
+  const [isEditingImage, setIsEditingImage] = useState(false)
+  const [brightness, setBrightness] = useState(100)
+  const [contrast, setContrast] = useState(100)
+  const [grayscale, setGrayscale] = useState(0)
+  const [sepia, setSepia] = useState(0)
+  const [blur, setBlur] = useState(0)
+  const [hueRotate, setHueRotate] = useState(0)
+  const [rotation, setRotation] = useState(0)
+
+  const handleResetImageEdit = () => {
+    setBrightness(100)
+    setContrast(100)
+    setGrayscale(0)
+    setSepia(0)
+    setBlur(0)
+    setHueRotate(0)
+    setRotation(0)
+  }
+
+  const handleSaveImageEdit = () => {
+    const imgElement = document.getElementById('editing-image-el') as HTMLImageElement
+    if (!imgElement) return
+
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    const isRotated90 = (rotation / 90) % 2 !== 0
+    const w = imgElement.naturalWidth
+    const h = imgElement.naturalHeight
+    canvas.width = isRotated90 ? h : w
+    canvas.height = isRotated90 ? w : h
+
+    ctx.translate(canvas.width / 2, canvas.height / 2)
+    ctx.rotate((rotation * Math.PI) / 180)
+
+    ctx.filter = `brightness(${brightness}%) contrast(${contrast}%) grayscale(${grayscale}%) sepia(${sepia}%) blur(${blur}px) hue-rotate(${hueRotate}deg)`
+    ctx.drawImage(imgElement, -w / 2, -h / 2, w, h)
+
+    const editedDataUrl = canvas.toDataURL('image/png')
+    
+    const a = document.createElement('a')
+    a.href = editedDataUrl
+    a.download = `edited_image_${Date.now()}.png`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+
+    setIsEditingImage(false)
+    setPreviewModalImg(editedDataUrl)
+  }
+
   const handleCopy = () => {
     navigator.clipboard.writeText(message.content)
     setCopied(true)
@@ -1075,15 +1128,19 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
         )}
       </div>
 
-      {/* Lightbox Modal for Zooming Attached/Generated Images */}
+      {/* Lightbox Modal with Interactive Image Editor */}
       {previewModalImg && (
         <div
-          onClick={() => setPreviewModalImg(null)}
+          onClick={() => {
+            setPreviewModalImg(null)
+            setIsEditingImage(false)
+            handleResetImageEdit()
+          }}
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(15, 23, 42, 0.9)',
-            backdropFilter: 'blur(8px)',
+            background: 'rgba(15, 23, 42, 0.95)',
+            backdropFilter: 'blur(10px)',
             zIndex: 9999,
             display: 'flex',
             flexDirection: 'column',
@@ -1092,47 +1149,198 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
             padding: '24px'
           }}
         >
-          <div style={{ position: 'relative', maxWidth: '90vw', maxHeight: '85vh', display: 'flex', flexDirection: 'column', alignItems: 'center' }} onClick={e => e.stopPropagation()}>
-            <img
-              src={previewModalImg}
-              alt="Fullscreen Zoomed Preview"
-              style={{ maxWidth: '100%', maxHeight: '75vh', borderRadius: '16px', boxShadow: '0 20px 60px rgba(0,0,0,0.5)', objectFit: 'contain' }}
-            />
-            <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
-              <a
-                href={previewModalImg}
-                download={`copetra-image-${Date.now()}.png`}
-                style={{
-                  background: '#0284c7',
-                  color: '#ffffff',
-                  padding: '10px 20px',
-                  borderRadius: '12px',
-                  fontSize: '13px',
-                  fontWeight: '700',
-                  textDecoration: 'none',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px'
+          <div 
+            style={{ 
+              position: 'relative', 
+              maxWidth: '95vw', 
+              maxHeight: '90vh', 
+              background: isEditingImage ? '#0f172a' : 'transparent',
+              borderRadius: isEditingImage ? '24px' : '0',
+              border: isEditingImage ? '1px solid #334155' : 'none',
+              padding: isEditingImage ? '24px' : '0',
+              display: 'flex', 
+              flexDirection: isEditingImage ? 'row' : 'column',
+              flexWrap: 'wrap',
+              gap: '24px',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: isEditingImage ? '0 25px 50px -12px rgba(0, 0, 0, 0.5)' : 'none'
+            }} 
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Left Column: Image Canvas / View */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minWidth: '280px', maxWidth: isEditingImage ? '55vw' : '100%' }}>
+              <img
+                id="editing-image-el"
+                src={previewModalImg}
+                alt="Fullscreen Zoomed Preview"
+                style={{ 
+                  maxWidth: '100%', 
+                  maxHeight: isEditingImage ? '55vh' : '75vh', 
+                  borderRadius: '16px', 
+                  boxShadow: '0 20px 60px rgba(0,0,0,0.5)', 
+                  objectFit: 'contain',
+                  filter: `brightness(${brightness}%) contrast(${contrast}%) grayscale(${grayscale}%) sepia(${sepia}%) blur(${blur}px) hue-rotate(${hueRotate}deg)`,
+                  transform: `rotate(${rotation}deg)`,
+                  transition: 'transform 0.15s ease, filter 0.15s ease'
                 }}
-              >
-                📥 Download Full Image
-              </a>
-              <button
-                onClick={() => setPreviewModalImg(null)}
-                style={{
-                  background: 'rgba(255, 255, 255, 0.2)',
-                  color: '#ffffff',
-                  border: '1px solid rgba(255, 255, 255, 0.3)',
-                  padding: '10px 18px',
-                  borderRadius: '12px',
-                  fontSize: '13px',
-                  fontWeight: '700',
-                  cursor: 'pointer'
-                }}
-              >
-                ✕ Close
-              </button>
+              />
             </div>
+
+            {/* Right Column: Controls Panel (Visible when editing) */}
+            {isEditingImage ? (
+              <div style={{ width: '300px', display: 'flex', flexDirection: 'column', gap: '14px', background: '#1e293b', padding: '20px', borderRadius: '16px', border: '1px solid #334155', color: '#f8fafc' }}>
+                <h3 style={{ margin: '0 0 6px 0', fontSize: '15px', fontWeight: '800', color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span>🎨</span> Image Filter Editor
+                </h3>
+
+                {/* Brightness */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: '700', marginBottom: '4px' }}>
+                    <span>Brightness</span>
+                    <span>{brightness}%</span>
+                  </div>
+                  <input type="range" min="0" max="200" value={brightness} onChange={e => setBrightness(Number(e.target.value))} style={{ width: '100%', cursor: 'pointer' }} />
+                </div>
+
+                {/* Contrast */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: '700', marginBottom: '4px' }}>
+                    <span>Contrast</span>
+                    <span>{contrast}%</span>
+                  </div>
+                  <input type="range" min="0" max="200" value={contrast} onChange={e => setContrast(Number(e.target.value))} style={{ width: '100%', cursor: 'pointer' }} />
+                </div>
+
+                {/* Grayscale */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: '700', marginBottom: '4px' }}>
+                    <span>Grayscale</span>
+                    <span>{grayscale}%</span>
+                  </div>
+                  <input type="range" min="0" max="100" value={grayscale} onChange={e => setGrayscale(Number(e.target.value))} style={{ width: '100%', cursor: 'pointer' }} />
+                </div>
+
+                {/* Sepia */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: '700', marginBottom: '4px' }}>
+                    <span>Sepia</span>
+                    <span>{sepia}%</span>
+                  </div>
+                  <input type="range" min="0" max="100" value={sepia} onChange={e => setSepia(Number(e.target.value))} style={{ width: '100%', cursor: 'pointer' }} />
+                </div>
+
+                {/* Blur */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: '700', marginBottom: '4px' }}>
+                    <span>Blur</span>
+                    <span>{blur}px</span>
+                  </div>
+                  <input type="range" min="0" max="10" value={blur} onChange={e => setBlur(Number(e.target.value))} style={{ width: '100%', cursor: 'pointer' }} />
+                </div>
+
+                {/* Hue Rotate */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: '700', marginBottom: '4px' }}>
+                    <span>Hue Rotate</span>
+                    <span>{hueRotate}°</span>
+                  </div>
+                  <input type="range" min="0" max="360" value={hueRotate} onChange={e => setHueRotate(Number(e.target.value))} style={{ width: '100%', cursor: 'pointer' }} />
+                </div>
+
+                {/* Rotate 90 deg button */}
+                <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                  <button
+                    onClick={() => setRotation(r => (r + 90) % 360)}
+                    style={{ flex: 1, padding: '8px', background: '#334155', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '11px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                  >
+                    🔄 Rotate 90°
+                  </button>
+                  <button
+                    onClick={handleResetImageEdit}
+                    style={{ flex: 1, padding: '8px', background: '#475569', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}
+                  >
+                    Reset Filters
+                  </button>
+                </div>
+
+                {/* Save/Cancel Action Buttons */}
+                <div style={{ display: 'flex', gap: '8px', borderTop: '1px solid #334155', paddingTop: '12px', marginTop: '6px' }}>
+                  <button
+                    onClick={handleSaveImageEdit}
+                    style={{ flex: 1, padding: '10px', background: '#10b981', border: 'none', borderRadius: '10px', color: '#fff', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
+                  >
+                    💾 Save Changes
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsEditingImage(false)
+                      handleResetImageEdit()
+                    }}
+                    style={{ padding: '10px 14px', background: '#ef4444', border: 'none', borderRadius: '10px', color: '#fff', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* Simple Zoom Controls Panel */
+              <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+                <button
+                  onClick={() => setIsEditingImage(true)}
+                  style={{
+                    background: 'linear-gradient(135deg, #059669, #047857)',
+                    color: '#ffffff',
+                    padding: '10px 20px',
+                    borderRadius: '12px',
+                    fontSize: '13px',
+                    fontWeight: '700',
+                    border: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 12px rgba(5, 150, 105, 0.25)'
+                  }}
+                >
+                  ✏️ Edit Image Filters
+                </button>
+                <a
+                  href={previewModalImg}
+                  download={`copetra-image-${Date.now()}.png`}
+                  style={{
+                    background: '#0284c7',
+                    color: '#ffffff',
+                    padding: '10px 20px',
+                    borderRadius: '12px',
+                    fontSize: '13px',
+                    fontWeight: '700',
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    boxShadow: '0 4px 12px rgba(2, 132, 199, 0.25)'
+                  }}
+                >
+                  📥 Download Full Image
+                </a>
+                <button
+                  onClick={() => setPreviewModalImg(null)}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.2)',
+                    color: '#ffffff',
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                    padding: '10px 18px',
+                    borderRadius: '12px',
+                    fontSize: '13px',
+                    fontWeight: '700',
+                    cursor: 'pointer'
+                  }}
+                >
+                  ✕ Close
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
