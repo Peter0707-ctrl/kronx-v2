@@ -561,6 +561,38 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
   // Check if AI response has multiple/any code blocks for project ZIP download
   const hasCodeBlocks = isAi && /```\w+/i.test(message.content)
 
+  // Check if response has parsed vCards
+  const parsedCards: Array<{ name: string; phone: string; email: string; title: string; org: string; rawTag: string }> = []
+  if (isAi && message.content) {
+    const vcardRegex = /\[VCARD:\s*([^\]]+)\]/gi
+    let vcardMatch
+    while ((vcardMatch = vcardRegex.exec(message.content)) !== null) {
+      const rawTag = vcardMatch[0]
+      const innerContent = vcardMatch[1]
+      const cardData = { name: '', phone: '', email: '', title: '', org: '', rawTag }
+      const pairs = innerContent.split(',')
+      for (const pair of pairs) {
+        const [key, ...valParts] = pair.split('=')
+        if (key && valParts.length > 0) {
+          const k = key.trim().toLowerCase()
+          const v = valParts.join('=').trim()
+          if (k === 'name') cardData.name = v
+          else if (k === 'phone' || k === 'tel') cardData.phone = v
+          else if (k === 'email') cardData.email = v
+          else if (k === 'title') cardData.title = v
+          else if (k === 'org' || k === 'organization') cardData.org = v
+        }
+      }
+      if (cardData.name) {
+        parsedCards.push(cardData)
+      }
+    }
+
+    parsedCards.forEach(card => {
+      displayContent = displayContent.replace(card.rawTag, '')
+    })
+  }
+
   return (
     <div className={`msg-row ${isAi ? 'msg-ai' : 'msg-user'}`}>
       <div className={`bubble ${isAi ? 'bubble-ai' : 'bubble-user'}`} style={{ position: 'relative' }}>
@@ -753,6 +785,107 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
                 >
                   {displayContent}
                 </ReactMarkdown>
+
+                {/* Render interactive parsed vCards */}
+                {parsedCards.map((card, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.9))',
+                      backdropFilter: 'blur(8px)',
+                      border: '1.5px solid #cbd5e1',
+                      borderRadius: '16px',
+                      padding: '16px',
+                      marginTop: '12px',
+                      maxWidth: '350px',
+                      boxShadow: '0 4px 16px rgba(15, 23, 42, 0.05)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '10px',
+                      position: 'relative',
+                      overflow: 'hidden'
+                    }}
+                  >
+                    <div style={{ position: 'absolute', top: '-15px', right: '-15px', width: '60px', height: '60px', borderRadius: '50%', background: 'rgba(2, 132, 199, 0.12)', filter: 'blur(12px)' }} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', zIndex: 1 }}>
+                      <div style={{
+                        width: '42px', height: '42px', borderRadius: '12px',
+                        background: 'linear-gradient(135deg, #0284c7, #0369a1)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        color: '#fff', fontSize: '15px', fontWeight: '800',
+                        boxShadow: '0 2px 8px rgba(2, 132, 199, 0.2)'
+                      }}>
+                        {card.name.slice(0, 2).toUpperCase()}
+                      </div>
+                      <div>
+                        <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '800', color: '#0f172a' }}>{card.name}</h4>
+                        <p style={{ margin: '2px 0 0 0', fontSize: '11px', fontWeight: '600', color: '#64748b' }}>
+                          {card.title || 'Contact Person'} {card.org ? `@ ${card.org}` : ''}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', fontSize: '11.5px', color: '#334155', borderTop: '1px solid #f1f5f9', paddingTop: '8px', zIndex: 1 }}>
+                      {card.phone && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span>📞</span>
+                          <a href={`tel:${card.phone}`} style={{ color: '#0284c7', textDecoration: 'none', fontWeight: '700' }}>{card.phone}</a>
+                        </div>
+                      )}
+                      {card.email && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span>✉️</span>
+                          <a href={`mailto:${card.email}`} style={{ color: '#0284c7', textDecoration: 'none', fontWeight: '700' }}>{card.email}</a>
+                        </div>
+                      )}
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        const vcard = [
+                          'BEGIN:VCARD',
+                          'VERSION:3.0',
+                          `FN:${card.name}`,
+                          card.org ? `ORG:${card.org}` : '',
+                          card.title ? `TITLE:${card.title}` : '',
+                          card.phone ? `TEL;TYPE=CELL:${card.phone}` : '',
+                          card.email ? `EMAIL;TYPE=INTERNET:${card.email}` : '',
+                          'END:VCARD'
+                        ].filter(Boolean).join('\r\n')
+
+                        const blob = new Blob([vcard], { type: 'text/vcard;charset=utf-8;' })
+                        const url = URL.createObjectURL(blob)
+                        const a = document.createElement('a')
+                        a.href = url
+                        a.download = `${card.name.toLowerCase().replace(/[^a-z0-9]/g, '_')}.vcf`
+                        document.body.appendChild(a)
+                        a.click()
+                        document.body.removeChild(a)
+                        URL.revokeObjectURL(url)
+                      }}
+                      style={{
+                        width: '100%',
+                        background: 'linear-gradient(135deg, #059669, #047857)',
+                        color: '#ffffff',
+                        border: 'none',
+                        padding: '6px 12px',
+                        borderRadius: '8px',
+                        fontSize: '11px',
+                        fontWeight: '700',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                        boxShadow: '0 2px 6px rgba(5, 150, 105, 0.15)',
+                        zIndex: 1
+                      }}
+                    >
+                      <span>📥</span>
+                      <span>Save to Contacts (.vcf)</span>
+                    </button>
+                  </div>
+                ))}
               </div>
             ) : isStreaming ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 0', color: '#0284c7', fontWeight: '700', fontSize: '14px' }}>
