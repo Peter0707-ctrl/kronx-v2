@@ -147,17 +147,35 @@ export const useKronxStore = create<KronxStore>()(
       setAuthModalOpen: (authModalOpen) => set({ authModalOpen }),
       
       loginUser: (user) => {
-        // Automatically save new user to our admin users JSON endpoint
+        set({ user, activeView: 'chat', authModalOpen: false })
+
+        // Persist + sync role/plan/developer grant from server (admin is source of truth)
         fetch('/api/users', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-admin-key': user.adminKey || ''
+            'x-admin-key': user.adminKey || '',
           },
-          body: JSON.stringify(user)
-        }).catch(e => console.warn('Could not register user to DB:', e));
-
-        set({ user, activeView: 'chat', authModalOpen: false })
+          body: JSON.stringify(user),
+        })
+          .then((r) => r.json())
+          .then((data) => {
+            if (data?.user) {
+              set((s) => ({
+                user: s.user
+                  ? {
+                      ...s.user,
+                      role: data.user.role || s.user.role,
+                      plan: data.user.plan || s.user.plan,
+                      isDeveloper: Boolean(data.user.isDeveloper),
+                      apiKey: data.user.apiKey || s.user.apiKey,
+                      callbackUrl: data.user.callbackUrl || s.user.callbackUrl,
+                    }
+                  : s.user,
+              }))
+            }
+          })
+          .catch((e) => console.warn('Could not register user to DB:', e))
       },
 
       logoutUser: () => set({ user: null, activeView: 'landing', conversations: [], activeConversationId: null }),

@@ -83,7 +83,12 @@ export default function AdminDashboard() {
           body: JSON.stringify(userToUpdate)
         })
         if (res.ok) {
-          showToast(sw ? `Hali ya Developer imebadilishwa!` : `Developer Mode status updated!`)
+          const nowOn = Boolean(userToUpdate.isDeveloper)
+          showToast(
+            nowOn
+              ? (sw ? 'Ruhusa ya Developer API imepewa!' : 'Developer API access granted!')
+              : (sw ? 'Ruhusa ya Developer API imefutwa!' : 'Developer API access revoked!')
+          )
         }
       } catch (e) {
         console.error('Failed to update developer status:', e)
@@ -354,7 +359,7 @@ export default function AdminDashboard() {
                             onClick={() => handleToggleDeveloper(u.id)}
                             style={{ background: u.isDeveloper ? '#0f172a' : '#f8fafc', color: u.isDeveloper ? '#38bdf8' : '#64748b', border: '1px solid #cbd5e1', padding: '5px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}
                           >
-                            {u.isDeveloper ? '👨‍💻 Dev: ON' : '👨‍💻 Dev: OFF'}
+                            {u.isDeveloper ? (sw ? 'API: ON' : 'API: Granted') : (sw ? 'API: OFF' : 'Grant API')}
                           </button>
                           <button
                             onClick={() => {

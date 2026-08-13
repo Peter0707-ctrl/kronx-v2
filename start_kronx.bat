@@ -8,8 +8,9 @@ echo.
 set KRONX_DIR=%~dp0
 set KRONX_DIR=%KRONX_DIR:~0,-1%
 
-echo [1/2] Starting Backend API (Port 8000)...
-start "Kronx Backend API" cmd /k "cd /d "%KRONX_DIR%\backend" && uvicorn main:app --host 0.0.0.0 --port 8000"
+REM Port 8000 is often taken by other XAMPP/PHP apps on this machine
+echo [1/2] Starting Backend API (Port 8001)...
+start "Kronx Backend API" cmd /k "cd /d "%KRONX_DIR%\backend" && python -m uvicorn main:app --host 0.0.0.0 --port 8001"
 
 timeout /t 4 /nobreak > nul
 
@@ -26,7 +27,7 @@ start "" "http://localhost:3000"
 echo.
 echo ========================================================
 echo Kronx is active!
-echo Backend API: http://localhost:8000
+echo Backend API: http://localhost:8001
 echo Frontend UI: http://localhost:3000
-echo System Status: http://localhost:8000/api/system/status
-echo ========================================================
+echo System Status: http://localhost:8001/api/system/status
+echo ========================================================

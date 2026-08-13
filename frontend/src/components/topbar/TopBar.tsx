@@ -17,14 +17,12 @@ export default function TopBar() {
     conversations,
     activeMessages,
     user,
-    generateApiKey,
     setActiveView,
     language
   } = useKronxStore()
 
   const [menuOpen, setMenuOpen] = useState(false)
   const [brandMenuOpen, setBrandMenuOpen] = useState(false)
-  const [copiedKey, setCopiedKey] = useState(false)
   const [topToast, setTopToast] = useState<string | null>(null)
   const [viewFilesModalOpen, setViewFilesModalOpen] = useState(false)
   const brandMenuRef = useRef<HTMLDivElement>(null)
@@ -229,48 +227,29 @@ export default function TopBar() {
                 ⚡
               </div>
               <div>
-                <div style={{ fontSize: '15px', fontWeight: '800', color: '#0f172a' }}>Copetra Developer Suite</div>
-                <div style={{ fontSize: '11.5px', color: '#64748b' }}>Live API Key & Gateway Integration</div>
+                <div style={{ fontSize: '15px', fontWeight: '800', color: '#0f172a' }}>Copetra Developer API</div>
+                <div style={{ fontSize: '11.5px', color: '#64748b' }}>Project keys · Gateway · Docs</div>
               </div>
             </div>
 
-            {/* API Key Box */}
             <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '12px', marginBottom: '14px' }}>
               <div style={{ fontSize: '11px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
-                Your Live API Secret Key
+                Base URL
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <input
-                  type="text"
-                  readOnly
-                  value={user?.apiKey || 'kx-live-key-not-generated'}
-                  style={{ flex: 1, padding: '6px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#ffffff', fontSize: '12px', fontFamily: 'monospace', color: '#0f172a' }}
-                />
-                <button
-                  onClick={() => {
-                    const key = user?.apiKey || generateApiKey()
-                    navigator.clipboard.writeText(key)
-                    setCopiedKey(true)
-                    showTopToast('API Secret Key copied to clipboard!')
-                    setTimeout(() => setCopiedKey(false), 2000)
-                  }}
-                  style={{ padding: '6px 12px', borderRadius: '8px', background: '#0284c7', color: '#ffffff', border: 'none', fontWeight: '700', fontSize: '11.5px', cursor: 'pointer' }}
-                >
-                  {copiedKey ? 'Copied ✓' : 'Copy'}
-                </button>
-              </div>
+              <code style={{ fontSize: '11px', color: '#0f172a', wordBreak: 'break-all' }}>
+                {process.env.NEXT_PUBLIC_SITE_URL || 'https://miraculous-forgiveness-production-10d4.up.railway.app'}
+              </code>
             </div>
 
-            {/* Developer Gateway Specs */}
             <div style={{ fontSize: '12px', color: '#475569', display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '16px', background: '#f0f9ff', padding: '10px 12px', borderRadius: '12px', border: '1px solid #bae6fd' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Endpoint:</span>
                 <span style={{ fontWeight: '700', fontFamily: 'monospace' }}>POST /api/gateway</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>Access Status:</span>
-                <span style={{ fontWeight: '700', color: user?.isDeveloper ? '#10b981' : '#f59e0b' }}>
-                  {user?.isDeveloper ? 'Developer Enabled ✓' : 'Standard User'}
+                <span>Access:</span>
+                <span style={{ fontWeight: '700', color: user?.isDeveloper || user?.role === 'admin' ? '#10b981' : '#f59e0b' }}>
+                  {user?.isDeveloper || user?.role === 'admin' ? 'Granted ✓' : 'Ask admin to grant'}
                 </span>
               </div>
             </div>
@@ -280,9 +259,9 @@ export default function TopBar() {
                 setBrandMenuOpen(false)
                 setSettingsModalOpen(true)
               }}
-              style={{ width: '100%', padding: '10px', borderRadius: '12px', background: 'linear-gradient(135deg, #0284c7, #0369a1)', color: '#ffffff', border: 'none', fontWeight: '700', fontSize: '13px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(2, 132, 199, 0.3)' }}
+              style={{ width: '100%', padding: '10px', borderRadius: '10px', background: '#0284c7', color: '#fff', border: 'none', fontWeight: 700, fontSize: 13, cursor: 'pointer', marginBottom: 8 }}
             >
-              Configure Developer Options
+              Open Developer Settings & Docs
             </button>
           </div>
         )}
