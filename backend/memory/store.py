@@ -27,65 +27,71 @@ class MemoryStore:
                 except Exception as e:
                     logger.error(f"Failed to create memory store file: {e}", exc_info=True)
 
-    def _load(self) -> dict:
+    def _load_under_lock(self) -> dict:
+        """Load database from cache or disk. Must be called while holding _file_lock."""
         if self._cache is not None:
-            return self._cache
+            # Return a copy to prevent mutation of the cached object outside the lock
+            return json.loads(json.dumps(self._cache))
 
-        with _file_lock:
-            if not os.path.exists(self.path):
-                self._cache = {}
-                return self._cache
+        if not os.path.exists(self.path):
+            self._cache = {}
+            return {}
 
+        try:
+            with open(self.path, "r", encoding="utf-8") as f:
+                self._cache = json.load(f)
+        except json.JSONDecodeError as jde:
+            logger.error(f"Memory store JSON corrupted: {jde}", exc_info=True)
+            corrupt_backup = f"{self.path}.corrupt.{int(datetime.now().timestamp())}"
             try:
-                with open(self.path, "r", encoding="utf-8") as f:
-                    self._cache = json.load(f)
-            except json.JSONDecodeError as jde:
-                logger.error(f"Memory store JSON corrupted: {jde}", exc_info=True)
-                # Recover safely: copy corrupted file to a backup diagnosis path
-                corrupt_backup = f"{self.path}.corrupt.{int(datetime.now().timestamp())}"
-                try:
-                    if os.path.exists(self.path):
-                        shutil.copy2(self.path, corrupt_backup)
-                        logger.warning(f"Saved corrupted memory file to {corrupt_backup}")
-                except Exception as backup_err:
-                    logger.error(f"Failed to backup corrupted file: {backup_err}", exc_info=True)
-                
-                # Recover safely with empty dictionary
-                self._cache = {}
-                try:
-                    with open(self.path, "w", encoding="utf-8") as f:
-                        json.dump({}, f)
-                except Exception as write_err:
-                    logger.error(f"Failed to write fresh file during recovery: {write_err}", exc_info=True)
-            except Exception as e:
-                logger.error(f"Failed to load memory store: {e}", exc_info=True)
-                self._cache = {}
+                if os.path.exists(self.path):
+                    shutil.copy2(self.path, corrupt_backup)
+                    logger.warning(f"Saved corrupted memory file to {corrupt_backup}")
+            except Exception as backup_err:
+                logger.error(f"Failed to backup corrupted file: {backup_err}", exc_info=True)
+            
+            self._cache = {}
+            try:
+                with open(self.path, "w", encoding="utf-8") as f:
+                    json.dump({}, f)
+            except Exception as write_err:
+                logger.error(f"Failed to write fresh file during recovery: {write_err}", exc_info=True)
+        except Exception as e:
+            logger.error(f"Failed to load memory store: {e}", exc_info=True)
+            self._cache = {}
 
-        return self._cache
+        return json.loads(json.dumps(self._cache))
+
+    def _save_under_lock(self, data: dict):
+        """Save data atomically. Must be called while holding _file_lock."""
+        self._cache = json.loads(json.dumps(data))
+        dir_name = os.path.dirname(self.path)
+        # Create temp file in same directory to guarantee atomic rename
+        temp_fd, temp_path = tempfile.mkstemp(dir=dir_name, prefix="memory_store_tmp_", suffix=".json")
+        try:
+            with os.fdopen(temp_fd, "w", encoding="utf-8") as f:
+                json.dump(self._cache, f, indent=2, default=str)
+                f.flush()
+                try:
+                    os.fsync(temp_fd)
+                except Exception:
+                    pass
+            os.replace(temp_path, self.path)
+        except Exception as e:
+            logger.error(f"Failed to save memory store atomically: {e}", exc_info=True)
+            if os.path.exists(temp_path):
+                try:
+                    os.remove(temp_path)
+                except Exception:
+                    pass
+
+    def _load(self) -> dict:
+        with _file_lock:
+            return self._load_under_lock()
 
     def _save(self, data: dict):
-        self._cache = data
-        dir_name = os.path.dirname(self.path)
         with _file_lock:
-            # Create a temp file in the same folder to guarantee atomic rename capability
-            temp_fd, temp_path = tempfile.mkstemp(dir=dir_name, prefix="memory_store_tmp_", suffix=".json")
-            try:
-                with os.fdopen(temp_fd, "w", encoding="utf-8") as f:
-                    json.dump(data, f, indent=2, default=str)
-                    f.flush()
-                    try:
-                        os.fsync(temp_fd)
-                    except Exception:
-                        pass
-                # Atomic swap file replace
-                os.replace(temp_path, self.path)
-            except Exception as e:
-                logger.error(f"Failed to save memory store atomically: {e}", exc_info=True)
-                if os.path.exists(temp_path):
-                    try:
-                        os.remove(temp_path)
-                    except Exception:
-                        pass
+            self._save_under_lock(data)
 
     def save_memory(
         self,
@@ -94,58 +100,66 @@ class MemoryStore:
         memory_type: str = "general",
         importance: float = 1.0
     ):
-        data = self._load()
+        with _file_lock:
+            data = self._load_under_lock()
 
-        if conversation_id not in data:
-            data[conversation_id] = []
+            if conversation_id not in data:
+                data[conversation_id] = []
 
-        memory = {
-            "id": f"{conversation_id}_{len(data[conversation_id])}",
-            "content": content,
-            "type": memory_type,
-            "importance": importance,
-            "created_at": datetime.now().isoformat()
-        }
+            memory = {
+                "id": f"{conversation_id}_{len(data[conversation_id])}",
+                "content": content,
+                "type": memory_type,
+                "importance": importance,
+                "created_at": datetime.now().isoformat()
+            }
 
-        data[conversation_id].append(memory)
+            data[conversation_id].append(memory)
 
-        # Prune conversation memories if count exceeds 40 to preserve low RAM & disk usage
-        if len(data[conversation_id]) > 40:
-            # Keep highest importance and most recent memories
-            sorted_memories = sorted(data[conversation_id], key=lambda x: (x.get("importance", 1.0), x.get("created_at", "")), reverse=True)
-            data[conversation_id] = sorted_memories[:30]
+            # Prune conversation memories if count exceeds 40 to preserve low RAM & disk usage
+            if len(data[conversation_id]) > 40:
+                # Keep highest importance and most recent memories
+                sorted_memories = sorted(data[conversation_id], key=lambda x: (x.get("importance", 1.0), x.get("created_at", "")), reverse=True)
+                data[conversation_id] = sorted_memories[:30]
 
-        self._save(data)
-        return memory
+            self._save_under_lock(data)
+            return memory
 
     def get_memories(
         self,
         conversation_id: str,
         limit: int = 10
     ) -> List[dict]:
-        data = self._load()
-        memories = data.get(conversation_id, [])
-        memories.sort(key=lambda x: x.get("importance", 1.0), reverse=True)
-        return memories[:limit]
+        with _file_lock:
+            data = self._load_under_lock()
+            memories = data.get(conversation_id, [])
+            # Return copy to prevent external mutation issues
+            copied_memories = json.loads(json.dumps(memories))
+            copied_memories.sort(key=lambda x: x.get("importance", 1.0), reverse=True)
+            return copied_memories[:limit]
 
     def get_all_memories(self, conversation_id: str) -> List[dict]:
-        data = self._load()
-        return data.get(conversation_id, [])
+        with _file_lock:
+            data = self._load_under_lock()
+            memories = data.get(conversation_id, [])
+            return json.loads(json.dumps(memories))
 
     def delete_memory(self, conversation_id: str, memory_id: str):
-        data = self._load()
-        if conversation_id in data:
-            data[conversation_id] = [
-                m for m in data[conversation_id]
-                if m.get("id") != memory_id
-            ]
-            self._save(data)
+        with _file_lock:
+            data = self._load_under_lock()
+            if conversation_id in data:
+                data[conversation_id] = [
+                    m for m in data[conversation_id]
+                    if m.get("id") != memory_id
+                ]
+                self._save_under_lock(data)
 
     def clear_conversation(self, conversation_id: str):
-        data = self._load()
-        if conversation_id in data:
-            del data[conversation_id]
-            self._save(data)
+        with _file_lock:
+            data = self._load_under_lock()
+            if conversation_id in data:
+                del data[conversation_id]
+                self._save_under_lock(data)
 
     def save_user_fact(self, user_id: str, fact: str, importance: float = 2.0):
         """Save important facts about the user permanently."""

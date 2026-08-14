@@ -177,5 +177,53 @@ class TestFoundation(unittest.TestCase):
         # The connection pool client should have only been invoked once because of caching!
         self.assertTrue(mock_client.post.call_count <= 4) # Flash lite, Flash 2.5, Flash 2.0, Flash 3.5
 
+    def test_concurrent_memory_store_stress(self):
+        """Stress test concurrent reads, writes, deletes, and updates on the SAME conversation ID."""
+        store = MemoryStore()
+        store.path = self.test_store_path
+        store._ensure_file()
+        
+        conversation_id = "stress_test_conv"
+        
+        def writer_worker(item_idx):
+            for i in range(20):
+                store.save_memory(
+                    conversation_id=conversation_id,
+                    content=f"write_{item_idx}_{i}",
+                    memory_type="write_test"
+                )
+                
+        def reader_worker():
+            for _ in range(50):
+                memories = store.get_memories(conversation_id)
+                self.assertIsInstance(memories, list)
+                
+        def deleter_worker():
+            for _ in range(10):
+                # Retrieve all and delete first if exists
+                all_m = store.get_all_memories(conversation_id)
+                if all_m:
+                    store.delete_memory(conversation_id, all_m[0]["id"])
+                    
+        threads = []
+        # Spawn 3 writer threads, 3 reader threads, and 2 deleter threads
+        for i in range(3):
+            threads.append(threading.Thread(target=writer_worker, args=(i,)))
+        for _ in range(3):
+            threads.append(threading.Thread(target=reader_worker))
+        for _ in range(2):
+            threads.append(threading.Thread(target=deleter_worker))
+            
+        for th in threads:
+            th.start()
+            
+        for th in threads:
+            th.join()
+            
+        # Verify the file is fully valid JSON
+        with open(store.path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        self.assertIn(conversation_id, data)
+
 if __name__ == "__main__":
     unittest.main()
