@@ -47,23 +47,27 @@ async def translate_en_to_sw(text: str, timeout: float = 8.0) -> str:
 async def _call_mymemory(text: str, timeout: float) -> str:
     """Single MyMemory API call for text <= 500 chars."""
     try:
-        async with httpx.AsyncClient(timeout=timeout) as client:
-            resp = await client.get(
-                MYMEMORY_URL,
-                params={
-                    "q": text,
-                    "langpair": "en|sw",
-                    "de": "kronx@ai.app",   # optional email improves quota
-                },
-            )
-            if resp.status_code == 200:
-                data = resp.json()
-                translated = data.get("responseData", {}).get("translatedText", "")
-                # MyMemory returns the original text if it can't translate
-                if translated and translated.lower() != text.lower():
-                    return translated
-    except Exception:
-        pass
+        from utils.http import get_client
+        from utils.logger import logger
+        client = get_client()
+        resp = await client.get(
+            MYMEMORY_URL,
+            params={
+                "q": text,
+                "langpair": "en|sw",
+                "de": "kronx@ai.app",   # optional email improves quota
+            },
+            timeout=timeout
+        )
+        if resp.status_code == 200:
+            data = resp.json()
+            translated = data.get("responseData", {}).get("translatedText", "")
+            # MyMemory returns the original text if it can't translate
+            if translated and translated.lower() != text.lower():
+                return translated
+    except Exception as e:
+        from utils.logger import logger
+        logger.warning(f"Translation API error: {e}", exc_info=True)
     return text   # Fallback: return English
 
 

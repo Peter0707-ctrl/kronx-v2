@@ -32,23 +32,26 @@ Conversation:
 Summary:"""
 
         try:
-            async with httpx.AsyncClient(timeout=15.0) as client:
-                response = await client.post(
-                    f"{self.base_url}/api/generate",
-                    json={
-                        "model": self.model,
-                        "prompt": prompt,
-                        "stream": False,
-                        "options": {
-                            "num_predict": 100,
-                            "temperature": 0.3
-                        }
+            from utils.http import get_client
+            from utils.logger import logger
+            client = get_client()
+            response = await client.post(
+                f"{self.base_url}/api/generate",
+                json={
+                    "model": self.model,
+                    "prompt": prompt,
+                    "stream": False,
+                    "options": {
+                        "num_predict": 100,
+                        "temperature": 0.3
                     }
-                )
-                data = response.json()
-                return data.get("response", "").strip()
+                },
+                timeout=15.0
+            )
+            data = response.json()
+            return data.get("response", "").strip()
         except Exception as e:
-            print(f"Summarizer error: {e}")
+            logger.error(f"Summarizer error: {e}", exc_info=True)
             return ""
 
     def summarize(self, messages: List[dict]) -> str:

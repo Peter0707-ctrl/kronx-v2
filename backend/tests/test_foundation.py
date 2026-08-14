@@ -225,5 +225,64 @@ class TestFoundation(unittest.TestCase):
             data = json.load(f)
         self.assertIn(conversation_id, data)
 
+    @patch.dict(os.environ, {"CORS_ALLOWED_ORIGINS": "http://localhost:3000,https://kronx.app"})
+    def test_cors_security(self):
+        """Test CORS allowed origin, disallowed origin, and credentials header matching."""
+        from fastapi.testclient import TestClient
+        from main import app
+        client = TestClient(app)
+        
+        # 1. Authorized Origin
+        resp = client.get("/health", headers={"Origin": "http://localhost:3000"})
+        self.assertEqual(resp.headers.get("access-control-allow-origin"), "http://localhost:3000")
+        self.assertEqual(resp.headers.get("access-control-allow-credentials"), "true")
+        
+        # 2. Unauthorized Origin (should not match allowed origins)
+        resp = client.get("/health", headers={"Origin": "http://malicious-origin.com"})
+        self.assertNotEqual(resp.headers.get("access-control-allow-origin"), "http://malicious-origin.com")
+
+    @patch.dict(os.environ, {"PAYMENT_WEBHOOK_SECRET": "secret_key_123"})
+    def test_payment_idempotency_deduplication(self):
+        """Test duplicate payment webhook transaction deduplication and replay handling."""
+        from fastapi.testclient import TestClient
+        from main import app
+        client = TestClient(app)
+        
+        payload = {"phone_number": "255700000000", "amount": 15000.0, "reference_id": "tx_unique_ref_999"}
+        headers = {"X-Webhook-Secret": "secret_key_123"}
+        
+        # First request succeeds
+        resp1 = client.post("/api/payment/mobile-money/webhook", json=payload, headers=headers)
+        self.assertEqual(resp1.status_code, 200)
+        self.assertEqual(resp1.json()["status"], "success")
+        self.assertEqual(resp1.json()["unlocked_plan"], "premium")
+        
+        # Second request (duplicate) is recognized as duplicate and processed idempotently
+        resp2 = client.post("/api/payment/mobile-money/webhook", json=payload, headers=headers)
+        self.assertEqual(resp2.status_code, 200)
+        self.assertEqual(resp2.json()["status"], "success")
+        self.assertIn("already processed", resp2.json()["message"])
+
+    def test_request_id_and_exception_sanitization(self):
+        """Test that X-Request-ID propagates in response headers and unhandled exceptions are sanitized."""
+        from fastapi.testclient import TestClient
+        from main import app
+        client = TestClient(app)
+        
+        # Test normal request propagates request ID
+        resp = client.get("/health", headers={"X-Request-ID": "test-req-123"})
+        self.assertEqual(resp.headers.get("X-Request-ID"), "test-req-123")
+        
+        # Test route that raises exception is sanitized to hide stack traces
+        @app.get("/test-error-endpoint")
+        def error_endpoint():
+            raise RuntimeError("Secret system error context")
+            
+        resp_err = client.get("/test-error-endpoint")
+        self.assertEqual(resp_err.status_code, 500)
+        # Detail must be sanitized and must not leak "Secret system error context"
+        self.assertNotIn("Secret system error context", resp_err.text)
+        self.assertIn("internal server error", resp_err.text.lower())
+
 if __name__ == "__main__":
     unittest.main()

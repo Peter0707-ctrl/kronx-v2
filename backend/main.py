@@ -38,23 +38,38 @@ async def request_id_middleware(request: Request, call_next):
     logger.info(f"Started {request.method} \"{request.url.path}\"")
     try:
         response = await call_next(request)
+        response.headers["X-Request-ID"] = req_id
         logger.info(f"Finished {request.method} \"{request.url.path}\" status={response.status_code}")
         return response
     except Exception as e:
         logger.error(f"Uncaught exception during request processing: {e}", exc_info=True)
         return JSONResponse(
             status_code=500,
+            headers={"X-Request-ID": req_id},
             content={"detail": "An internal server error occurred. Please try again later."}
         )
     finally:
         request_id_var.reset(token)
 
+# Parse allowed CORS origins safely
+cors_origins_raw = os.getenv("CORS_ALLOWED_ORIGINS", "")
+if cors_origins_raw:
+    origins = [origin.strip() for origin in cors_origins_raw.split(",") if origin.strip()]
+else:
+    # Safe development defaults
+    origins = [
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:5173"
+    ]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization", "X-Request-ID", "X-Webhook-Secret"],
 )
 
 from api.chat import router as chat_router
