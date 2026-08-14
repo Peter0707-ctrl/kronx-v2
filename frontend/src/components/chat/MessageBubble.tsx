@@ -1,5 +1,14 @@
 'use client'
 
+/**
+ * 🚨 CRITICAL SAFEGUARD WARNING FOR DEVELOPERS
+ * -------------------------------------------------------------
+ * 1. vCARD PARSING: Do not modify the pattern matching for [VCARD: ...] blocks.
+ * 2. EXPORT FUNCTIONS: Keep handleExportDocx, handleExportPdf, and handleExportExcel intact.
+ * 3. CANVAS EDITOR: Keep isEditingImage, slider states, and canvas.toDataURL() logic intact.
+ * -------------------------------------------------------------
+ */
+
 import { memo, useState } from 'react'
 import { Message } from '@/types'
 import ReactMarkdown from 'react-markdown'

@@ -1,5 +1,15 @@
 'use client'
 
+/**
+ * 🚨 CRITICAL SAFEGUARD WARNING FOR DEVELOPERS
+ * -------------------------------------------------------------
+ * 1. TAG REGEXES: Do not modify tag matching patterns inside postProcessResponse().
+ * 2. HISTORY SLICING: When passing messages to buildHistory(), ALWAYS use (.slice(0, -2))
+ *    to strip the current user message and empty AI loading message. Failing to do so
+ *    causes consecutive duplicate user messages in the API payload, crashing the upstream model.
+ * -------------------------------------------------------------
+ */
+
 import { useCallback } from 'react'
 import { useKronxStore } from '@/store/useKronxStore'
 import { streamMessage, sendMessage, buildHistory } from '@/services/chat'
