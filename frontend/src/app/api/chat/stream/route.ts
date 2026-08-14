@@ -3,6 +3,12 @@ import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
+const GROQ_API_KEYS = [
+  process.env.GROQ_API_KEY,
+  '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',
+  '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'
+].filter(Boolean) as string[]
+
 // Greetings-only hardcoded table — fires ONLY when the message is a pure standalone greeting.
 // Any message with a question, topic, or extra content goes directly to the LLM.
 const GREETINGS: Record<string, string> = {
@@ -369,10 +375,12 @@ export async function POST(req: NextRequest) {
       // go directly to the LLM which genuinely understands and answers based on user needs.
 
 
-      const apiKey = process.env.GROQ_API_KEY
+      const keys = GROQ_API_KEYS
       let streamedAny = false
 
-      if (apiKey) {
+      for (const apiKey of keys) {
+        if (streamedAny) break
+
         const groqMessages = buildGroqMessages(message, mode, history, true, webSearchResults)
         
         const hasVision = groqMessages.some(m => Array.isArray(m.content)) || message.includes('[IMAGE:')
@@ -409,7 +417,7 @@ export async function POST(req: NextRequest) {
               : isDocument 
                 ? (model.includes('70b') ? 25000 : 12000) 
                 : (model.includes('70b') ? 15000 : 8000)
-            setTimeout(() => abortCtrl.abort(), timeoutMs)
+            const timeoutId = setTimeout(() => abortCtrl.abort(), timeoutMs)
 
             const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
               method: 'POST',
@@ -428,6 +436,8 @@ export async function POST(req: NextRequest) {
               signal: abortCtrl.signal,
               cache: 'no-store',
             })
+
+            clearTimeout(timeoutId)
 
             if (groqRes.ok && groqRes.body) {
               const reader = groqRes.body.getReader()
@@ -458,7 +468,7 @@ export async function POST(req: NextRequest) {
                 }
               }
             } else {
-              console.warn(`Groq model ${model} returned status ${groqRes.status}`)
+              console.warn(`Groq model ${model} with key prefix ${apiKey.slice(0, 10)} returned status ${groqRes.status}`)
             }
           } catch (e) {
             console.error(`Groq stream ${model} error:`, e)

@@ -257,14 +257,20 @@ function buildGroqMessages(
   return messages
 }
 
+const GROQ_API_KEYS = [
+  process.env.GROQ_API_KEY,
+  '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',
+  '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'
+].filter(Boolean) as string[]
+
 async function callGroq(
   message: string,
   mode: string,
   history: HistoryMessage[] = [],
   webSearchResults: string | null = null
 ): Promise<string | null> {
-  const apiKey = process.env.GROQ_API_KEY
-  if (!apiKey) return null
+  const keys = GROQ_API_KEYS
+  if (keys.length === 0) return null
 
   const groqMessages = buildGroqMessages(message, mode, history, webSearchResults)
   
@@ -287,37 +293,41 @@ async function callGroq(
         'mixtral-8x7b-32768'
       ]
 
-  for (const model of models) {
-    try {
-      const controller = new AbortController()
-      const timeoutMs = model.includes('70b') || model.includes('90b') ? 20000 : 8000
-      setTimeout(() => controller.abort(), timeoutMs)
+  for (const apiKey of keys) {
+    for (const model of models) {
+      try {
+        const controller = new AbortController()
+        const timeoutMs = model.includes('70b') || model.includes('90b') ? 20000 : 8000
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
 
-      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model,
-          messages: groqMessages,
-          max_tokens: 2048,
-          temperature: 0.1,
-          top_p: 0.1,
-          stream: false,
-        }),
-        signal: controller.signal,
-        cache: 'no-store',
-      })
+        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model,
+            messages: groqMessages,
+            max_tokens: 2048,
+            temperature: 0.1,
+            top_p: 0.1,
+            stream: false,
+          }),
+          signal: controller.signal,
+          cache: 'no-store',
+        })
 
-      if (res.ok) {
-        const data = await res.json()
-        const text = data.choices?.[0]?.message?.content?.trim()
-        if (text) return text
+        clearTimeout(timeoutId)
+
+        if (res.ok) {
+          const data = await res.json()
+          const text = data.choices?.[0]?.message?.content?.trim()
+          if (text) return text
+        }
+      } catch (e) {
+        console.warn(`Groq key or model ${model} failed, trying next. Error:`, e)
       }
-    } catch (e) {
-      console.error(`Groq model ${model} error:`, e)
     }
   }
   return null
