@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { authenticateApiKey, apiError } from '@/lib/developerAuth'
 
 export const dynamic = 'force-dynamic'
-export const maxDuration = 60
+export const maxDuration = 120
 
 /**
  * Copetra Image Generation API
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
     try {
       const imgRes = await fetch(url, {
         headers: { 'User-Agent': 'Copetra-Image-API/1.0' },
-        signal: AbortSignal.timeout(45000),
+        signal: AbortSignal.timeout(90_000),
         cache: 'no-store',
       })
       if (imgRes.ok) {

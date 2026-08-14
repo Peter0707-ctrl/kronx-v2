@@ -38,7 +38,7 @@ Users with **Developer API granted** (or `admin` role) receive **unlimited app-s
 - You may send a high `max_tokens` (e.g. `8192`)
 - Provider (upstream model) limits may still apply
 
-Non-granted accounts cannot call the API (`403 developer_not_granted`).
+Non-granted accounts cannot **create** keys in the UI (`403 developer_not_granted`), but any **active** `cpk_` key works with **unlimited tokens** and no app-side rate limits.
 
 ---
 
@@ -89,7 +89,7 @@ Authorization: Bearer cpk_...
 | `message` / `prompt` / `query` | Alt | Legacy single-string user prompt |
 | `model` | No | Defaults to `copetra-ai` |
 | `temperature` | No | Default `0.5` |
-| `max_tokens` | No | Default `2048` (or higher when unlimited) |
+| `max_tokens` | No | No app-side cap — pass any value (default `8192`); upstream model limits may still apply |
 | `stream` | No | `true` for Server-Sent Events (SSE) |
 | `callback_url` | No | Async webhook (non-stream only) |
 

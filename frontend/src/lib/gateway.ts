@@ -1,16 +1,17 @@
 import { v4 as uuidv4 } from 'uuid'
 
-/** Prefer a fast model first so chat stays responsive; fall back to larger models. */
+/** Fast model first; larger models as fallback for long / complex prompts. */
 const GROQ_MODELS = [
   'llama-3.1-8b-instant',
   'llama-3.3-70b-versatile',
+  'llama-3.1-70b-versatile',
 ]
 
 function groqKeys(): string[] {
   const keys = [process.env.GROQ_API_KEY, process.env.GROQ_API_KEY_2].filter(
     (k): k is string => Boolean(k && k.trim() && !k.includes('placeholder'))
   )
-  return [...new Set(keys)]
+  return Array.from(new Set(keys))
 }
 
 function upstreamTimeoutMs(wantStream: boolean): number {
@@ -20,7 +21,17 @@ function upstreamTimeoutMs(wantStream: boolean): number {
       : process.env.GATEWAY_UPSTREAM_TIMEOUT_MS
   )
   if (Number.isFinite(fromEnv) && fromEnv > 0) return fromEnv
-  return wantStream ? 120000 : 120000
+  return wantStream ? 180_000 : 300_000
+}
+
+function defaultMaxTokens(): number {
+  const fromEnv = Number(process.env.GATEWAY_DEFAULT_MAX_TOKENS)
+  if (Number.isFinite(fromEnv) && fromEnv > 0) return fromEnv
+  return 8192
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 export type ChatMessage = { role: string; content: string }
@@ -38,6 +49,13 @@ export function normalizeMessages(body: Record<string, unknown>): ChatMessage[] 
     return [{ role: 'user', content: legacy.trim() }]
   }
   return []
+}
+
+/** No app-side cap for developer API — pass client value through to upstream. */
+export function resolveMaxTokens(requested: unknown, _unlimited = true): number {
+  const n = typeof requested === 'number' ? requested : parseInt(String(requested ?? ''), 10)
+  if (Number.isFinite(n) && n > 0) return Math.floor(n)
+  return defaultMaxTokens()
 }
 
 const SYSTEM_PROMPT = `You are Copetra AI, an elite academic AI assistant powered by PJ Copetranova.
@@ -66,74 +84,95 @@ export async function createCompletion(opts: {
 
   const formatted = [{ role: 'system', content: SYSTEM_PROMPT }, ...opts.messages]
   const temperature = typeof opts.temperature === 'number' ? opts.temperature : 0.5
-  // Granted / unlimited API users: no app-side token cap (provider still enforces model max).
-  const requested = typeof opts.maxTokens === 'number' ? opts.maxTokens : opts.unlimited ? 8192 : 2048
-  const maxTokens = opts.unlimited ? Math.max(requested, 1) : Math.min(Math.max(requested, 1), 8192)
+  const maxTokens = resolveMaxTokens(opts.maxTokens, opts.unlimited !== false)
   const wantStream = opts.stream === true
   const timeoutMs = upstreamTimeoutMs(wantStream)
 
   let lastStatus = 0
   let lastDetail = ''
   let sawAuthFailure = false
-  let sawRateLimit = false
+  let rateLimitHits = 0
 
   for (const apiKey of keys) {
     for (const model of GROQ_MODELS) {
-      try {
-        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${apiKey}`,
-          },
-          body: JSON.stringify({
-            model,
-            messages: formatted,
-            temperature,
-            max_tokens: maxTokens,
-            stream: wantStream,
-          }),
-          signal: AbortSignal.timeout(timeoutMs),
-        })
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${apiKey}`,
+            },
+            body: JSON.stringify({
+              model,
+              messages: formatted,
+              temperature,
+              max_tokens: maxTokens,
+              stream: wantStream,
+            }),
+            signal: AbortSignal.timeout(timeoutMs),
+          })
 
-        if (!res.ok) {
-          lastStatus = res.status
-          lastDetail = await res.text().catch(() => '')
-          if (res.status === 401 || res.status === 403) {
-            sawAuthFailure = true
-            break // try next key, skip remaining models for this bad key
-          }
-          if (res.status === 429) {
-            sawRateLimit = true
+          if (!res.ok) {
+            lastStatus = res.status
+            lastDetail = await res.text().catch(() => '')
+
+            if (res.status === 401 || res.status === 403) {
+              sawAuthFailure = true
+              break
+            }
+
+            if (res.status === 429) {
+              rateLimitHits++
+              if (attempt < 3) {
+                await sleep(1500 * attempt)
+                continue
+              }
+              continue
+            }
+
+            if ([502, 503, 504].includes(res.status) && attempt < 3) {
+              await sleep(1000 * attempt)
+              continue
+            }
+
             continue
           }
-          continue
-        }
 
-        if (wantStream && res.body) {
-          return { ok: true, stream: true, response: res }
-        }
+          if (wantStream && res.body) {
+            return { ok: true, stream: true, response: res }
+          }
 
-        const data = await res.json()
-        const text = data.choices?.[0]?.message?.content || ''
-        if (text) {
-          return {
-            ok: true,
-            stream: false,
-            text,
-            usage: data.usage || { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
+          const data = await res.json()
+          const text = data.choices?.[0]?.message?.content || ''
+          if (text) {
+            return {
+              ok: true,
+              stream: false,
+              text,
+              usage: data.usage || { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
+            }
+          }
+
+          lastDetail = 'empty completion content'
+        } catch (err: any) {
+          lastDetail =
+            err?.name === 'TimeoutError' || err?.name === 'AbortError'
+              ? `timeout after ${timeoutMs}ms`
+              : String(err?.message || err)
+
+          if (attempt < 3) {
+            await sleep(1000 * attempt)
+            continue
           }
         }
-      } catch (err: any) {
-        lastDetail = err?.name === 'TimeoutError' || err?.name === 'AbortError'
-          ? `timeout after ${timeoutMs}ms`
-          : String(err?.message || err)
-        // try next model/key
       }
+
+      if (sawAuthFailure) break
     }
   }
 
-  if (sawRateLimit) {
+  if (rateLimitHits > 0) {
     return {
       ok: false,
       status: 429,
@@ -154,7 +193,7 @@ export async function createCompletion(opts: {
   return {
     ok: false,
     status: 504,
-    message: `All upstream AI providers failed or timed out (${lastDetail || 'no detail'}). Retry with stream:true or try again in a few seconds.`,
+    message: `All upstream AI providers failed or timed out (${lastDetail || 'no detail'}). Please retry.`,
     code: 'upstream_timeout',
   }
 }
@@ -238,4 +277,33 @@ export function wrapProviderStreamAsOpenAi(
       }
     },
   })
+}
+
+/** If streaming fails, automatically retry as a single non-stream completion. */
+export async function createCompletionWithFallback(opts: {
+  messages: ChatMessage[]
+  temperature?: number
+  maxTokens?: number
+  stream?: boolean
+  unlimited?: boolean
+}): Promise<
+  | { ok: true; stream: true; response: Response }
+  | { ok: true; stream: false; text: string; usage: Record<string, number>; fellBack?: boolean }
+  | { ok: false; status: number; message: string; code: string }
+> {
+  const wantStream = opts.stream === true
+  const first = await createCompletion(opts)
+
+  if (first.ok || !wantStream) {
+    return first
+  }
+
+  if (first.code === 'upstream_timeout' || first.code === 'rate_limited' || first.status >= 502) {
+    const fallback = await createCompletion({ ...opts, stream: false })
+    if (fallback.ok && !fallback.stream) {
+      return { ...fallback, fellBack: true }
+    }
+  }
+
+  return first
 }

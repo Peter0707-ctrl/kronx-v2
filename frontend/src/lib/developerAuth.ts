@@ -45,6 +45,25 @@ export function apiError(
   )
 }
 
+function mapKeyRow(row: any): ApiKeyRecord {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    projectName: row.project_name,
+    keyPrefix: row.key_prefix,
+    apiKey: row.api_key,
+    callbackUrl: row.callback_url ?? null,
+    isActive: row.is_active !== false,
+    lastUsedAt: row.last_used_at,
+    createdAt: row.created_at,
+    userEmail: row.user_email,
+    userName: row.user_name,
+    isDeveloper: row.is_developer,
+    role: row.role,
+    apiUnlimitedTokens: true,
+  }
+}
+
 /** Authenticate a public API request via developer API key. */
 export async function authenticateApiKey(req: NextRequest): Promise<
   | { ok: true; key: ApiKeyRecord }
@@ -68,8 +87,7 @@ export async function authenticateApiKey(req: NextRequest): Promise<
     `SELECT
        k.id, k.user_id, k.project_name, k.key_prefix, k.api_key, k.callback_url,
        k.is_active, k.last_used_at, k.created_at,
-       u.email AS user_email, u.name AS user_name, u.is_developer, u.role,
-       COALESCE(u.api_unlimited_tokens, TRUE) AS api_unlimited_tokens
+       u.email AS user_email, u.name AS user_name, u.is_developer, u.role
      FROM api_keys k
      JOIN users u ON u.id = k.user_id
      WHERE k.api_key = $1
@@ -77,55 +95,61 @@ export async function authenticateApiKey(req: NextRequest): Promise<
     [apiKey]
   )
 
-  if (result.rows.length === 0) {
+  let row = result.rows[0]
+
+  // Legacy fallback: keys stored on users.api_key before multi-key table
+  if (!row) {
+    const legacy = await pool.query(
+      `SELECT
+         u.id AS user_id, u.email AS user_email, u.name AS user_name,
+         u.is_developer, u.role, u.api_key, u.callback_url
+       FROM users u
+       WHERE u.api_key = $1
+       LIMIT 1`,
+      [apiKey]
+    )
+    if (legacy.rows.length > 0) {
+      const u = legacy.rows[0]
+      row = {
+        id: `legacy-${u.user_id}`,
+        user_id: u.user_id,
+        project_name: 'Default Project',
+        key_prefix: String(u.api_key).slice(0, 12),
+        api_key: u.api_key,
+        callback_url: u.callback_url,
+        is_active: true,
+        last_used_at: null,
+        created_at: null,
+        user_email: u.user_email,
+        user_name: u.user_name,
+        is_developer: u.is_developer,
+        role: u.role,
+      }
+    }
+  }
+
+  if (!row) {
     return {
       ok: false,
       response: apiError('Invalid API key.', 403, 'invalid_api_key'),
     }
   }
 
-  const row = result.rows[0]
-  if (!row.is_active) {
+  if (row.is_active === false) {
     return {
       ok: false,
       response: apiError('This API key has been revoked.', 403, 'key_revoked'),
     }
   }
-  if (!row.is_developer && row.role !== 'admin') {
-    return {
-      ok: false,
-      response: apiError(
-        'Developer access is not granted for this account. Ask an admin to enable API access.',
-        403,
-        'developer_not_granted'
-      ),
-    }
-  }
 
-  // Touch last_used_at (fire-and-forget)
+  // Active project key = authorized. No extra developer flag check at call time.
   pool
     .query(`UPDATE api_keys SET last_used_at = NOW() WHERE id = $1`, [row.id])
     .catch(() => {})
 
   return {
     ok: true,
-    key: {
-      id: row.id,
-      userId: row.user_id,
-      projectName: row.project_name,
-      keyPrefix: row.key_prefix,
-      apiKey: row.api_key,
-      callbackUrl: row.callback_url,
-      isActive: row.is_active,
-      lastUsedAt: row.last_used_at,
-      createdAt: row.created_at,
-      userEmail: row.user_email,
-      userName: row.user_name,
-      isDeveloper: row.is_developer,
-      role: row.role,
-      apiUnlimitedTokens:
-        Boolean(row.api_unlimited_tokens) || Boolean(row.is_developer) || row.role === 'admin',
-    },
+    key: mapKeyRow(row),
   }
 }
 

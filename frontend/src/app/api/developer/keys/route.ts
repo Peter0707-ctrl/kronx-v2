@@ -68,8 +68,8 @@ export async function POST(req: NextRequest) {
       `SELECT COUNT(*)::int AS c FROM api_keys WHERE user_id = $1 AND is_active = TRUE`,
       [auth.userId]
     )
-    if ((existing.rows[0]?.c || 0) >= 20) {
-      return apiError('Maximum of 20 active API keys per account.', 400, 'key_limit_reached')
+    if ((existing.rows[0]?.c || 0) >= 100) {
+      return apiError('Maximum of 100 active API keys per account.', 400, 'key_limit_reached')
     }
 
     const apiKey = generateApiKeyValue()
