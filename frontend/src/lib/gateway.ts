@@ -3,7 +3,11 @@ import { v4 as uuidv4 } from 'uuid'
 const GROQ_MODELS = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768']
 
 function groqKeys(): string[] {
-  const keys = [process.env.GROQ_API_KEY].filter(Boolean) as string[]
+  const keys = [
+    process.env.GROQ_API_KEY,
+    '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',
+    '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',
+  ].filter(Boolean) as string[]
   return keys
 }
 
