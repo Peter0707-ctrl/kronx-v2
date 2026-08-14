@@ -502,8 +502,8 @@ class KronxOrchestrator:
         conversation_id: str,
         history: List
     ) -> AsyncGenerator[str, None]:
-        # High-Speed Response Cache Lookup for Frequently Asked Questions (Sub-millisecond latency)
-        cache_key = f"{mode}:{language}:{message.strip().lower()}"
+        # High-Speed Response Cache Lookup bound to specific conversation to avoid cross-user/cross-conversation data leakage
+        cache_key = f"{conversation_id}:{mode}:{language}:{message.strip().lower()}"
         if cache_key in RESPONSE_CACHE:
             cached_ans = RESPONSE_CACHE[cache_key]
             yield cached_ans

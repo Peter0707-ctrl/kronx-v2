@@ -323,3 +323,100 @@ RuntimeError: Secret system error context
 2026-08-14 03:55:45,351 - INFO - kronx - [req:390e76ac] - [main.py:38] - Started POST "/api/payment/mobile-money/webhook"
 2026-08-14 03:55:45,352 - INFO - kronx - [req:390e76ac] - [main.py:249] - Payment verified for PJKRONX Plus: TZS 15,000 ref=tx_ref_101
 2026-08-14 03:55:45,352 - INFO - kronx - [req:390e76ac] - [main.py:42] - Finished POST "/api/payment/mobile-money/webhook" status=200
+2026-08-14 03:58:35,266 - INFO - kronx - [req:903cee01] - [main.py:38] - Started GET "/health"
+2026-08-14 03:58:35,272 - INFO - kronx - [req:903cee01] - [main.py:42] - Finished GET "/health" status=200
+2026-08-14 03:58:35,276 - INFO - kronx - [req:91768b14] - [main.py:38] - Started GET "/health"
+2026-08-14 03:58:35,277 - INFO - kronx - [req:91768b14] - [main.py:42] - Finished GET "/health" status=200
+2026-08-14 03:58:35,281 - INFO - kronx - [req:system] - [http.py:10] - Initializing HTTP client connection pool...
+2026-08-14 03:58:35,885 - ERROR - kronx - [req:system] - [store.py:44] - Memory store JSON corrupted: Expecting property name enclosed in double quotes: line 1 column 3 (char 2)
+Traceback (most recent call last):
+  File "C:\Users\admin\Desktop\Kron-X\backend\memory\store.py", line 42, in _load_under_lock
+    self._cache = json.load(f)
+                  ^^^^^^^^^^^^
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\json\__init__.py", line 293, in load
+    return loads(fp.read(),
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\json\__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\json\decoder.py", line 338, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\json\decoder.py", line 354, in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ^^^^^^^^^^^^^^^^^^^^^^
+json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 3 (char 2)
+2026-08-14 03:58:35,888 - WARNING - kronx - [req:system] - [store.py:49] - Saved corrupted memory file to C:\Users\admin\AppData\Local\Temp\tmpwvyo3t3l\test_memory_store.json.corrupt.1786669115
+2026-08-14 03:58:35,894 - INFO - kronx - [req:ecb0f4d4] - [main.py:38] - Started POST "/api/payment/mobile-money/webhook"
+2026-08-14 03:58:35,896 - INFO - kronx - [req:ecb0f4d4] - [main.py:249] - Payment verified for PJKRONX Plus: TZS 15,000 ref=tx_unique_ref_999
+2026-08-14 03:58:35,896 - INFO - kronx - [req:ecb0f4d4] - [main.py:42] - Finished POST "/api/payment/mobile-money/webhook" status=200
+2026-08-14 03:58:35,899 - INFO - kronx - [req:c8f0886b] - [main.py:38] - Started POST "/api/payment/mobile-money/webhook"
+2026-08-14 03:58:35,899 - INFO - kronx - [req:c8f0886b] - [main.py:237] - Duplicate payment webhook received for reference_id=tx_unique_ref_999. Ignoring.
+2026-08-14 03:58:35,899 - INFO - kronx - [req:c8f0886b] - [main.py:42] - Finished POST "/api/payment/mobile-money/webhook" status=200
+2026-08-14 03:58:35,906 - INFO - kronx - [req:test-req-123] - [main.py:38] - Started GET "/health"
+2026-08-14 03:58:35,908 - INFO - kronx - [req:test-req-123] - [main.py:42] - Finished GET "/health" status=200
+2026-08-14 03:58:35,912 - INFO - kronx - [req:0033fa0e] - [main.py:38] - Started GET "/test-error-endpoint"
+2026-08-14 03:58:35,914 - ERROR - kronx - [req:0033fa0e] - [main.py:45] - Uncaught exception during request processing: Secret system error context
+Traceback (most recent call last):
+  File "C:\Users\admin\Desktop\Kron-X\backend\main.py", line 40, in request_id_middleware
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\starlette\middleware\base.py", line 168, in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\starlette\middleware\exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\fastapi\middleware\asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\starlette\routing.py", line 660, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\fastapi\routing.py", line 2734, in app
+    await route.handle(scope, receive, send)
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\fastapi\routing.py", line 1281, in handle
+    await super().handle(scope, receive, send)
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\starlette\routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\fastapi\routing.py", line 158, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\fastapi\routing.py", line 144, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\fastapi\routing.py", line 706, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\fastapi\routing.py", line 354, in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\starlette\concurrency.py", line 34, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\anyio\to_thread.py", line 63, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\anyio\_backends\_asyncio.py", line 2518, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\anyio\_backends\_asyncio.py", line 1002, in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\Desktop\Kron-X\backend\tests\test_foundation.py", line 279, in error_endpoint
+    raise RuntimeError("Secret system error context")
+RuntimeError: Secret system error context
+2026-08-14 03:58:35,928 - INFO - kronx - [req:9cb8eae6] - [main.py:38] - Started POST "/api/payment/mobile-money/webhook"
+2026-08-14 03:58:35,929 - CRITICAL - kronx - [req:9cb8eae6] - [main.py:226] - PAYMENT_WEBHOOK_SECRET is not configured in the environment. Webhook is locked down (Fail-Closed).
+2026-08-14 03:58:35,929 - INFO - kronx - [req:9cb8eae6] - [main.py:42] - Finished POST "/api/payment/mobile-money/webhook" status=500
+2026-08-14 03:58:35,935 - INFO - kronx - [req:5df5d527] - [main.py:38] - Started POST "/api/payment/mobile-money/webhook"
+2026-08-14 03:58:35,935 - WARNING - kronx - [req:5df5d527] - [main.py:231] - Unauthorized payment webhook request from phone=255700000000 ref=tx_ref_101
+2026-08-14 03:58:35,936 - INFO - kronx - [req:5df5d527] - [main.py:42] - Finished POST "/api/payment/mobile-money/webhook" status=401
+2026-08-14 03:58:35,939 - INFO - kronx - [req:c62e3d8b] - [main.py:38] - Started POST "/api/payment/mobile-money/webhook"
+2026-08-14 03:58:35,940 - INFO - kronx - [req:c62e3d8b] - [main.py:249] - Payment verified for PJKRONX Plus: TZS 15,000 ref=tx_ref_101
+2026-08-14 03:58:35,940 - INFO - kronx - [req:c62e3d8b] - [main.py:42] - Finished POST "/api/payment/mobile-money/webhook" status=200
