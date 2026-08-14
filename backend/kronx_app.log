@@ -420,3 +420,150 @@ RuntimeError: Secret system error context
 2026-08-14 03:58:35,939 - INFO - kronx - [req:c62e3d8b] - [main.py:38] - Started POST "/api/payment/mobile-money/webhook"
 2026-08-14 03:58:35,940 - INFO - kronx - [req:c62e3d8b] - [main.py:249] - Payment verified for PJKRONX Plus: TZS 15,000 ref=tx_ref_101
 2026-08-14 03:58:35,940 - INFO - kronx - [req:c62e3d8b] - [main.py:42] - Finished POST "/api/payment/mobile-money/webhook" status=200
+2026-08-14 04:04:29,005 - INFO - kronx - [req:system] - [manager.py:67] - Registered workspace=ws_f75060fe path=C:\Users\admin\AppData\Local\Temp\tmpp562vmp9\test_proj
+2026-08-14 04:04:29,010 - INFO - kronx - [req:system] - [manager.py:100] - Queued scan job=scan_b6b05bc2 for workspace=ws_f75060fe
+2026-08-14 04:04:29,015 - INFO - kronx - [req:system] - [scanner.py:148] - Scan job cancelled cooperatively during directory traversal.
+2026-08-14 04:04:29,020 - INFO - kronx - [req:system] - [manager.py:124] - Cancelled scan job=scan_b6b05bc2
+2026-08-14 04:04:29,046 - INFO - kronx - [req:system] - [manager.py:67] - Registered workspace=ws_1f9b77fb path=C:\Users\admin\AppData\Local\Temp\tmpaswbfwxn\test_proj
+2026-08-14 04:04:29,050 - INFO - kronx - [req:system] - [manager.py:100] - Queued scan job=scan_1024a31e for workspace=ws_1f9b77fb
+2026-08-14 04:04:29,080 - INFO - kronx - [req:system] - [manager.py:186] - Completed scan job=scan_1024a31e successfully.
+2026-08-14 04:04:29,203 - INFO - kronx - [req:system] - [manager.py:67] - Registered workspace=ws_31a8b7f3 path=C:\Users\admin\AppData\Local\Temp\tmpmiw3oyaa\test_proj
+2026-08-14 04:04:29,208 - INFO - kronx - [req:system] - [manager.py:100] - Queued scan job=scan_c06efdf7 for workspace=ws_31a8b7f3
+2026-08-14 04:04:29,245 - INFO - kronx - [req:system] - [manager.py:186] - Completed scan job=scan_c06efdf7 successfully.
+2026-08-14 04:04:29,342 - INFO - kronx - [req:system] - [manager.py:67] - Registered workspace=ws_d6cb81c2 path=C:\Users\admin\AppData\Local\Temp\tmpwzbu85ou\test_proj
+2026-08-14 04:04:29,347 - INFO - kronx - [req:system] - [manager.py:100] - Queued scan job=scan_0f09e005 for workspace=ws_d6cb81c2
+2026-08-14 04:04:29,364 - INFO - kronx - [req:system] - [manager.py:186] - Completed scan job=scan_0f09e005 successfully.
+2026-08-14 04:04:29,474 - INFO - kronx - [req:4103a3a5] - [main.py:38] - Started POST "/api/workspace"
+2026-08-14 04:04:29,513 - INFO - kronx - [req:4103a3a5] - [manager.py:67] - Registered workspace=ws_7b26aa9b path=C:\Users\admin\AppData\Local\Temp\tmpo3sd9zjs\test_proj
+2026-08-14 04:04:29,515 - INFO - kronx - [req:4103a3a5] - [main.py:42] - Finished POST "/api/workspace" status=200
+2026-08-14 04:04:29,520 - INFO - kronx - [req:470ecf01] - [main.py:38] - Started POST "/api/workspace/scan"
+2026-08-14 04:04:29,527 - INFO - kronx - [req:470ecf01] - [manager.py:100] - Queued scan job=scan_a572229d for workspace=ws_7b26aa9b
+2026-08-14 04:04:29,528 - INFO - kronx - [req:470ecf01] - [main.py:42] - Finished POST "/api/workspace/scan" status=200
+2026-08-14 04:04:29,535 - INFO - kronx - [req:320bacfe] - [main.py:38] - Started GET "/api/workspace/scan/scan_a572229d"
+2026-08-14 04:04:29,537 - INFO - kronx - [req:320bacfe] - [main.py:42] - Finished GET "/api/workspace/scan/scan_a572229d" status=200
+2026-08-14 04:04:29,544 - INFO - kronx - [req:8f4504aa] - [main.py:38] - Started POST "/api/workspace/scan/scan_a572229d/cancel"
+2026-08-14 04:04:29,552 - INFO - kronx - [req:8f4504aa] - [manager.py:124] - Cancelled scan job=scan_a572229d
+2026-08-14 04:04:29,552 - INFO - kronx - [req:8f4504aa] - [main.py:42] - Finished POST "/api/workspace/scan/scan_a572229d/cancel" status=200
+2026-08-14 04:04:29,553 - INFO - kronx - [req:system] - [manager.py:186] - Completed scan job=scan_a572229d successfully.
+2026-08-14 04:05:21,919 - INFO - kronx - [req:d2f32aed] - [main.py:38] - Started GET "/health"
+2026-08-14 04:05:21,928 - INFO - kronx - [req:d2f32aed] - [main.py:42] - Finished GET "/health" status=200
+2026-08-14 04:05:21,933 - INFO - kronx - [req:cbbff9f3] - [main.py:38] - Started GET "/health"
+2026-08-14 04:05:21,934 - INFO - kronx - [req:cbbff9f3] - [main.py:42] - Finished GET "/health" status=200
+2026-08-14 04:05:21,937 - INFO - kronx - [req:system] - [http.py:10] - Initializing HTTP client connection pool...
+2026-08-14 04:05:22,501 - ERROR - kronx - [req:system] - [store.py:44] - Memory store JSON corrupted: Expecting property name enclosed in double quotes: line 1 column 3 (char 2)
+Traceback (most recent call last):
+  File "C:\Users\admin\Desktop\Kron-X\backend\memory\store.py", line 42, in _load_under_lock
+    self._cache = json.load(f)
+                  ^^^^^^^^^^^^
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\json\__init__.py", line 293, in load
+    return loads(fp.read(),
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\json\__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\json\decoder.py", line 338, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\json\decoder.py", line 354, in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ^^^^^^^^^^^^^^^^^^^^^^
+json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 3 (char 2)
+2026-08-14 04:05:22,504 - WARNING - kronx - [req:system] - [store.py:49] - Saved corrupted memory file to C:\Users\admin\AppData\Local\Temp\tmpp_wxpt9f\test_memory_store.json.corrupt.1786669522
+2026-08-14 04:05:22,508 - INFO - kronx - [req:8cc54681] - [main.py:38] - Started POST "/api/payment/mobile-money/webhook"
+2026-08-14 04:05:22,510 - INFO - kronx - [req:8cc54681] - [main.py:251] - Payment verified for PJKRONX Plus: TZS 15,000 ref=tx_unique_ref_999
+2026-08-14 04:05:22,510 - INFO - kronx - [req:8cc54681] - [main.py:42] - Finished POST "/api/payment/mobile-money/webhook" status=200
+2026-08-14 04:05:22,513 - INFO - kronx - [req:e3a8ed56] - [main.py:38] - Started POST "/api/payment/mobile-money/webhook"
+2026-08-14 04:05:22,515 - INFO - kronx - [req:e3a8ed56] - [main.py:239] - Duplicate payment webhook received for reference_id=tx_unique_ref_999. Ignoring.
+2026-08-14 04:05:22,515 - INFO - kronx - [req:e3a8ed56] - [main.py:42] - Finished POST "/api/payment/mobile-money/webhook" status=200
+2026-08-14 04:05:22,521 - INFO - kronx - [req:test-req-123] - [main.py:38] - Started GET "/health"
+2026-08-14 04:05:22,522 - INFO - kronx - [req:test-req-123] - [main.py:42] - Finished GET "/health" status=200
+2026-08-14 04:05:22,526 - INFO - kronx - [req:6783816c] - [main.py:38] - Started GET "/test-error-endpoint"
+2026-08-14 04:05:22,528 - ERROR - kronx - [req:6783816c] - [main.py:45] - Uncaught exception during request processing: Secret system error context
+Traceback (most recent call last):
+  File "C:\Users\admin\Desktop\Kron-X\backend\main.py", line 40, in request_id_middleware
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\starlette\middleware\base.py", line 168, in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\starlette\middleware\exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\fastapi\middleware\asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\starlette\routing.py", line 660, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\fastapi\routing.py", line 2734, in app
+    await route.handle(scope, receive, send)
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\fastapi\routing.py", line 1281, in handle
+    await super().handle(scope, receive, send)
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\starlette\routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\fastapi\routing.py", line 158, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\fastapi\routing.py", line 144, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\fastapi\routing.py", line 706, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\fastapi\routing.py", line 354, in run_endpoint_function
+    return await run_in_threadpool(dependant.call, **values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\starlette\concurrency.py", line 34, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\anyio\to_thread.py", line 63, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\anyio\_backends\_asyncio.py", line 2518, in run_sync_in_worker_thread
+    return await future
+           ^^^^^^^^^^^^
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\site-packages\anyio\_backends\_asyncio.py", line 1002, in run
+    result = context.run(func, *args)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\Desktop\Kron-X\backend\tests\test_foundation.py", line 279, in error_endpoint
+    raise RuntimeError("Secret system error context")
+RuntimeError: Secret system error context
+2026-08-14 04:05:22,544 - INFO - kronx - [req:6d1da30a] - [main.py:38] - Started POST "/api/payment/mobile-money/webhook"
+2026-08-14 04:05:22,545 - CRITICAL - kronx - [req:6d1da30a] - [main.py:228] - PAYMENT_WEBHOOK_SECRET is not configured in the environment. Webhook is locked down (Fail-Closed).
+2026-08-14 04:05:22,546 - INFO - kronx - [req:6d1da30a] - [main.py:42] - Finished POST "/api/payment/mobile-money/webhook" status=500
+2026-08-14 04:05:22,552 - INFO - kronx - [req:15e0c76f] - [main.py:38] - Started POST "/api/payment/mobile-money/webhook"
+2026-08-14 04:05:22,553 - WARNING - kronx - [req:15e0c76f] - [main.py:233] - Unauthorized payment webhook request from phone=255700000000 ref=tx_ref_101
+2026-08-14 04:05:22,554 - INFO - kronx - [req:15e0c76f] - [main.py:42] - Finished POST "/api/payment/mobile-money/webhook" status=401
+2026-08-14 04:05:22,558 - INFO - kronx - [req:a9de2c48] - [main.py:38] - Started POST "/api/payment/mobile-money/webhook"
+2026-08-14 04:05:22,559 - INFO - kronx - [req:a9de2c48] - [main.py:251] - Payment verified for PJKRONX Plus: TZS 15,000 ref=tx_ref_101
+2026-08-14 04:05:22,559 - INFO - kronx - [req:a9de2c48] - [main.py:42] - Finished POST "/api/payment/mobile-money/webhook" status=200
+2026-08-14 04:05:22,589 - INFO - kronx - [req:system] - [manager.py:67] - Registered workspace=ws_28c4d6f1 path=C:\Users\admin\AppData\Local\Temp\tmpb4oqsl6w\test_proj
+2026-08-14 04:05:22,595 - INFO - kronx - [req:system] - [manager.py:100] - Queued scan job=scan_3853b96c for workspace=ws_28c4d6f1
+2026-08-14 04:05:22,600 - INFO - kronx - [req:system] - [scanner.py:148] - Scan job cancelled cooperatively during directory traversal.
+2026-08-14 04:05:22,604 - INFO - kronx - [req:system] - [manager.py:124] - Cancelled scan job=scan_3853b96c
+2026-08-14 04:05:22,638 - INFO - kronx - [req:system] - [manager.py:67] - Registered workspace=ws_e6177774 path=C:\Users\admin\AppData\Local\Temp\tmpiphjyrkx\test_proj
+2026-08-14 04:05:22,643 - INFO - kronx - [req:system] - [manager.py:100] - Queued scan job=scan_0f3b6a63 for workspace=ws_e6177774
+2026-08-14 04:05:22,664 - INFO - kronx - [req:system] - [manager.py:186] - Completed scan job=scan_0f3b6a63 successfully.
+2026-08-14 04:05:22,779 - INFO - kronx - [req:system] - [manager.py:67] - Registered workspace=ws_d927a09b path=C:\Users\admin\AppData\Local\Temp\tmpp1yd0qp3\test_proj
+2026-08-14 04:05:22,784 - INFO - kronx - [req:system] - [manager.py:100] - Queued scan job=scan_506f84f1 for workspace=ws_d927a09b
+2026-08-14 04:05:22,803 - INFO - kronx - [req:system] - [manager.py:186] - Completed scan job=scan_506f84f1 successfully.
+2026-08-14 04:05:22,920 - INFO - kronx - [req:system] - [manager.py:67] - Registered workspace=ws_592bbcb5 path=C:\Users\admin\AppData\Local\Temp\tmpmq2jhnoj\test_proj
+2026-08-14 04:05:22,927 - INFO - kronx - [req:system] - [manager.py:100] - Queued scan job=scan_5be243c3 for workspace=ws_592bbcb5
+2026-08-14 04:05:22,948 - INFO - kronx - [req:system] - [manager.py:186] - Completed scan job=scan_5be243c3 successfully.
+2026-08-14 04:05:23,047 - INFO - kronx - [req:b4b85125] - [main.py:38] - Started POST "/api/workspace"
+2026-08-14 04:05:23,076 - INFO - kronx - [req:b4b85125] - [manager.py:67] - Registered workspace=ws_5d880111 path=C:\Users\admin\AppData\Local\Temp\tmpwz21_jxp\test_proj
+2026-08-14 04:05:23,077 - INFO - kronx - [req:b4b85125] - [main.py:42] - Finished POST "/api/workspace" status=200
+2026-08-14 04:05:23,081 - INFO - kronx - [req:bb3b6c9b] - [main.py:38] - Started POST "/api/workspace/scan"
+2026-08-14 04:05:23,087 - INFO - kronx - [req:bb3b6c9b] - [manager.py:100] - Queued scan job=scan_4d1096bc for workspace=ws_5d880111
+2026-08-14 04:05:23,089 - INFO - kronx - [req:bb3b6c9b] - [main.py:42] - Finished POST "/api/workspace/scan" status=200
+2026-08-14 04:05:23,094 - INFO - kronx - [req:671790fd] - [main.py:38] - Started GET "/api/workspace/scan/scan_4d1096bc"
+2026-08-14 04:05:23,097 - INFO - kronx - [req:671790fd] - [main.py:42] - Finished GET "/api/workspace/scan/scan_4d1096bc" status=200
+2026-08-14 04:05:23,103 - INFO - kronx - [req:22748b39] - [main.py:38] - Started POST "/api/workspace/scan/scan_4d1096bc/cancel"
+2026-08-14 04:05:23,112 - INFO - kronx - [req:system] - [manager.py:186] - Completed scan job=scan_4d1096bc successfully.
+2026-08-14 04:05:23,118 - INFO - kronx - [req:22748b39] - [manager.py:124] - Cancelled scan job=scan_4d1096bc
+2026-08-14 04:05:23,119 - INFO - kronx - [req:22748b39] - [main.py:42] - Finished POST "/api/workspace/scan/scan_4d1096bc/cancel" status=200

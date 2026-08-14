@@ -15,6 +15,8 @@ venv/
 chroma_db/
 kronx.db
 memory_store.json
+workspace_store.json
+*.log
 
 # Node / Next.js
 node_modules/
