@@ -160,7 +160,7 @@ export function useChat() {
       currentState.setStreaming(true)
 
       try {
-        const history = buildHistory(currentState.activeMessages())
+        const history = buildHistory(currentState.activeMessages().slice(0, -2))
         const memories = currentState.userMemories || []
         const memoryPrompt = memories.length > 0 ? `\n\n[PERSISTENT USER BRAIN MEMORY]:\n${memories.map(m => `- ${m}`).join('\n')}` : ''
 
@@ -212,7 +212,7 @@ export function useChat() {
             mode: currentState.mode,
             language: currentState.language,
             conversation_id: currentState.activeConversationId ?? 'new',
-            history: buildHistory(currentState.activeMessages()),
+            history: buildHistory(currentState.activeMessages().slice(0, -2)),
           })
           currentState.replaceLastAiMessage(directText)
           postProcessResponse()
@@ -272,7 +272,7 @@ export function useChat() {
     currentState.setStreaming(true)
 
     try {
-      const history = buildHistory(currentState.activeMessages().slice(0, -1))
+      const history = buildHistory(currentState.activeMessages().slice(0, -2))
 
       const gen = streamMessage({
         message: `${lastUserMessage} (Note: Provide an alternative, enhanced response)`,
