@@ -33,7 +33,17 @@ export function useChat() {
         currentState.incrementPictureUsage()
 
         const imagePrompt = imgMatch[1].trim()
-        const encodedPrompt = encodeURIComponent(`${imagePrompt}, 8k resolution, highly detailed, photorealistic, cinematic lighting, masterpiece`)
+        const lowerPrompt = imagePrompt.toLowerCase()
+        let styleModifiers = "8k resolution, highly detailed, photorealistic, cinematic lighting, masterpiece"
+        if (lowerPrompt.includes('logo')) {
+          styleModifiers = "minimalist vector logo, clean professional branding, vector art, flat design, SVG style, white background"
+        } else if (lowerPrompt.includes('map') || lowerPrompt.includes('floor plan') || lowerPrompt.includes('blueprint')) {
+          styleModifiers = "highly detailed topographic map, clear geography labels, cartographic design, satellite style, detailed vectors"
+        } else if (lowerPrompt.includes('card') || lowerPrompt.includes('ui') || lowerPrompt.includes('mockup') || lowerPrompt.includes('wireframe')) {
+          styleModifiers = "UI UX layout, premium presentation design, high-fidelity app component mockup, glassmorphism, clean interface aesthetics"
+        }
+
+        const encodedPrompt = encodeURIComponent(`${imagePrompt}, ${styleModifiers}`)
         const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&model=flux&seed=${Math.floor(Math.random()*100000)}&nologo=true`
         const imageMarkdown = `Here is your high-fidelity generated image for **"${imagePrompt}"**:\n\n![Generated Image](${pollinationsUrl})`
         currentState.replaceLastAiMessage(imageMarkdown)

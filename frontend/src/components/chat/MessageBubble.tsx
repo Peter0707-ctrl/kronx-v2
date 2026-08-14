@@ -309,6 +309,88 @@ function CodeBlockRunner({ language, code, children, props }: any) {
   )
 }
 
+const ResilientMarkdownImage = ({ src, alt, onPreview }: { src?: string; alt?: string; onPreview: (s: string) => void }) => {
+  const [currentSrc, setCurrentSrc] = useState(src || '')
+  const [loading, setLoading] = useState(true)
+  const [errorCount, setErrorCount] = useState(0)
+
+  const handleLoad = () => {
+    setLoading(false)
+  }
+
+  const handleError = () => {
+    if (errorCount === 0 && src) {
+      setErrorCount(1)
+      const fallback = src.includes('image.pollinations.ai')
+        ? src.replace('image.pollinations.ai/prompt', 'gen.pollinations.ai/image')
+        : src.replace('gen.pollinations.ai/image', 'image.pollinations.ai/prompt')
+      setCurrentSrc(fallback)
+    } else {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <span style={{ display: 'inline-block', margin: '14px 0', position: 'relative', maxWidth: '512px', width: '100%', minHeight: loading ? '280px' : 'auto' }}>
+      {loading && (
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
+          borderRadius: '16px', border: '1.5px dashed #cbd5e1',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          gap: '12px', padding: '20px', zIndex: 2
+        }}>
+          <div style={{ width: '28px', height: '28px', borderRadius: '50%', border: '3px solid #0284c7', borderTopColor: 'transparent', animation: 'imageLoadingSpin 1s linear infinite' }} />
+          <span style={{ fontSize: '11px', fontWeight: '800', color: '#64748b', textAlign: 'center' }}>
+            🎨 Generating visual concept... Please wait
+          </span>
+          <style>{`@keyframes imageLoadingSpin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+      )}
+      <img 
+        src={currentSrc} 
+        alt={alt} 
+        onLoad={handleLoad}
+        onError={handleError}
+        style={{ 
+          width: '100%', maxWidth: '512px', height: 'auto', 
+          borderRadius: '16px', border: '1px solid #bae6fd', 
+          boxShadow: '0 8px 24px rgba(2, 132, 199, 0.12)', 
+          display: 'block', cursor: 'pointer',
+          opacity: loading ? 0 : 1,
+          transition: 'opacity 0.3s ease-in-out'
+        }} 
+        onClick={() => !loading && onPreview(currentSrc)} 
+      />
+      {!loading && (
+        <a 
+          href={currentSrc} 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          style={{ 
+            position: 'absolute', bottom: '12px', right: '12px', 
+            background: 'rgba(15, 23, 42, 0.85)', color: '#ffffff', 
+            padding: '6px 14px', borderRadius: '20px', 
+            fontSize: '12px', fontWeight: '700', textDecoration: 'none', 
+            display: 'flex', alignItems: 'center', gap: '6px', 
+            backdropFilter: 'blur(8px)', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)', 
+            transition: 'all 0.2s ease-in-out' 
+          }} 
+          onMouseOver={e => e.currentTarget.style.background = '#0f172a'} 
+          onMouseOut={e => e.currentTarget.style.background = 'rgba(15, 23, 42, 0.85)'}
+        >
+          <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          <span>Download Image</span>
+        </a>
+      )}
+    </span>
+  )
+}
+
 interface Props {
   message: Message
   isStreaming?: boolean
@@ -830,18 +912,8 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
                         </code>
                       )
                     },
-                    img: ({node, src, alt, ...props}) => (
-                      <span style={{ display: 'inline-block', margin: '14px 0', position: 'relative', maxWidth: '512px', width: '100%' }}>
-                        <img src={src} alt={alt} style={{ width: '100%', maxWidth: '512px', height: 'auto', borderRadius: '16px', border: '1px solid #bae6fd', boxShadow: '0 8px 24px rgba(2, 132, 199, 0.12)', display: 'block', cursor: 'pointer' }} onClick={() => src && setPreviewModalImg(src)} />
-                        <a href={src} target="_blank" rel="noopener noreferrer" style={{ position: 'absolute', bottom: '12px', right: '12px', background: 'rgba(15, 23, 42, 0.85)', color: '#ffffff', padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px', backdropFilter: 'blur(8px)', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)', transition: 'all 0.2s ease-in-out' }} onMouseOver={e => e.currentTarget.style.background = '#0f172a'} onMouseOut={e => e.currentTarget.style.background = 'rgba(15, 23, 42, 0.85)'}>
-                          <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                            <polyline points="7 10 12 15 17 10" />
-                            <line x1="12" y1="15" x2="12" y2="3" />
-                          </svg>
-                          <span>Download Image</span>
-                        </a>
-                      </span>
+                    img: ({node, src, alt}) => (
+                      <ResilientMarkdownImage src={src} alt={alt} onPreview={setPreviewModalImg} />
                     )
                   }}
                 >
