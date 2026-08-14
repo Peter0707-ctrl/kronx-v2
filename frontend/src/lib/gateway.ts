@@ -20,7 +20,7 @@ function upstreamTimeoutMs(wantStream: boolean): number {
       : process.env.GATEWAY_UPSTREAM_TIMEOUT_MS
   )
   if (Number.isFinite(fromEnv) && fromEnv > 0) return fromEnv
-  return wantStream ? 60000 : 90000
+  return wantStream ? 120000 : 120000
 }
 
 export type ChatMessage = { role: string; content: string }
