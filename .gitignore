@@ -6,7 +6,9 @@
 
 # Python
 __pycache__/
+**/__pycache__/
 *.pyc
+**/*.pyc
 *.pyo
 *.pyd
 .pytest_cache/
@@ -16,7 +18,14 @@ chroma_db/
 kronx.db
 memory_store.json
 workspace_store.json
+*_store.json
+**/*_store.json
+*.corrupt.*
+**/*.corrupt.*
+backups/
+**/backups/
 *.log
+**/*.log
 
 # Node / Next.js
 node_modules/
@@ -33,4 +42,4 @@ Thumbs.db
 replacements.txt
 .env
 **/.env
-web: uvicorn main:app --host 0.0.0.0 --port $PORT
+

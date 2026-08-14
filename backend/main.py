@@ -77,10 +77,41 @@ from api.chat import router as chat_router
 from api.memory import router as memory_router
 from api.workspace import router as workspace_router
 from api.tools import router as tools_router
+from api.planner import router as planner_router
+from api.execution import router as execution_router
+from api.modification import router as modification_router
+from api.verification import verification_router
+from api.auth import auth_router
+from api.agent import agent_router
+from api.multimodal import multimodal_router
+from api.llm import llm_router
+from api.operations import operations_router
+from gateway import GatewayMiddleware, health_router
+
+
+app.add_middleware(GatewayMiddleware)
+
 app.include_router(chat_router, prefix="/api")
 app.include_router(memory_router, prefix="/api")
 app.include_router(workspace_router, prefix="/api")
 app.include_router(tools_router, prefix="/api")
+app.include_router(planner_router, prefix="/api")
+app.include_router(execution_router, prefix="/api")
+app.include_router(modification_router, prefix="/api")
+app.include_router(verification_router)
+app.include_router(auth_router)
+app.include_router(health_router)
+app.include_router(agent_router)
+app.include_router(multimodal_router)
+app.include_router(llm_router)
+app.include_router(operations_router)
+
+
+
+
+
+
+
 
 from fastapi.responses import HTMLResponse
 
