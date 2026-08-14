@@ -567,6 +567,9 @@ echo $response;`,
                   <strong>OpenAI alias:</strong> <code>POST /api/v1/chat/completions</code>
                 </li>
                 <li>
+                  <strong>Images:</strong> <code>POST /api/images</code> — body <code>{`{ "prompt": "..." }`}</code>
+                </li>
+                <li>
                   <strong>Model id:</strong> <code>copetra-ai</code>
                 </li>
               </ul>
