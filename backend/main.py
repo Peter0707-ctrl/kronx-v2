@@ -1,7 +1,15 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 import os
+import uuid
+import threading
+from typing import Optional
+
+# Setup logger first to capture initialization logs
+from utils.logger import logger, request_id_var
+from utils.http import get_client, close_client
 
 load_dotenv()
 
@@ -10,6 +18,36 @@ app = FastAPI(
     description="Kronx AI Companion Backend",
     version="0.2.0"
 )
+
+# Startup / Shutdown events to manage global HTTP connection pool
+@app.on_event("startup")
+async def startup_event():
+    logger.info("Starting up Kronx AI Backend API...")
+    get_client() # initialize connection pool
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    logger.info("Shutting down Kronx AI Backend API...")
+    await close_client() # clean up connections
+
+# Request Correlation ID tracking middleware
+@app.middleware("http")
+async def request_id_middleware(request: Request, call_next):
+    req_id = request.headers.get("X-Request-ID", str(uuid.uuid4())[:8])
+    token = request_id_var.set(req_id)
+    logger.info(f"Started {request.method} \"{request.url.path}\"")
+    try:
+        response = await call_next(request)
+        logger.info(f"Finished {request.method} \"{request.url.path}\" status={response.status_code}")
+        return response
+    except Exception as e:
+        logger.error(f"Uncaught exception during request processing: {e}", exc_info=True)
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "An internal server error occurred. Please try again later."}
+        )
+    finally:
+        request_id_var.reset(token)
 
 app.add_middleware(
     CORSMiddleware,
@@ -150,6 +188,8 @@ async def system_status():
 
 # MOBILE MONEY AUTOMATED PAYMENT GATEWAY WEBHOOK (AzamPay / Selcom / Yas Lipa Namba API)
 from pydantic import BaseModel
+from fastapi import Header, HTTPException
+import hmac
 
 class MobileMoneyPayload(BaseModel):
     phone_number: str
@@ -157,9 +197,41 @@ class MobileMoneyPayload(BaseModel):
     reference_id: str
     service: str = "PJKRONX_PLUS"
 
+# In-memory deduplication set for webhook replay protection
+PROCESSED_PAYMENTS = set()
+payment_lock = threading.Lock()
+
 @app.post("/api/payment/mobile-money/webhook")
-async def mobile_money_webhook(payload: MobileMoneyPayload):
+async def mobile_money_webhook(
+    payload: MobileMoneyPayload,
+    x_webhook_secret: Optional[str] = Header(None, alias="X-Webhook-Secret")
+):
+    secret = os.getenv("PAYMENT_WEBHOOK_SECRET")
+    if not secret:
+        logger.critical("PAYMENT_WEBHOOK_SECRET is not configured in the environment. Webhook is locked down (Fail-Closed).")
+        raise HTTPException(status_code=500, detail="Webhook signature validation is misconfigured.")
+
+    # Use hmac.compare_digest for constant-time comparison to prevent timing attacks
+    if not x_webhook_secret or not hmac.compare_digest(x_webhook_secret, secret):
+        logger.warning(f"Unauthorized payment webhook request from phone={payload.phone_number} ref={payload.reference_id}")
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    # Webhook replay protection check
+    with payment_lock:
+        if payload.reference_id in PROCESSED_PAYMENTS:
+            logger.info(f"Duplicate payment webhook received for reference_id={payload.reference_id}. Ignoring.")
+            return {
+                "status": "success",
+                "message": "Payment already processed",
+                "reference_id": payload.reference_id
+            }
+        PROCESSED_PAYMENTS.add(payload.reference_id)
+        # Bounded cache clean up
+        if len(PROCESSED_PAYMENTS) > 5000:
+            PROCESSED_PAYMENTS.clear() # Clear to bound memory usage
+
     if payload.amount >= 15000:
+        logger.info(f"Payment verified for PJKRONX Plus: TZS {payload.amount:,.0f} ref={payload.reference_id}")
         return {
             "status": "success",
             "message": "Payment verified for PJKRONX Plus Subscription",

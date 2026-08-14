@@ -1,9 +1,16 @@
 import json
 import os
+import threading
+import shutil
+import tempfile
 from datetime import datetime
 from typing import List, Optional
+from utils.logger import logger
 
 MEMORY_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "memory_store.json")
+
+# Global thread lock for serialize read/write filesystem access
+_file_lock = threading.Lock()
 
 class MemoryStore:
     def __init__(self):
@@ -12,33 +19,73 @@ class MemoryStore:
         self._ensure_file()
 
     def _ensure_file(self):
-        if not os.path.exists(self.path):
-            with open(self.path, "w", encoding="utf-8") as f:
-                json.dump({}, f)
+        with _file_lock:
+            if not os.path.exists(self.path):
+                try:
+                    with open(self.path, "w", encoding="utf-8") as f:
+                        json.dump({}, f)
+                except Exception as e:
+                    logger.error(f"Failed to create memory store file: {e}", exc_info=True)
 
     def _load(self) -> dict:
         if self._cache is not None:
             return self._cache
 
-        if not os.path.exists(self.path):
-            self._cache = {}
-            return self._cache
+        with _file_lock:
+            if not os.path.exists(self.path):
+                self._cache = {}
+                return self._cache
 
-        try:
-            with open(self.path, "r", encoding="utf-8") as f:
-                self._cache = json.load(f)
-        except Exception:
-            self._cache = {}
+            try:
+                with open(self.path, "r", encoding="utf-8") as f:
+                    self._cache = json.load(f)
+            except json.JSONDecodeError as jde:
+                logger.error(f"Memory store JSON corrupted: {jde}", exc_info=True)
+                # Recover safely: copy corrupted file to a backup diagnosis path
+                corrupt_backup = f"{self.path}.corrupt.{int(datetime.now().timestamp())}"
+                try:
+                    if os.path.exists(self.path):
+                        shutil.copy2(self.path, corrupt_backup)
+                        logger.warning(f"Saved corrupted memory file to {corrupt_backup}")
+                except Exception as backup_err:
+                    logger.error(f"Failed to backup corrupted file: {backup_err}", exc_info=True)
+                
+                # Recover safely with empty dictionary
+                self._cache = {}
+                try:
+                    with open(self.path, "w", encoding="utf-8") as f:
+                        json.dump({}, f)
+                except Exception as write_err:
+                    logger.error(f"Failed to write fresh file during recovery: {write_err}", exc_info=True)
+            except Exception as e:
+                logger.error(f"Failed to load memory store: {e}", exc_info=True)
+                self._cache = {}
 
         return self._cache
 
     def _save(self, data: dict):
         self._cache = data
-        try:
-            with open(self.path, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=2, default=str)
-        except Exception as e:
-            print(f"[MemoryStore save error]: {e}")
+        dir_name = os.path.dirname(self.path)
+        with _file_lock:
+            # Create a temp file in the same folder to guarantee atomic rename capability
+            temp_fd, temp_path = tempfile.mkstemp(dir=dir_name, prefix="memory_store_tmp_", suffix=".json")
+            try:
+                with os.fdopen(temp_fd, "w", encoding="utf-8") as f:
+                    json.dump(data, f, indent=2, default=str)
+                    f.flush()
+                    try:
+                        os.fsync(temp_fd)
+                    except Exception:
+                        pass
+                # Atomic swap file replace
+                os.replace(temp_path, self.path)
+            except Exception as e:
+                logger.error(f"Failed to save memory store atomically: {e}", exc_info=True)
+                if os.path.exists(temp_path):
+                    try:
+                        os.remove(temp_path)
+                    except Exception:
+                        pass
 
     def save_memory(
         self,

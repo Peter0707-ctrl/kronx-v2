@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from typing import List
 import re
 import asyncio
+from utils.logger import logger
 
 router = APIRouter()
 
@@ -42,7 +43,8 @@ async def chat(request: ChatRequest):
         )
         return {"response": fix_response(response)}
     except Exception as e:
-        return {"response": f"Error processing your request: {str(e)}. Please try again."}
+        logger.error(f"Error in chat endpoint: {e}", exc_info=True)
+        return {"response": "Error processing your request. Please try again."}
 
 @router.post("/chat/stream")
 async def chat_stream(request: ChatRequest):
@@ -100,6 +102,7 @@ async def chat_stream(request: ChatRequest):
             }
         )
     except Exception as e:
+        logger.error(f"Error in chat_stream setup: {e}", exc_info=True)
         # Fallback to JSON if streaming setup fails entirely
         try:
             from orchestrator.core import KronxOrchestrator
@@ -113,4 +116,5 @@ async def chat_stream(request: ChatRequest):
             )
             return JSONResponse({"response": fix_response(response)})
         except Exception as e2:
-            return JSONResponse({"response": f"System error: {str(e2)}"})
+            logger.error(f"Error in fallback JSON response: {e2}", exc_info=True)
+            return JSONResponse({"response": "An internal error occurred. Please try again later."})

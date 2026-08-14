@@ -1,0 +1,49 @@
+2026-08-14 03:45:28,646 - INFO - kronx - [req:system] - [http.py:10] - Initializing HTTP client connection pool...
+2026-08-14 03:45:29,405 - ERROR - kronx - [req:system] - [store.py:43] - Memory store JSON corrupted: Expecting property name enclosed in double quotes: line 1 column 3 (char 2)
+Traceback (most recent call last):
+  File "C:\Users\admin\Desktop\Kron-X\backend\memory\store.py", line 41, in _load
+    self._cache = json.load(f)
+                  ^^^^^^^^^^^^
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\json\__init__.py", line 293, in load
+    return loads(fp.read(),
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\json\__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\json\decoder.py", line 338, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\json\decoder.py", line 354, in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ^^^^^^^^^^^^^^^^^^^^^^
+json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 3 (char 2)
+2026-08-14 03:45:29,442 - WARNING - kronx - [req:system] - [store.py:49] - Saved corrupted memory file to C:\Users\admin\AppData\Local\Temp\tmpz4nrixin\test_memory_store.json.corrupt.1786668329
+2026-08-14 03:46:07,250 - INFO - kronx - [req:system] - [http.py:10] - Initializing HTTP client connection pool...
+2026-08-14 03:46:07,870 - ERROR - kronx - [req:system] - [store.py:43] - Memory store JSON corrupted: Expecting property name enclosed in double quotes: line 1 column 3 (char 2)
+Traceback (most recent call last):
+  File "C:\Users\admin\Desktop\Kron-X\backend\memory\store.py", line 41, in _load
+    self._cache = json.load(f)
+                  ^^^^^^^^^^^^
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\json\__init__.py", line 293, in load
+    return loads(fp.read(),
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\json\__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\json\decoder.py", line 338, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\admin\AppData\Local\Programs\Python\Python312\Lib\json\decoder.py", line 354, in raw_decode
+    obj, end = self.scan_once(s, idx)
+               ^^^^^^^^^^^^^^^^^^^^^^
+json.decoder.JSONDecodeError: Expecting property name enclosed in double quotes: line 1 column 3 (char 2)
+2026-08-14 03:46:07,873 - WARNING - kronx - [req:system] - [store.py:49] - Saved corrupted memory file to C:\Users\admin\AppData\Local\Temp\tmp2ghltjjg\test_memory_store.json.corrupt.1786668367
+2026-08-14 03:46:08,856 - INFO - kronx - [req:faa121a0] - [main.py:38] - Started POST "/api/payment/mobile-money/webhook"
+2026-08-14 03:46:08,864 - CRITICAL - kronx - [req:faa121a0] - [main.py:211] - PAYMENT_WEBHOOK_SECRET is not configured in the environment. Webhook is locked down (Fail-Closed).
+2026-08-14 03:46:08,865 - INFO - kronx - [req:faa121a0] - [main.py:41] - Finished POST "/api/payment/mobile-money/webhook" status=500
+2026-08-14 03:46:08,872 - INFO - kronx - [req:a120f657] - [main.py:38] - Started POST "/api/payment/mobile-money/webhook"
+2026-08-14 03:46:08,873 - WARNING - kronx - [req:a120f657] - [main.py:216] - Unauthorized payment webhook request from phone=255700000000 ref=tx_ref_101
+2026-08-14 03:46:08,873 - INFO - kronx - [req:a120f657] - [main.py:41] - Finished POST "/api/payment/mobile-money/webhook" status=401
+2026-08-14 03:46:08,877 - INFO - kronx - [req:4c5d8d38] - [main.py:38] - Started POST "/api/payment/mobile-money/webhook"
+2026-08-14 03:46:08,878 - INFO - kronx - [req:4c5d8d38] - [main.py:234] - Payment verified for PJKRONX Plus: TZS 15,000 ref=tx_ref_101
+2026-08-14 03:46:08,878 - INFO - kronx - [req:4c5d8d38] - [main.py:41] - Finished POST "/api/payment/mobile-money/webhook" status=200

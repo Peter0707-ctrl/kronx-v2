@@ -2,18 +2,52 @@ import os
 import json
 import httpx
 import re
+import asyncio
 from typing import List, AsyncGenerator, Optional
 from dotenv import load_dotenv
 from memory.manager import MemoryManager
 from utils.helpers import get_mode_context
+from utils.http import get_client
+from utils.logger import logger
 
 load_dotenv()
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
 
+from collections import OrderedDict
+import threading
+
+class BoundedCache:
+    def __init__(self, maxsize: int = 500):
+        self.maxsize = maxsize
+        self.cache = OrderedDict()
+        self.lock = threading.Lock()
+
+    def __contains__(self, key) -> bool:
+        with self.lock:
+            return key in self.cache
+
+    def __getitem__(self, key):
+        with self.lock:
+            if key not in self.cache:
+                raise KeyError(key)
+            self.cache.move_to_end(key)
+            return self.cache[key]
+
+    def __setitem__(self, key, value):
+        with self.lock:
+            if key in self.cache:
+                self.cache[key] = value
+                self.cache.move_to_end(key)
+            else:
+                self.cache[key] = value
+                if len(self.cache) > self.maxsize:
+                    self.cache.popitem(last=False)
+
 # HIGH-SPEED IN-MEMORY RESPONSE CACHE FOR FREQUENTLY ASKED QUESTIONS
-RESPONSE_CACHE = {}
+# Thread-safe LRU cache bounded to max 500 entries to prevent memory growth
+RESPONSE_CACHE = BoundedCache(maxsize=500)
 
 # ==============================================================================
 #  PJKRONX WEB SEARCH ENGINE — Free, No API Key Required
@@ -41,37 +75,37 @@ async def _web_search(query: str) -> Optional[str]:
             "no_html": "1",
             "skip_disambig": "1",
         }
-        async with httpx.AsyncClient(timeout=8.0) as client:
-            ddg_resp = await client.get("https://api.duckduckgo.com/", params=ddg_params)
-            if ddg_resp.status_code == 200:
-                ddg_data = ddg_resp.json()
-                abstract = ddg_data.get("Abstract", "").strip()
-                abstract_text = ddg_data.get("AbstractText", "").strip()
-                answer = ddg_data.get("Answer", "").strip()
-                definition = ddg_data.get("Definition", "").strip()
-                source = ddg_data.get("AbstractSource", "").strip()
-                source_url = ddg_data.get("AbstractURL", "").strip()
+        client = get_client()
+        ddg_resp = await client.get("https://api.duckduckgo.com/", params=ddg_params, timeout=8.0)
+        if ddg_resp.status_code == 200:
+            ddg_data = ddg_resp.json()
+            abstract = ddg_data.get("Abstract", "").strip()
+            abstract_text = ddg_data.get("AbstractText", "").strip()
+            answer = ddg_data.get("Answer", "").strip()
+            definition = ddg_data.get("Definition", "").strip()
+            source = ddg_data.get("AbstractSource", "").strip()
+            source_url = ddg_data.get("AbstractURL", "").strip()
 
-                if answer:
-                    result_parts.append(f"**Direct Answer:** {answer}")
-                if abstract_text:
-                    result_parts.append(f"**{abstract or query_clean}**\n\n{abstract_text}")
-                    if source:
-                        result_parts.append(f"*Source: {source}* — {source_url}")
-                if definition:
-                    result_parts.append(f"**Definition:** {definition}")
+            if answer:
+                result_parts.append(f"**Direct Answer:** {answer}")
+            if abstract_text:
+                result_parts.append(f"**{abstract or query_clean}**\n\n{abstract_text}")
+                if source:
+                    result_parts.append(f"*Source: {source}* — {source_url}")
+            if definition:
+                result_parts.append(f"**Definition:** {definition}")
 
-                # DuckDuckGo related topics
-                related = ddg_data.get("RelatedTopics", [])[:3]
-                if related and not result_parts:
-                    topics = []
-                    for topic in related:
-                        if isinstance(topic, dict) and topic.get("Text"):
-                            topics.append(f"- {topic['Text'][:150]}")
-                    if topics:
-                        result_parts.append("**Related Information:**\n" + "\n".join(topics))
+            # DuckDuckGo related topics
+            related = ddg_data.get("RelatedTopics", [])[:3]
+            if related and not result_parts:
+                topics = []
+                for topic in related:
+                    if isinstance(topic, dict) and topic.get("Text"):
+                        topics.append(f"- {topic['Text'][:150]}")
+                if topics:
+                    result_parts.append("**Related Information:**\n" + "\n".join(topics))
     except Exception as e:
-        print(f"[DuckDuckGo Search Error] {e}")
+        logger.error(f"[DuckDuckGo Search Error] {e}", exc_info=True)
 
     # ── Source 2: Wikipedia REST API (free, no key) ──
     if not result_parts:
@@ -83,26 +117,27 @@ async def _web_search(query: str) -> Optional[str]:
 
             if len(wiki_query) > 2:
                 wiki_url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{httpx.URL(scheme='', host='', path='').copy_with()}"
-                async with httpx.AsyncClient(timeout=8.0) as client:
-                    wiki_resp = await client.get(
-                        f"https://en.wikipedia.org/api/rest_v1/page/summary/{wiki_query}",
-                        headers={"User-Agent": "PJKRONX-AI/2.0"}
-                    )
-                    if wiki_resp.status_code == 200:
-                        wiki_data = wiki_resp.json()
-                        title = wiki_data.get("title", "")
-                        extract = wiki_data.get("extract", "").strip()
-                        page_url = wiki_data.get("content_urls", {}).get("desktop", {}).get("page", "")
+                client = get_client()
+                wiki_resp = await client.get(
+                    f"https://en.wikipedia.org/api/rest_v1/page/summary/{wiki_query}",
+                    headers={"User-Agent": "PJKRONX-AI/2.0"},
+                    timeout=8.0
+                )
+                if wiki_resp.status_code == 200:
+                    wiki_data = wiki_resp.json()
+                    title = wiki_data.get("title", "")
+                    extract = wiki_data.get("extract", "").strip()
+                    page_url = wiki_data.get("content_urls", {}).get("desktop", {}).get("page", "")
 
-                        if extract and len(extract) > 80:
-                            # Trim to first 3 paragraphs
-                            paragraphs = [p.strip() for p in extract.split('\n') if p.strip()][:3]
-                            formatted = "\n\n".join(paragraphs)
-                            result_parts.append(f"**{title}** (Wikipedia)\n\n{formatted}")
-                            if page_url:
-                                result_parts.append(f"*Full article: {page_url}*")
+                    if extract and len(extract) > 80:
+                        # Trim to first 3 paragraphs
+                        paragraphs = [p.strip() for p in extract.split('\n') if p.strip()][:3]
+                        formatted = "\n\n".join(paragraphs)
+                        result_parts.append(f"**{title}** (Wikipedia)\n\n{formatted}")
+                        if page_url:
+                            result_parts.append(f"*Full article: {page_url}*")
         except Exception as e:
-            print(f"[Wikipedia Search Error] {e}")
+            logger.error(f"[Wikipedia Search Error] {e}", exc_info=True)
 
     if result_parts:
         web_result = "\n\n".join(result_parts)
@@ -205,6 +240,9 @@ def _search_knowledge_base(query: str) -> str | None:
     
     return None
 
+
+_active_model_cache = {"model": None, "timestamp": 0.0}
+_active_model_cache_lock = threading.Lock()
 
 class KronxOrchestrator:
     def __init__(self):
@@ -315,27 +353,41 @@ class KronxOrchestrator:
         return contents
 
     async def get_active_model(self) -> str:
-        """Get the name of the currently active AI model."""
+        """Get the name of the currently active AI model (cached for 60 seconds)."""
+        import time
+        now = time.time()
+        
+        with _active_model_cache_lock:
+            if _active_model_cache["model"] is not None and (now - _active_model_cache["timestamp"] < 60.0):
+                return _active_model_cache["model"]
+
         models_to_try = ["gemini-2.0-flash-lite", "gemini-2.5-flash", "gemini-2.0-flash", "gemini-3.5-flash"]
+        active = "pjkronx-embedded-engine-v2"
+
         if not self.api_key or self.api_key == "YOUR_GEMINI_API_KEY_HERE":
             groq_api_key = os.getenv("GROQ_API_KEY", "")
             if groq_api_key:
-                return "groq-llama-3.3-70b"
-            return "pjkronx-embedded-engine-v2"
-        
-        for m in models_to_try:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent?key={self.api_key}"
-            try:
-                async with httpx.AsyncClient(timeout=5.0) as client:
+                active = "groq-llama-3.3-70b"
+        else:
+            client = get_client()
+            for m in models_to_try:
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent?key={self.api_key}"
+                try:
                     resp = await client.post(url, json={
                         "contents": [{"role": "user", "parts": [{"text": "hi"}]}],
                         "generationConfig": {"maxOutputTokens": 5}
-                    })
+                    }, timeout=5.0)
                     if resp.status_code == 200:
-                        return m
-            except Exception:
-                continue
-        return "pjkronx-embedded-engine-v2"
+                        active = m
+                        break
+                except Exception:
+                    continue
+
+        with _active_model_cache_lock:
+            _active_model_cache["model"] = active
+            _active_model_cache["timestamp"] = now
+
+        return active
 
     async def process(
         self,
@@ -345,14 +397,16 @@ class KronxOrchestrator:
         conversation_id: str,
         history: List
     ) -> str:
-        memory_context = self.memory.get_context(conversation_id)
+        # Offload blocking load operations to a worker thread
+        memory_context = await asyncio.to_thread(self.memory.get_context, conversation_id)
         system = self._build_system_prompt(mode, language, memory_context)
         contents = self._build_contents(history, message)
 
         # Step 1: Knowledge Base (instant, no latency)
         kb_answer = _search_knowledge_base(message)
         if kb_answer:
-            self.memory.extract_and_save(
+            await asyncio.to_thread(
+                self.memory.extract_and_save,
                 conversation_id=conversation_id,
                 user_message=message,
                 ai_response=kb_answer
@@ -363,7 +417,8 @@ class KronxOrchestrator:
         if await _is_current_events_query(message):
             web_answer = await _web_search(message)
             if web_answer:
-                self.memory.extract_and_save(
+                await asyncio.to_thread(
+                    self.memory.extract_and_save,
                     conversation_id=conversation_id,
                     user_message=message,
                     ai_response=web_answer
@@ -373,6 +428,7 @@ class KronxOrchestrator:
         models_to_try = ["gemini-2.0-flash-lite", "gemini-2.5-flash", "gemini-2.0-flash", "gemini-3.5-flash"]
         last_err = None
 
+        client = get_client()
         for m in models_to_try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent?key={self.api_key}"
             payload = {
@@ -384,21 +440,22 @@ class KronxOrchestrator:
                 }
             }
             try:
-                async with httpx.AsyncClient(timeout=30.0) as client:
-                    response = await client.post(url, json=payload)
-                    if response.status_code == 200:
-                        data = response.json()
-                        result = data["candidates"][0]["content"]["parts"][0]["text"].strip()
-                        self.memory.extract_and_save(
-                            conversation_id=conversation_id,
-                            user_message=message,
-                            ai_response=result
-                        )
-                        return result
-                    else:
-                        last_err = f"HTTP {response.status_code}: {response.text}"
+                response = await client.post(url, json=payload, timeout=30.0)
+                if response.status_code == 200:
+                    data = response.json()
+                    result = data["candidates"][0]["content"]["parts"][0]["text"].strip()
+                    await asyncio.to_thread(
+                        self.memory.extract_and_save,
+                        conversation_id=conversation_id,
+                        user_message=message,
+                        ai_response=result
+                    )
+                    return result
+                else:
+                    last_err = f"HTTP {response.status_code}: {response.text}"
             except Exception as e:
                 last_err = str(e)
+                logger.error(f"[Gemini Process Error] Model {m}: {e}", exc_info=True)
 
         # Groq fallback
         groq_api_key = os.getenv("GROQ_API_KEY", "")
@@ -412,23 +469,25 @@ class KronxOrchestrator:
                     "max_tokens": 2048
                 }
                 groq_headers = {"Authorization": f"Bearer {groq_api_key}", "Content-Type": "application/json"}
-                async with httpx.AsyncClient(timeout=20.0) as client:
-                    resp = await client.post(groq_url, json=groq_payload, headers=groq_headers)
-                    if resp.status_code == 200:
-                        groq_data = resp.json()
-                        result = groq_data["choices"][0]["message"]["content"].strip()
-                        self.memory.extract_and_save(
-                            conversation_id=conversation_id,
-                            user_message=message,
-                            ai_response=result
-                        )
-                        return result
+                resp = await client.post(groq_url, json=groq_payload, headers=groq_headers, timeout=20.0)
+                if resp.status_code == 200:
+                    groq_data = resp.json()
+                    result = groq_data["choices"][0]["message"]["content"].strip()
+                    await asyncio.to_thread(
+                        self.memory.extract_and_save,
+                        conversation_id=conversation_id,
+                        user_message=message,
+                        ai_response=result
+                    )
+                    return result
             except Exception as e:
                 last_err = str(e)
+                logger.error(f"[Groq Process Error]: {e}", exc_info=True)
 
         # Intelligent embedded fallback — generates a coherent, helpful answer
-        result = _generate_embedded_answer(message, language)
-        self.memory.extract_and_save(
+        result = await _generate_embedded_answer(message, language)
+        await asyncio.to_thread(
+            self.memory.extract_and_save,
             conversation_id=conversation_id,
             user_message=message,
             ai_response=result
@@ -448,7 +507,8 @@ class KronxOrchestrator:
         if cache_key in RESPONSE_CACHE:
             cached_ans = RESPONSE_CACHE[cache_key]
             yield cached_ans
-            self.memory.extract_and_save(
+            await asyncio.to_thread(
+                self.memory.extract_and_save,
                 conversation_id=conversation_id,
                 user_message=message,
                 ai_response=cached_ans
@@ -460,7 +520,8 @@ class KronxOrchestrator:
         if kb_answer:
             yield kb_answer
             RESPONSE_CACHE[cache_key] = kb_answer
-            self.memory.extract_and_save(
+            await asyncio.to_thread(
+                self.memory.extract_and_save,
                 conversation_id=conversation_id,
                 user_message=message,
                 ai_response=kb_answer
@@ -473,14 +534,15 @@ class KronxOrchestrator:
             if web_answer:
                 yield web_answer
                 RESPONSE_CACHE[cache_key] = web_answer
-                self.memory.extract_and_save(
+                await asyncio.to_thread(
+                    self.memory.extract_and_save,
                     conversation_id=conversation_id,
                     user_message=message,
                     ai_response=web_answer
                 )
                 return
 
-        memory_context = self.memory.get_context(conversation_id)
+        memory_context = await asyncio.to_thread(self.memory.get_context, conversation_id)
         system = self._build_system_prompt(mode, language, memory_context)
         contents = self._build_contents(history, message)
 
@@ -490,6 +552,8 @@ class KronxOrchestrator:
 
         full_response = ""
         success = False
+
+        client = get_client()
 
         # Provider 1: Google Gemini API Models
         models_to_try = [
@@ -511,23 +575,22 @@ class KronxOrchestrator:
                 }
             }
             try:
-                async with httpx.AsyncClient(timeout=20.0) as client:
-                    resp = await client.post(direct_url, json=payload)
-                    if resp.status_code == 200:
-                        data = resp.json()
-                        candidates = data.get("candidates", [])
-                        if candidates and "content" in candidates[0]:
-                            parts = candidates[0]["content"].get("parts", [])
-                            text_result = "".join([p.get("text", "") for p in parts]).strip()
-                            if text_result:
-                                full_response = text_result
-                                success = True
-                                yield text_result
-                                break
-                    else:
-                        print(f"[Gemini API Error] Model {m} status {resp.status_code}: {resp.text[:200]}")
+                resp = await client.post(direct_url, json=payload, timeout=20.0)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    candidates = data.get("candidates", [])
+                    if candidates and "content" in candidates[0]:
+                        parts = candidates[0]["content"].get("parts", [])
+                        text_result = "".join([p.get("text", "") for p in parts]).strip()
+                        if text_result:
+                            full_response = text_result
+                            success = True
+                            yield text_result
+                            break
+                else:
+                    logger.warning(f"[Gemini API Error] Model {m} status {resp.status_code}: {resp.text[:200]}")
             except Exception as e:
-                print(f"[Gemini Exception] {e}")
+                logger.error(f"[Gemini Exception] Model {m}: {e}", exc_info=True)
 
         # Provider 2: Groq Cloud API Failover (Llama 3.3 70B - Ultra Fast)
         if not success and groq_api_key:
@@ -540,17 +603,16 @@ class KronxOrchestrator:
                     "max_tokens": 2048
                 }
                 groq_headers = {"Authorization": f"Bearer {groq_api_key}", "Content-Type": "application/json"}
-                async with httpx.AsyncClient(timeout=20.0) as client:
-                    resp = await client.post(groq_url, json=groq_payload, headers=groq_headers)
-                    if resp.status_code == 200:
-                        groq_data = resp.json()
-                        text_result = groq_data["choices"][0]["message"]["content"].strip()
-                        if text_result:
-                            full_response = text_result
-                            success = True
-                            yield text_result
-            except Exception:
-                pass
+                resp = await client.post(groq_url, json=groq_payload, headers=groq_headers, timeout=20.0)
+                if resp.status_code == 200:
+                    groq_data = resp.json()
+                    text_result = groq_data["choices"][0]["message"]["content"].strip()
+                    if text_result:
+                        full_response = text_result
+                        success = True
+                        yield text_result
+            except Exception as e:
+                logger.error(f"[Groq Stream Failover Exception]: {e}", exc_info=True)
 
         # Provider 3: OpenAI API Failover (GPT-4o-mini)
         if not success and openai_api_key:
@@ -563,17 +625,16 @@ class KronxOrchestrator:
                     "max_tokens": 2048
                 }
                 openai_headers = {"Authorization": f"Bearer {openai_api_key}", "Content-Type": "application/json"}
-                async with httpx.AsyncClient(timeout=15.0) as client:
-                    resp = await client.post(openai_url, json=openai_payload, headers=openai_headers)
-                    if resp.status_code == 200:
-                        openai_data = resp.json()
-                        text_result = openai_data["choices"][0]["message"]["content"].strip()
-                        if text_result:
-                            full_response = text_result
-                            success = True
-                            yield text_result
-            except Exception:
-                pass
+                resp = await client.post(openai_url, json=openai_payload, headers=openai_headers, timeout=15.0)
+                if resp.status_code == 200:
+                    openai_data = resp.json()
+                    text_result = openai_data["choices"][0]["message"]["content"].strip()
+                    if text_result:
+                        full_response = text_result
+                        success = True
+                        yield text_result
+            except Exception as e:
+                logger.error(f"[OpenAI Stream Failover Exception]: {e}", exc_info=True)
 
         # PJKRONX Real Fact Extraction Engine — Last Resort
         if not success:
@@ -586,7 +647,8 @@ class KronxOrchestrator:
         if full_response and success:
             RESPONSE_CACHE[cache_key] = full_response
 
-        self.memory.extract_and_save(
+        await asyncio.to_thread(
+            self.memory.extract_and_save,
             conversation_id=conversation_id,
             user_message=message,
             ai_response=full_response
@@ -607,18 +669,19 @@ async def _generate_embedded_answer(message: str, language: str) -> str:
     if clean_q:
         try:
             wiki_target = clean_q.replace(' ', '_').title()
-            async with httpx.AsyncClient(timeout=8.0) as client:
-                resp = await client.get(
-                    f"https://en.wikipedia.org/api/rest_v1/page/summary/{wiki_target}",
-                    headers={"User-Agent": "CopetraAI/2.0"}
-                )
-                if resp.status_code == 200:
-                    data = resp.json()
-                    title = data.get("title", clean_q)
-                    extract = data.get("extract", "").strip()
-                    if extract:
-                        return f"### 📚 {title}\n\n{extract}"
+            client = get_client()
+            resp = await client.get(
+                f"https://en.wikipedia.org/api/rest_v1/page/summary/{wiki_target}",
+                headers={"User-Agent": "CopetraAI/2.0"},
+                timeout=8.0
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                title = data.get("title", clean_q)
+                extract = data.get("extract", "").strip()
+                if extract:
+                    return f"### 📚 {title}\n\n{extract}"
         except Exception as e:
-            print(f"[Embedded Fact Error] {e}")
+            logger.error(f"[Embedded Fact Error] {e}", exc_info=True)
 
     return f"**{message.strip()}**\n\nPlease provide more specific details or attach reference material so I can give you an exact, in-depth academic answer."
