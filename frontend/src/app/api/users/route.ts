@@ -16,6 +16,7 @@ function mapUser(row: any) {
     lastActive: row.last_active,
     conversationCount: row.conversation_count,
     isDeveloper: row.is_developer,
+    apiUnlimitedTokens: row.api_unlimited_tokens !== false,
     expiresAt: row.expires_at,
     apiKey: row.api_key,
     callbackUrl: row.callback_url,
@@ -90,8 +91,8 @@ export async function POST(req: NextRequest) {
     }
 
     const query = `
-      INSERT INTO users (id, name, email, role, plan, avatar, last_active, conversation_count, is_developer, expires_at, api_key, callback_url)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      INSERT INTO users (id, name, email, role, plan, avatar, last_active, conversation_count, is_developer, api_unlimited_tokens, expires_at, api_key, callback_url)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
       ON CONFLICT (email) DO UPDATE SET
         name = EXCLUDED.name,
         role = EXCLUDED.role,
@@ -99,11 +100,16 @@ export async function POST(req: NextRequest) {
         avatar = EXCLUDED.avatar,
         last_active = EXCLUDED.last_active,
         is_developer = EXCLUDED.is_developer,
+        api_unlimited_tokens = EXCLUDED.api_unlimited_tokens,
         expires_at = EXCLUDED.expires_at,
         api_key = COALESCE(EXCLUDED.api_key, users.api_key),
         callback_url = COALESCE(EXCLUDED.callback_url, users.callback_url)
       RETURNING *;
     `
+
+    // Granted developers / admins always get unlimited app-side tokens
+    const unlimitedTokens =
+      targetIsDeveloper || targetRole === 'admin' || user.apiUnlimitedTokens === true
 
     const values = [
       user.id,
@@ -116,6 +122,7 @@ export async function POST(req: NextRequest) {
       user.lastActive || 'Just now',
       user.conversationCount || 0,
       targetIsDeveloper,
+      unlimitedTokens,
       expiresAt,
       user.apiKey || null,
       user.callbackUrl || null,

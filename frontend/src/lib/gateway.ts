@@ -1,14 +1,26 @@
 import { v4 as uuidv4 } from 'uuid'
 
-const GROQ_MODELS = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768']
+/** Prefer a fast model first so chat stays responsive; fall back to larger models. */
+const GROQ_MODELS = [
+  'llama-3.1-8b-instant',
+  'llama-3.3-70b-versatile',
+]
 
 function groqKeys(): string[] {
-  const keys = [
-    process.env.GROQ_API_KEY,
-    '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',
-    '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',
-  ].filter(Boolean) as string[]
-  return keys
+  const keys = [process.env.GROQ_API_KEY, process.env.GROQ_API_KEY_2].filter(
+    (k): k is string => Boolean(k && k.trim() && !k.includes('placeholder'))
+  )
+  return [...new Set(keys)]
+}
+
+function upstreamTimeoutMs(wantStream: boolean): number {
+  const fromEnv = Number(
+    wantStream
+      ? process.env.GATEWAY_STREAM_TIMEOUT_MS
+      : process.env.GATEWAY_UPSTREAM_TIMEOUT_MS
+  )
+  if (Number.isFinite(fromEnv) && fromEnv > 0) return fromEnv
+  return wantStream ? 60000 : 90000
 }
 
 export type ChatMessage = { role: string; content: string }
@@ -36,6 +48,7 @@ export async function createCompletion(opts: {
   temperature?: number
   maxTokens?: number
   stream?: boolean
+  unlimited?: boolean
 }): Promise<
   | { ok: true; stream: true; response: Response }
   | { ok: true; stream: false; text: string; usage: Record<string, number> }
@@ -46,15 +59,23 @@ export async function createCompletion(opts: {
     return {
       ok: false,
       status: 503,
-      message: 'AI provider is not configured on this server.',
+      message: 'AI provider is not configured on this server (missing GROQ_API_KEY).',
       code: 'provider_not_configured',
     }
   }
 
   const formatted = [{ role: 'system', content: SYSTEM_PROMPT }, ...opts.messages]
   const temperature = typeof opts.temperature === 'number' ? opts.temperature : 0.5
-  const maxTokens = typeof opts.maxTokens === 'number' ? opts.maxTokens : 2048
+  // Granted / unlimited API users: no app-side token cap (provider still enforces model max).
+  const requested = typeof opts.maxTokens === 'number' ? opts.maxTokens : opts.unlimited ? 8192 : 2048
+  const maxTokens = opts.unlimited ? Math.max(requested, 1) : Math.min(Math.max(requested, 1), 8192)
   const wantStream = opts.stream === true
+  const timeoutMs = upstreamTimeoutMs(wantStream)
+
+  let lastStatus = 0
+  let lastDetail = ''
+  let sawAuthFailure = false
+  let sawRateLimit = false
 
   for (const apiKey of keys) {
     for (const model of GROQ_MODELS) {
@@ -72,10 +93,22 @@ export async function createCompletion(opts: {
             max_tokens: maxTokens,
             stream: wantStream,
           }),
-          signal: AbortSignal.timeout(wantStream ? 20000 : 25000),
+          signal: AbortSignal.timeout(timeoutMs),
         })
 
-        if (!res.ok) continue
+        if (!res.ok) {
+          lastStatus = res.status
+          lastDetail = await res.text().catch(() => '')
+          if (res.status === 401 || res.status === 403) {
+            sawAuthFailure = true
+            break // try next key, skip remaining models for this bad key
+          }
+          if (res.status === 429) {
+            sawRateLimit = true
+            continue
+          }
+          continue
+        }
 
         if (wantStream && res.body) {
           return { ok: true, stream: true, response: res }
@@ -91,16 +124,37 @@ export async function createCompletion(opts: {
             usage: data.usage || { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
           }
         }
-      } catch {
+      } catch (err: any) {
+        lastDetail = err?.name === 'TimeoutError' || err?.name === 'AbortError'
+          ? `timeout after ${timeoutMs}ms`
+          : String(err?.message || err)
         // try next model/key
       }
+    }
+  }
+
+  if (sawRateLimit) {
+    return {
+      ok: false,
+      status: 429,
+      message: 'Upstream AI provider rate-limited the request. Please retry shortly.',
+      code: 'rate_limited',
+    }
+  }
+
+  if (sawAuthFailure && lastStatus) {
+    return {
+      ok: false,
+      status: 502,
+      message: 'Upstream AI provider authentication failed. Check GROQ_API_KEY on the server.',
+      code: 'provider_auth_failed',
     }
   }
 
   return {
     ok: false,
     status: 504,
-    message: 'All upstream AI providers failed or timed out.',
+    message: `All upstream AI providers failed or timed out (${lastDetail || 'no detail'}). Retry with stream:true or try again in a few seconds.`,
     code: 'upstream_timeout',
   }
 }
@@ -125,7 +179,6 @@ export function toOpenAiChatResponse(opts: {
       },
     ],
     usage: opts.usage,
-    // Convenience aliases for non-OpenAI clients
     response: opts.text,
     status: 'success',
     developer_id: opts.developerId,

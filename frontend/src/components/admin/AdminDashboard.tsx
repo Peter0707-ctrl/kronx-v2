@@ -86,7 +86,7 @@ export default function AdminDashboard() {
           const nowOn = Boolean(userToUpdate.isDeveloper)
           showToast(
             nowOn
-              ? (sw ? 'Ruhusa ya Developer API imepewa!' : 'Developer API access granted!')
+              ? (sw ? 'Ruhusa ya Developer API imepewa (tokens unlimited)!' : 'Developer API granted (unlimited tokens)!')
               : (sw ? 'Ruhusa ya Developer API imefutwa!' : 'Developer API access revoked!')
           )
         }

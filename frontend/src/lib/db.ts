@@ -31,6 +31,13 @@ export async function ensureDb() {
     await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS expires_at TIMESTAMP NULL`)
     await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS api_key VARCHAR(255)`)
     await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS callback_url VARCHAR(255)`)
+    await client.query(
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS api_unlimited_tokens BOOLEAN DEFAULT TRUE`
+    )
+    // Granted developers / admins get unlimited app-side token quotas by default
+    await client.query(
+      `UPDATE users SET api_unlimited_tokens = TRUE WHERE (is_developer = TRUE OR role = 'admin') AND api_unlimited_tokens IS DISTINCT FROM TRUE`
+    )
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS api_keys (

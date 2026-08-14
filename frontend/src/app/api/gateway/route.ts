@@ -8,15 +8,14 @@ import {
 } from '@/lib/gateway'
 
 export const dynamic = 'force-dynamic'
-export const maxDuration = 60
+export const maxDuration = 120
 
 /**
  * Copetra Developer API Gateway
  * POST /api/gateway
  *
  * Auth: Authorization: Bearer <cpk_...>  OR  x-api-key: <cpk_...>
- * Body (OpenAI-compatible):
- *   { model?, messages: [{role, content}], stream?, temperature?, max_tokens?, callback_url? }
+ * Granted developers / admins receive unlimited app-side token quotas.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -37,14 +36,22 @@ export async function POST(req: NextRequest) {
     const stream = body.stream === true
     const model = typeof body.model === 'string' && body.model ? body.model : 'copetra-ai'
     const temperature = typeof body.temperature === 'number' ? body.temperature : 0.5
-    const maxTokens = typeof body.max_tokens === 'number' ? body.max_tokens : 2048
+    const unlimited = Boolean(auth.key.apiUnlimitedTokens || auth.key.isDeveloper)
+    const requestedTokens =
+      typeof body.max_tokens === 'number' ? body.max_tokens : unlimited ? 8192 : 2048
+    const maxTokens = unlimited ? Math.max(1, requestedTokens) : Math.min(Math.max(1, requestedTokens), 4096)
     const callbackUrl =
       body.callback_url || body.callbackUrl || body.webhook_url || body.webhookUrl || auth.key.callbackUrl
 
-    // Async webhook mode
     if (callbackUrl && !stream) {
       void (async () => {
-        const result = await createCompletion({ messages, temperature, maxTokens, stream: false })
+        const result = await createCompletion({
+          messages,
+          temperature,
+          maxTokens,
+          stream: false,
+          unlimited,
+        })
         const answer =
           result.ok && result.stream === false ? result.text : 'Generation failed.'
 
@@ -81,7 +88,13 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const result = await createCompletion({ messages, temperature, maxTokens, stream })
+    const result = await createCompletion({
+      messages,
+      temperature,
+      maxTokens,
+      stream,
+      unlimited,
+    })
 
     if (!result.ok) {
       return apiError(result.message, result.status, result.code, 'api_error')

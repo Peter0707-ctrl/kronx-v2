@@ -15,6 +15,8 @@ export type ApiKeyRecord = {
   userEmail?: string
   userName?: string
   isDeveloper?: boolean
+  apiUnlimitedTokens?: boolean
+  role?: string
 }
 
 export function generateApiKeyValue() {
@@ -66,7 +68,8 @@ export async function authenticateApiKey(req: NextRequest): Promise<
     `SELECT
        k.id, k.user_id, k.project_name, k.key_prefix, k.api_key, k.callback_url,
        k.is_active, k.last_used_at, k.created_at,
-       u.email AS user_email, u.name AS user_name, u.is_developer, u.role
+       u.email AS user_email, u.name AS user_name, u.is_developer, u.role,
+       COALESCE(u.api_unlimited_tokens, TRUE) AS api_unlimited_tokens
      FROM api_keys k
      JOIN users u ON u.id = k.user_id
      WHERE k.api_key = $1
@@ -119,6 +122,9 @@ export async function authenticateApiKey(req: NextRequest): Promise<
       userEmail: row.user_email,
       userName: row.user_name,
       isDeveloper: row.is_developer,
+      role: row.role,
+      apiUnlimitedTokens:
+        Boolean(row.api_unlimited_tokens) || Boolean(row.is_developer) || row.role === 'admin',
     },
   }
 }
