@@ -42,11 +42,12 @@ class RequestNormalizer:
     @staticmethod
     def extract_requested_detail_level(text: str) -> str:
         t_low = text.lower()
-        if any(w in t_low for w in ["step by step", "hatua kwa hatua", "in depth", "detailed", "kwa kina", "comprehensive", "full analysis"]):
+        if any(w in t_low for w in ["step by step", "step-by-step", "teach me", "hatua kwa hatua", "in depth", "detailed", "in detail", "kwa kina", "comprehensive", "full analysis"]):
             return "DETAILED"
-        if any(w in t_low for w in ["brief", "short", "kwa ufupi", "summary", "quick", "one sentence"]):
+        if any(w in t_low for w in ["brief", "short", "kwa ufupi", "summary", "quick", "one sentence", "only the answer", "only answer", "just the answer"]):
             return "CONCISE"
         return "STANDARD"
+
 
     @classmethod
     def normalize(cls, req: IntelligenceRequest) -> Dict[str, Any]:

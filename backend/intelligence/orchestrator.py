@@ -139,8 +139,9 @@ class CopetraIntelligenceOrchestrator:
         def generate_draft() -> tuple[str, List[ClaimItem]]:
             d_claims: List[ClaimItem] = []
             if contract.intent == IntentType.MULTI_DOCUMENT_ANALYSIS and len(files_evidence_map) > 1:
-                ans, d_claims = MultiDocumentEngine.compare_documents(files_evidence_map)
+                ans, d_claims = MultiDocumentEngine.compare_documents(files_evidence_map, query=normalized["clean_message"])
                 return ans, d_claims
+
             elif contract.intent in [IntentType.DOCUMENT_ANALYSIS, IntentType.ACADEMIC] and extracted_evidence:
                 ans, _, d_claims = DocumentGroundingEngine.answer_from_evidence(contract, extracted_evidence, normalized["clean_message"])
                 return ans, d_claims

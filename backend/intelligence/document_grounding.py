@@ -29,13 +29,26 @@ class DocumentGroundingEngine:
 
         # Check if the query asks about specific attributes that do NOT exist anywhere in the corpus
         query_terms = set(re.findall(r'\b[a-zA-Z0-9_-]{3,}\b', query.lower()))
-        inquiry_words = {"what", "when", "where", "which", "does", "explain", "state", "show", "describe", "find", "tell", "document", "is", "the", "report", "file", "that", "years", "according", "this", "author", "name", "value", "details", "information", "and"}
+        inquiry_words = {
+            "what", "when", "where", "which", "does", "explain", "state", "show", "describe",
+            "find", "tell", "document", "is", "the", "report", "file", "that", "years", "according",
+            "this", "author", "name", "value", "details", "information", "and", "requirement",
+            "requirements", "used", "exist", "algorithm", "field", "fields", "minimum", "maximum",
+            "policy", "config", "code", "function", "study", "pdf", "docx", "json", "csv", "latency",
+            "pool", "stated", "contain"
+        }
         key_attributes = [t for t in query_terms if t not in inquiry_words]
-
 
         if key_attributes:
             corpus_text = " ".join(e.normalized_content for e in evidence_items)
-            missing_attrs = [attr for attr in key_attributes if attr not in corpus_text]
+            def is_present(attr: str) -> bool:
+                if attr in corpus_text:
+                    return True
+                if len(attr) > 4 and (attr[:-1] in corpus_text or attr[:-2] in corpus_text):
+                    return True
+                return False
+
+            missing_attrs = [attr for attr in key_attributes if not is_present(attr)]
             if missing_attrs:
                 attr_str = ", ".join(sorted(missing_attrs))
                 ans = f"That information was not found in the provided document. The requested information ({attr_str}) is not stated in the provided document."
@@ -46,6 +59,7 @@ class DocumentGroundingEngine:
                     reason="Explicit not-found statement verified against document corpus.",
                 )
                 return ans, [], [claim]
+
 
 
         relevant_scored = EvidenceEngine.search_evidence(query, evidence_items, top_k=6)

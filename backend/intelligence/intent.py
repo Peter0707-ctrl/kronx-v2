@@ -26,13 +26,14 @@ class IntentClassifier:
         ),
         # Image Analysis
         (
-            re.compile(r'\b(analyze|describe|what is in|inspect|examine|read|look at|view|see in)\b.*\b(image|picture|photo|screenshot|diagram|chart|graph)\b', re.IGNORECASE),
+            re.compile(r'\b(analyze|describe|what is in|what does|inspect|examine|read|look at|view|see in|show in)\b.*\b(image|picture|photo|screenshot|diagram|chart|graph|logo|visual|icon)\b', re.IGNORECASE),
             IntentType.IMAGE_ANALYSIS,
             DomainType.GENERAL,
             TaskType.IMAGE_ANALYSIS,
             [CapabilityType.VISION, CapabilityType.OCR],
             True,
         ),
+
         # OCR
         (
             re.compile(r'\b(extract text|ocr|read text|transcribe|read handwriting|detect text)\b', re.IGNORECASE),

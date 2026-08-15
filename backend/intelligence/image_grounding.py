@@ -138,9 +138,14 @@ class ImageGroundingEngine:
             "what", "where", "when", "which", "does", "explain", "describe", "show", "tell",
             "image", "picture", "photo", "this", "there", "any", "visible", "seen", "observe",
             "found", "contain", "content", "the", "title", "heading", "text", "words", "shown",
-            "present", "view", "read", "logo", "screenshot", "chart", "diagram"
+            "present", "view", "read", "logo", "screenshot", "chart", "diagram", "object",
+            "objects", "item", "items", "element", "elements", "feature", "features", "thing",
+            "things", "are", "can", "you", "how", "who", "all", "has", "have", "had", "was",
+            "were", "been", "with", "from"
         }
         target_entities = q_tokens - inquiry_words
+
+
 
         # Check if user asks for specific nonexistent items (e.g., "car", "signature", "submarine", "person")
         if target_entities:
