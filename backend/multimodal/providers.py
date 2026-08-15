@@ -91,7 +91,7 @@ class MockMultimodalProvider(MultimodalProvider):
             "description": f"Visual asset ({size_kb:.1f} KB, {mime_type}).",
             "ui_elements": ui_elements,
             "diagram_nodes": diagram_nodes,
-            "visible_text": "Kron-X Secure Platform Overview",
+            "visible_text": "Kron-X Platform Overview",
             "visual_summary": "Clean modern interface layout with balanced visual hierarchy.",
             "facts": [
                 f"Image format is {mime_type}.",
@@ -157,6 +157,8 @@ class MockMultimodalProvider(MultimodalProvider):
             ],
             "warnings": [],
         }
+
+
 
     def generate_image(self, request: ImageGenerationRequest) -> ImageGenerationResult:
         warnings = detect_prompt_injection(request.prompt)

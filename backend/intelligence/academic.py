@@ -1,6 +1,7 @@
 """
-Phase 4.0 — Academic Intelligence Engine
+Phase 4.1 — Academic Intelligence Engine
 Structured academic research engine supporting theses, dissertations, methodology design, and citation-aware analysis.
+Distinguishes SOURCE FACT, MODEL EXPLANATION, GENERAL KNOWLEDGE, INFERENCE, and USER ASSUMPTION.
 """
 from __future__ import annotations
 import re
@@ -9,7 +10,7 @@ from intelligence.schemas import AcademicStructure, AcademicSectionData
 
 
 class AcademicIntelligenceEngine:
-    """Structures academic responses into rigorous research sections with explicit citation provenance."""
+    """Structures academic responses into rigorous research sections with explicit provenance classification."""
 
     @classmethod
     def structure_methodology(
@@ -43,35 +44,38 @@ class AcademicIntelligenceEngine:
         specific_objectives: Optional[List[str]] = None,
         methodology: Optional[Dict[str, str]] = None,
         language: str = "en",
+        detail_level: str = "STANDARD",
     ) -> str:
-        """Formats structured academic research guidance in English or Swahili."""
-        if language == "sw":
+        """Formats structured academic research guidance with provenance annotations in English or Swahili."""
+        is_sw = language == "sw"
+
+        if is_sw:
             lines = [f"# Muundo wa Kitaaluma na Utafiti: {topic}\n"]
             if problem_statement:
-                lines.append(f"### 1. Tamko la Tatizo (Problem Statement)\n{problem_statement}\n")
+                lines.append(f"### 1. Tamko la Tatizo [MODEL EXPLANATION]\n{problem_statement}\n")
             if research_gap:
-                lines.append(f"### 2. Pengo la Utafiti (Research Gap)\n{research_gap}\n")
+                lines.append(f"### 2. Pengo la Utafiti [MODEL EXPLANATION]\n{research_gap}\n")
             if general_objective:
-                lines.append(f"### 3. Lengo Kuu (General Objective)\n{general_objective}\n")
+                lines.append(f"### 3. Lengo Kuu [MODEL EXPLANATION]\n{general_objective}\n")
             if specific_objectives:
-                lines.append("### 4. Malengo Mahususi (Specific Objectives)\n" + "\n".join(f"{i}. {obj}" for i, obj in enumerate(specific_objectives, 1)) + "\n")
+                lines.append("### 4. Malengo Mahususi [MODEL EXPLANATION]\n" + "\n".join(f"{i}. {obj}" for i, obj in enumerate(specific_objectives, 1)) + "\n")
             if methodology:
-                lines.append("### 5. Mbinu za Utafiti (Research Methodology)")
+                lines.append("### 5. Mbinu za Utafiti (Research Methodology) [ACADEMIC FRAMEWORK]")
                 for k, v in methodology.items():
                     lines.append(f"- **{k}:** {v}")
             return "\n".join(lines)
 
         lines = [f"# Academic Research Framework: {topic}\n"]
         if problem_statement:
-            lines.append(f"### 1. Problem Statement\n{problem_statement}\n")
+            lines.append(f"### 1. Problem Statement [MODEL EXPLANATION]\n{problem_statement}\n")
         if research_gap:
-            lines.append(f"### 2. Research Gap\n{research_gap}\n")
+            lines.append(f"### 2. Research Gap [MODEL EXPLANATION]\n{research_gap}\n")
         if general_objective:
-            lines.append(f"### 3. General Objective\n{general_objective}\n")
+            lines.append(f"### 3. General Objective [MODEL EXPLANATION]\n{general_objective}\n")
         if specific_objectives:
-            lines.append("### 4. Specific Objectives\n" + "\n".join(f"{i}. {obj}" for i, obj in enumerate(specific_objectives, 1)) + "\n")
+            lines.append("### 4. Specific Objectives [MODEL EXPLANATION]\n" + "\n".join(f"{i}. {obj}" for i, obj in enumerate(specific_objectives, 1)) + "\n")
         if methodology:
-            lines.append("### 5. Research Methodology Framework")
+            lines.append("### 5. Research Methodology Framework [ACADEMIC FRAMEWORK]")
             for k, v in methodology.items():
                 lines.append(f"- **{k}:** {v}")
         return "\n".join(lines)

@@ -1,5 +1,5 @@
 """
-Phase 4.0 — Copetra Intelligence Package
+Phase 4.1 — Copetra Intelligence Package
 Universal Intelligence, Grounded Reasoning, Multimodal Accuracy & Academic Intelligence Engine.
 """
 from intelligence.schemas import (
@@ -15,6 +15,8 @@ from intelligence.errors import (
     UNAUTHORIZED_CAPABILITY, PROVIDER_UNAVAILABLE, ROUTING_FAILED,
     TASK_NOT_FOUND, TASK_CANCELLED, TASK_ALREADY_COMPLETED, PROMPT_INJECTION_DETECTED
 )
+from intelligence.parsers import SpecializedParsers
+from intelligence.quality_gate import QualityGate, QualityGateResult, CheckResult
 from intelligence.normalizer import RequestNormalizer
 from intelligence.intent import IntentClassifier
 from intelligence.contract import TaskContractGenerator
@@ -69,6 +71,10 @@ __all__ = [
     "TASK_CANCELLED",
     "TASK_ALREADY_COMPLETED",
     "PROMPT_INJECTION_DETECTED",
+    "SpecializedParsers",
+    "QualityGate",
+    "QualityGateResult",
+    "CheckResult",
     "RequestNormalizer",
     "IntentClassifier",
     "TaskContractGenerator",

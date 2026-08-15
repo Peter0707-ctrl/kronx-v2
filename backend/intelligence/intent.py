@@ -51,7 +51,17 @@ class IntentClassifier:
             [CapabilityType.DOCUMENT_ANALYSIS, CapabilityType.TEXT_REASONING],
             True,
         ),
+        # Creative Writing
+        (
+            re.compile(r'\b(write a story|creative story|poem|fiction|creative writing|novel|tale|essay|poetry)\b', re.IGNORECASE),
+            IntentType.CREATIVE_WRITING,
+            DomainType.CREATIVE,
+            TaskType.CREATIVE_GENERATION,
+            [CapabilityType.CREATIVE_GENERATION],
+            False,
+        ),
         # Academic & Research Thesis / Methodology / Qualitative & Quantitative
+
         (
             re.compile(r'\b(methodology|research gap|problem statement|conceptual framework|theoretical framework|literature review|sampling technique|sample size|hypotheses|dissertation|thesis|journal paper|msc|phd|research design|data collection|qualitative|quantitative|research)\b', re.IGNORECASE),
             IntentType.ACADEMIC,

@@ -1,6 +1,7 @@
 """
-Phase 4.0 — Document Grounding Engine
+Phase 4.1 — Document Grounding Engine
 Strictly enforces the "NO EVIDENCE = NO CLAIM" invariant for all document-based queries.
+Ensures exact text preservation, answers the user question directly, and states when facts are unmentioned.
 """
 from __future__ import annotations
 import re
@@ -28,14 +29,16 @@ class DocumentGroundingEngine:
 
         # Check if the query asks about specific attributes that do NOT exist anywhere in the corpus
         query_terms = set(re.findall(r'\b[a-zA-Z0-9_-]{3,}\b', query.lower()))
-        inquiry_words = {"what", "when", "where", "which", "does", "explain", "state", "show", "describe", "find", "tell", "document", "is", "the", "report", "file", "that", "years"}
+        inquiry_words = {"what", "when", "where", "which", "does", "explain", "state", "show", "describe", "find", "tell", "document", "is", "the", "report", "file", "that", "years", "according", "this", "author", "name", "value", "details", "information", "and"}
         key_attributes = [t for t in query_terms if t not in inquiry_words]
+
 
         if key_attributes:
             corpus_text = " ".join(e.normalized_content for e in evidence_items)
             missing_attrs = [attr for attr in key_attributes if attr not in corpus_text]
             if missing_attrs:
-                ans = f"That information was not found in the provided document. The document does not contain details regarding {', '.join(sorted(missing_attrs))}."
+                attr_str = ", ".join(sorted(missing_attrs))
+                ans = f"That information was not found in the provided document. The requested information ({attr_str}) is not stated in the provided document."
                 claim = ClaimItem(
                     claim_id="clm_not_found",
                     text=ans,
@@ -50,9 +53,8 @@ class DocumentGroundingEngine:
             ans = "I could not find information addressing that question in the provided document."
             return ans, [], []
 
-
         matched_evidence = [item for item, score in relevant_scored]
-        
+
         # Formulate grounded answer with explicit citations
         citations = []
         claims: List[ClaimItem] = []
@@ -81,6 +83,12 @@ class DocumentGroundingEngine:
             )
 
         unique_citations = list(dict.fromkeys(citations))
+
+        # Check detail level requirement
+        if "CONCISE" in contract.output_requirements or "concise" in query.lower() or "short" in query.lower():
+            body = "\n".join(f"- {ev.content}" for ev in matched_evidence[:2])
+            return f"{body}\n\n*(Source: {unique_citations[0]})*", matched_evidence[:2], claims[:2]
+
         header = f"Based on the provided document (`{matched_evidence[0].filename}`):\n\n"
         body = "\n\n".join(content_lines)
         footer = f"\n\n**Sources:**\n" + "\n".join(f"- {c}" for c in unique_citations)
