@@ -86,6 +86,7 @@ from api.agent import agent_router
 from api.multimodal import multimodal_router
 from api.llm import llm_router
 from api.operations import operations_router
+from api.intelligence import intelligence_router
 from gateway import GatewayMiddleware, health_router
 
 
@@ -105,6 +106,8 @@ app.include_router(agent_router)
 app.include_router(multimodal_router)
 app.include_router(llm_router)
 app.include_router(operations_router)
+app.include_router(intelligence_router)
+
 
 
 

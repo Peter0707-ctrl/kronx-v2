@@ -30,7 +30,9 @@ EXPECTED_TEST_SUITES = {
     "test_llm.py":          {"phase": "Phase 2J", "min_tests": 60},
     "test_phase3_architecture.py": {"phase": "Phase 3.0", "min_tests": 50},
     "test_operations.py":   {"phase": "Phase 3.1", "min_tests": 50},
+    "test_intelligence.py": {"phase": "Phase 4.0", "min_tests": 50},
 }
+
 
 
 

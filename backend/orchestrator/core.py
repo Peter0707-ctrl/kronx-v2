@@ -398,8 +398,9 @@ class KronxOrchestrator:
         history: List
     ) -> str:
         # Offload blocking load operations to a worker thread
-        memory_context = await asyncio.to_thread(self.memory.get_context, conversation_id)
+        memory_context = await asyncio.to_thread(self.memory.get_context, conversation_id, message)
         system = self._build_system_prompt(mode, language, memory_context)
+
         contents = self._build_contents(history, message)
 
         # Step 1: Knowledge Base (instant, no latency)
@@ -542,8 +543,9 @@ class KronxOrchestrator:
                 )
                 return
 
-        memory_context = await asyncio.to_thread(self.memory.get_context, conversation_id)
+        memory_context = await asyncio.to_thread(self.memory.get_context, conversation_id, message)
         system = self._build_system_prompt(mode, language, memory_context)
+
         contents = self._build_contents(history, message)
 
         # MULTI-PROVIDER CLOUD API FAILOVER ROUTER (Zero Local RAM Consumption for 8GB PC)

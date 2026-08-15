@@ -52,27 +52,42 @@ class MemoryManager:
 
         return memories
 
-    def get_context(self, conversation_id: str) -> str:
+    def get_context(self, conversation_id: str, query: str = "") -> str:
         """
-        Build a memory context string to inject into prompts.
+        Build a memory context string to inject into prompts, filtering out irrelevant topics.
         """
         memories = self.store.get_memories(
             conversation_id=conversation_id,
-            limit=5
+            limit=10
         )
 
         if not memories:
             return ""
 
+        # Filter memories if a current query is provided
+        forex_keywords = {"forex", "trading", "mt5", "eurusd", "gbpusd", "crypto", "bitcoin"}
+        q_lower = query.lower()
+        is_query_academic_or_coding = any(w in q_lower for w in ["thesis", "methodology", "research", "chapter", "code", "python", "debug", "math", "algorithm", "science"])
+        is_query_forex = any(w in q_lower for w in forex_keywords)
+
         context_lines = ["Previous context from this conversation:"]
         for m in memories:
-            if m["type"] != "short_term":
-                context_lines.append(f"- {m['content']}")
+            if m.get("type") == "short_term":
+                continue
+            content = m.get("content", "")
+            m_lower = content.lower()
+
+            # If user query is academic/technical and memory has forex, exclude it
+            if is_query_academic_or_coding and not is_query_forex and any(w in m_lower for w in forex_keywords):
+                continue
+
+            context_lines.append(f"- {content}")
 
         if len(context_lines) == 1:
             return ""
 
-        return "\n".join(context_lines)
+        return "\n".join(context_lines[:5])
+
 
     def get_user_context(self, user_id: str) -> str:
         """
