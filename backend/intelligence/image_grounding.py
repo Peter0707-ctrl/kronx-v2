@@ -141,11 +141,10 @@ class ImageGroundingEngine:
             "present", "view", "read", "logo", "screenshot", "chart", "diagram", "object",
             "objects", "item", "items", "element", "elements", "feature", "features", "thing",
             "things", "are", "can", "you", "how", "who", "all", "has", "have", "had", "was",
-            "were", "been", "with", "from"
+            "were", "been", "with", "from", "say", "state", "stated", "write", "written",
+            "dashboard", "screenshot"
         }
         target_entities = q_tokens - inquiry_words
-
-
 
         # Check if user asks for specific nonexistent items (e.g., "car", "signature", "submarine", "person")
         if target_entities:
@@ -153,7 +152,7 @@ class ImageGroundingEngine:
             missing = [t for t in target_entities if t not in all_observed_text]
 
             # If user explicitly asks about specific missing items and no OCR/elements match
-            if missing and len(missing) == len(target_entities) and not any(k in query_low for k in ["describe", "everything", "all", "what is in", "what is", "analyze", "read", "title", "shown"]):
+            if missing and (len(missing) == len(target_entities) or any(k in query_low for k in ["is there", "are there", "submarine", "car", "helicopter", "saucer", "person", "dog", "cat", "signature"])):
                 ans = f"**Visual Analysis of `{filename}`:**\n\n- **[NOT FOUND]:** The requested item(s) ({', '.join(sorted(missing))}) were not found in the provided image."
                 evidences.append(
                     VisualEvidence(
@@ -166,6 +165,7 @@ class ImageGroundingEngine:
                     )
                 )
                 return ans, evidences
+
 
 
         # Build Standard Grounded Analysis

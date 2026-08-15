@@ -90,8 +90,10 @@ class EvidenceEngine:
                 term_ratio = len(matched_terms) / len(q_terms)
                 score += term_ratio * 0.5
 
-            if score > 0.1:
+            if score >= 0.05:
                 scored.append((item, min(1.0, score)))
+
 
         scored.sort(key=lambda x: x[1], reverse=True)
         return scored[:top_k]
+

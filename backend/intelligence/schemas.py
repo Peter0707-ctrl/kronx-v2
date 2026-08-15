@@ -17,26 +17,34 @@ class IntentType(str, Enum):
     IMAGE_ANALYSIS = "IMAGE_ANALYSIS"
     OCR = "OCR"
     MULTI_DOCUMENT_ANALYSIS = "MULTI_DOCUMENT_ANALYSIS"
+    CODE_GENERATION = "CODE_GENERATION"
+    CODE_DEBUGGING = "CODE_DEBUGGING"
     CODING = "CODING"
     DEBUGGING = "DEBUGGING"
     SOFTWARE_ENGINEERING = "SOFTWARE_ENGINEERING"
     MATHEMATICS = "MATHEMATICS"
-    DATA_ANALYSIS = "DATA_ANALYSIS"
+    SCIENCE = "SCIENCE"
     BUSINESS = "BUSINESS"
     FINANCE = "FINANCE"
+    FOREX = "FOREX"
     LEGAL_INFORMATION = "LEGAL_INFORMATION"
-    TECHNOLOGY = "TECHNOLOGY"
-    WRITING = "WRITING"
-    EDITING = "EDITING"
-    TRANSLATION = "TRANSLATION"
+    GENERAL_KNOWLEDGE = "GENERAL_KNOWLEDGE"
     SUMMARIZATION = "SUMMARIZATION"
+    TRANSLATION = "TRANSLATION"
+    DATA_ANALYSIS = "DATA_ANALYSIS"
     COMPARISON = "COMPARISON"
-    PLANNING = "PLANNING"
-    GENERAL_QA = "GENERAL_QA"
     CREATIVE_WRITING = "CREATIVE_WRITING"
     IMAGE_GENERATION = "IMAGE_GENERATION"
+    EXPLANATION = "EXPLANATION"
+    TUTORING = "TUTORING"
+    PLANNING = "PLANNING"
+    SYSTEM_DIAGNOSTICS = "SYSTEM_DIAGNOSTICS"
     UI_DESIGN = "UI_DESIGN"
     SYSTEM_ASSISTANCE = "SYSTEM_ASSISTANCE"
+    GENERAL_QA = "GENERAL_QA"
+    WRITING = "WRITING"
+    EDITING = "EDITING"
+    TECHNOLOGY = "TECHNOLOGY"
     OTHER = "OTHER"
 
 
@@ -48,6 +56,7 @@ class DomainType(str, Enum):
     SCIENCE = "SCIENCE"
     BUSINESS = "BUSINESS"
     FINANCE = "FINANCE"
+    FOREX = "FOREX"
     LEGAL = "LEGAL"
     CREATIVE = "CREATIVE"
     GENERAL = "GENERAL"
@@ -65,6 +74,9 @@ class TaskType(str, Enum):
     SUMMARIZATION = "SUMMARIZATION"
     PLANNING = "PLANNING"
     GENERAL_QA = "GENERAL_QA"
+    TUTORING = "TUTORING"
+    SYSTEM_DIAGNOSTICS = "SYSTEM_DIAGNOSTICS"
+
 
 
 class CapabilityType(str, Enum):
@@ -242,11 +254,61 @@ class ClaimVerificationResult(BaseModel):
     summary: str = ""
 
 
+class QualityGateRule(str, Enum):
+    INTENT_MATCH = "INTENT_MATCH"
+    TOPIC_MATCH = "TOPIC_MATCH"
+    EVIDENCE_SUPPORT = "EVIDENCE_SUPPORT"
+    CLAIM_SUPPORT = "CLAIM_SUPPORT"
+    SOURCE_FIDELITY = "SOURCE_FIDELITY"
+    LANGUAGE_MATCH = "LANGUAGE_MATCH"
+    COMPLETENESS = "COMPLETENESS"
+    UNCERTAINTY_CORRECTNESS = "UNCERTAINTY_CORRECTNESS"
+    HALLUCINATION_CHECK = "HALLUCINATION_CHECK"
+    USER_QUESTION_COVERAGE = "USER_QUESTION_COVERAGE"
+    MODALITY_CORRECTNESS = "MODALITY_CORRECTNESS"
+    MODEL_CAPABILITY_CORRECTNESS = "MODEL_CAPABILITY_CORRECTNESS"
+    CONTEXT_CONTAMINATION_CHECK = "CONTEXT_CONTAMINATION_CHECK"
+    ACADEMIC_ATTRIBUTION_CHECK = "ACADEMIC_ATTRIBUTION_CHECK"
+    ANSWER_DIRECTNESS = "ANSWER_DIRECTNESS"
+
+
+class QualityGateCheckResult(BaseModel):
+    rule: QualityGateRule
+    passed: bool
+    score: float = 1.0
+    reason: str = ""
+
+
+class QualityGateEvaluation(BaseModel):
+    passed: bool
+    overall_score: float
+    checks: List[QualityGateCheckResult] = []
+    regeneration_needed: bool = False
+    critical_failures: List[str] = []
+
+
+class AnswerPlan(BaseModel):
+    user_goal: str
+    expected_output_format: str = "DIRECT"
+    available_evidence: List[str] = []
+    missing_evidence: List[str] = []
+    domain: DomainType
+    required_capabilities: List[CapabilityType] = []
+    selected_provider: str
+    selected_model: str
+    relevant_context: List[str] = []
+    dropped_context: List[str] = []
+    planned_claims: List[str] = []
+    forbidden_claims: List[str] = []
+    certainty_level: str = "HIGH"
+
+
 class TopicDriftEvaluation(BaseModel):
     is_drifted: bool = False
     drift_score: float = 0.0
     reason: str = "Answer is strictly relevant to user request."
     detected_unrelated_topics: List[str] = []
+
 
 
 class AcademicSectionData(BaseModel):

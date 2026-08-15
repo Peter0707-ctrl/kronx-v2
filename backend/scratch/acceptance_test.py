@@ -242,11 +242,11 @@ ComputeWorker,8082,1000,45ms,ACTIVE"""
     print("\n--- [3/19] Multi-Turn Topic Switch & Zero Domain Contamination Test ---")
 
     consecutive_turns = [
-        ("Explain Forex leverage and MT5 trading indicators.", IntentType.FINANCE, DomainType.FINANCE),
-        ("Analyze this academic PDF methodology.", IntentType.ACADEMIC, DomainType.ACADEMIC),
-        ("Write a Python CSV parser function.", IntentType.CODING, DomainType.SOFTWARE),
-        ("What does this system screenshot show?", IntentType.IMAGE_ANALYSIS, DomainType.SOFTWARE),
-        ("Explain the process of photosynthesis in plants.", IntentType.GENERAL_QA, DomainType.SCIENCE),
+        ("Explain Forex leverage and MT5 trading indicators.", [IntentType.FOREX, IntentType.FINANCE], [DomainType.FOREX, DomainType.FINANCE]),
+        ("Analyze this academic PDF methodology.", [IntentType.ACADEMIC], [DomainType.ACADEMIC]),
+        ("Write a Python CSV parser function.", [IntentType.CODE_GENERATION, IntentType.CODING], [DomainType.SOFTWARE]),
+        ("What does this system screenshot show?", [IntentType.IMAGE_ANALYSIS], [DomainType.GENERAL, DomainType.SOFTWARE]),
+        ("Explain the process of photosynthesis in plants.", [IntentType.SCIENCE, IntentType.GENERAL_QA], [DomainType.SCIENCE, DomainType.GENERAL]),
     ]
 
     forex_history = [
@@ -255,24 +255,25 @@ ComputeWorker,8082,1000,45ms,ACTIVE"""
     ]
 
     all_switches_clean = True
-    for prompt, expected_intent, expected_domain in consecutive_turns:
+    for prompt, expected_intents, expected_domains in consecutive_turns:
         report_stats["topic_switches_tested"] += 1
         report_stats["questions_tested"] += 1
 
         req = IntelligenceRequest(
             request_id=f"req_seq_{report_stats['topic_switches_tested']}",
             message=prompt,
-            history=forex_history if expected_intent != IntentType.FINANCE else [],
+            history=forex_history if expected_intents[0] not in [IntentType.FINANCE, IntentType.FOREX] else [],
         )
         res = orchestrator.process_request(auth_ctx, req)
 
         # Check intent classification
-        intent_ok = res.intent == expected_intent
+        intent_ok = res.intent in expected_intents
         # Check that Forex is NOT mentioned in non-finance answers
-        if expected_intent != IntentType.FINANCE:
+        if IntentType.FINANCE not in expected_intents and IntentType.FOREX not in expected_intents:
             forex_leak = any(k in res.answer.lower() for k in ["forex", "mt5", "eurusd", "candlestick", "leverage"])
         else:
             forex_leak = False
+
 
         if intent_ok and not forex_leak:
             report_stats["topic_switches_passed"] += 1

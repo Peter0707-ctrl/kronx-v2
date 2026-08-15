@@ -1,11 +1,11 @@
 """
-Phase 4.0 — Capability & Model Routing Engine
-Dynamically selects models and provider endpoints based on required capabilities, complexity, and health without hard-coded assumptions.
+Phase 4.2 — Capability-Based Model Routing Engine
+Dynamically maps required capabilities and domains to optimal providers/models without capability mismatches.
 """
 from __future__ import annotations
 import os
 from typing import Dict, Any, List, Optional
-from intelligence.schemas import TaskContract, CapabilityType, TaskComplexity
+from intelligence.schemas import TaskContract, CapabilityType, TaskComplexity, DomainType, IntentType
 
 
 class CapabilityRouter:
@@ -24,13 +24,16 @@ class CapabilityRouter:
     @classmethod
     def select_route(cls, contract: TaskContract) -> Dict[str, Any]:
         """
-        Determines the optimal provider and model based on capabilities and complexity.
+        Determines the optimal provider and model based on capabilities, domain, and complexity.
+        Ensures vision tasks are NEVER routed to text-only models, and document tasks ALWAYS receive extracted evidence.
         """
         providers = cls.get_available_providers()
         caps = contract.allowed_capabilities
         complexity = contract.complexity
+        domain = contract.domain
+        intent = contract.intent
 
-        # 1. Vision Tasks
+        # 1. Vision & Optical OCR Tasks
         if CapabilityType.VISION in caps or CapabilityType.OCR in caps:
             if providers["gemini"]:
                 return {
@@ -54,7 +57,7 @@ class CapabilityRouter:
             }
 
         # 2. Creative Image Generation
-        if CapabilityType.CREATIVE_GENERATION in caps:
+        if CapabilityType.CREATIVE_GENERATION in caps or intent == IntentType.IMAGE_GENERATION:
             return {
                 "provider": "pollinations_safe",
                 "model": "pollinations-image-synth",
@@ -62,8 +65,31 @@ class CapabilityRouter:
                 "fallback_provider": "internal_grounded",
             }
 
-        # 3. High Complexity / Long Context Academic Tasks
-        if complexity in [TaskComplexity.HIGH, TaskComplexity.VERY_HIGH] or CapabilityType.LONG_CONTEXT in caps:
+        # 3. Document Analysis Tasks
+        if CapabilityType.DOCUMENT_ANALYSIS in caps or contract.evidence_required:
+            if providers["gemini"]:
+                return {
+                    "provider": "gemini",
+                    "model": "gemini-2.0-flash",
+                    "capabilities": [CapabilityType.DOCUMENT_ANALYSIS, CapabilityType.LONG_CONTEXT],
+                    "fallback_provider": "internal_grounded",
+                }
+            if providers["groq"]:
+                return {
+                    "provider": "groq",
+                    "model": "llama-3.3-70b-versatile",
+                    "capabilities": [CapabilityType.DOCUMENT_ANALYSIS, CapabilityType.LONG_CONTEXT],
+                    "fallback_provider": "internal_grounded",
+                }
+            return {
+                "provider": "internal_grounded",
+                "model": "pjkronx-document-grounding-v4",
+                "capabilities": [CapabilityType.DOCUMENT_ANALYSIS, CapabilityType.TEXT_REASONING],
+                "fallback_provider": None,
+            }
+
+        # 4. Academic & Research Tasks
+        if domain in [DomainType.ACADEMIC, DomainType.RESEARCH] or intent == IntentType.ACADEMIC:
             if providers["groq"]:
                 return {
                     "provider": "groq",
@@ -78,8 +104,54 @@ class CapabilityRouter:
                     "capabilities": [CapabilityType.TEXT_REASONING, CapabilityType.LONG_CONTEXT],
                     "fallback_provider": "internal_grounded",
                 }
+            return {
+                "provider": "internal_grounded",
+                "model": "pjkronx-academic-engine-v4",
+                "capabilities": [CapabilityType.TEXT_REASONING],
+                "fallback_provider": None,
+            }
 
-        # 4. Standard Fast / Medium Tasks
+        # 5. Code Reasoning & Debugging Tasks
+        if domain == DomainType.SOFTWARE or CapabilityType.CODE_REASONING in caps:
+            if providers["groq"]:
+                return {
+                    "provider": "groq",
+                    "model": "llama-3.3-70b-versatile",
+                    "capabilities": [CapabilityType.CODE_REASONING, CapabilityType.TEXT_REASONING],
+                    "fallback_provider": "gemini" if providers["gemini"] else "internal_grounded",
+                }
+            if providers["gemini"]:
+                return {
+                    "provider": "gemini",
+                    "model": "gemini-2.0-flash",
+                    "capabilities": [CapabilityType.CODE_REASONING, CapabilityType.TEXT_REASONING],
+                    "fallback_provider": "internal_grounded",
+                }
+            return {
+                "provider": "internal_grounded",
+                "model": "pjkronx-code-engine-v4",
+                "capabilities": [CapabilityType.CODE_REASONING],
+                "fallback_provider": None,
+            }
+
+        # 6. Mathematics Tasks
+        if domain == DomainType.MATHEMATICS or CapabilityType.MATHEMATICAL_REASONING in caps:
+            if providers["gemini"]:
+                return {
+                    "provider": "gemini",
+                    "model": "gemini-2.0-flash",
+                    "capabilities": [CapabilityType.MATHEMATICAL_REASONING, CapabilityType.TEXT_REASONING],
+                    "fallback_provider": "internal_grounded",
+                }
+            if providers["groq"]:
+                return {
+                    "provider": "groq",
+                    "model": "llama-3.3-70b-versatile",
+                    "capabilities": [CapabilityType.MATHEMATICAL_REASONING, CapabilityType.TEXT_REASONING],
+                    "fallback_provider": "internal_grounded",
+                }
+
+        # 7. General Fast Tasks
         if providers["groq"]:
             return {
                 "provider": "groq",
@@ -95,10 +167,10 @@ class CapabilityRouter:
                 "fallback_provider": "internal_grounded",
             }
 
-        # 5. High-Precision Internal Grounded Fallback
+        # 8. High-Precision Internal Grounded Engine Fallback
         return {
             "provider": "internal_grounded",
             "model": "pjkronx-grounded-intelligence-v4",
-            "capabilities": [CapabilityType.TEXT_REASONING, CapabilityType.DOCUMENT_ANALYSIS],
+            "capabilities": [CapabilityType.TEXT_REASONING],
             "fallback_provider": None,
         }

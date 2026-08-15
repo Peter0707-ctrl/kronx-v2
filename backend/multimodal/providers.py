@@ -53,6 +53,7 @@ class MockMultimodalProvider(MultimodalProvider):
     """
     Deterministic, offline, safe provider implementation.
     Used for unit testing, offline environments, and fallback handling.
+    Strictly returns verifiable metadata or explicit NOT_FOUND / UNCERTAIN.
     """
 
     def analyze_text(self, prompt: str, content: str) -> Dict[str, Any]:
@@ -65,8 +66,8 @@ class MockMultimodalProvider(MultimodalProvider):
             "description": f"Analyzed text content ({line_count} lines, {word_count} words).",
             "summary": f"Content summary: {sanitized[:200]}..." if len(sanitized) > 200 else sanitized,
             "facts": [f"Document contains {line_count} lines of text.", f"Word count is {word_count} words."],
-            "inferences": ["Document is structured plain text or source code."],
-            "assumptions": ["File contents are intended for static analysis."],
+            "inferences": [],
+            "assumptions": [],
             "warnings": warnings,
         }
 
@@ -74,35 +75,20 @@ class MockMultimodalProvider(MultimodalProvider):
         size_kb = len(image_bytes) / 1024
         warnings = detect_prompt_injection(prompt)
 
-        ui_elements = [
-            {"type": "Header", "label": "Navigation Bar", "confidence": 0.95},
-            {"type": "Form", "label": "Authentication Input", "confidence": 0.92},
-            {"type": "Button", "label": "Submit Action", "confidence": 0.94},
-        ]
-        diagram_nodes = [
-            {"id": "node_1", "label": "Client Layer", "type": "Frontend"},
-            {"id": "node_2", "label": "API Gateway", "type": "Routing"},
-            {"id": "node_3", "label": "Service Backend", "type": "Compute"},
-        ]
-
         return {
             "image_type": mime_type.split("/")[-1].upper() if "/" in mime_type else "IMAGE",
-            "dimensions": {"width": 1280, "height": 720},
+            "dimensions": {"width": 0, "height": 0},
             "description": f"Visual asset ({size_kb:.1f} KB, {mime_type}).",
-            "ui_elements": ui_elements,
-            "diagram_nodes": diagram_nodes,
-            "visible_text": "Kron-X Platform Overview",
-            "visual_summary": "Clean modern interface layout with balanced visual hierarchy.",
+            "ui_elements": [],
+            "diagram_nodes": [],
+            "visible_text": "",
+            "visual_summary": "Image received for processing.",
             "facts": [
                 f"Image format is {mime_type}.",
-                f"Detected 3 key UI elements and 3 structural layout blocks.",
+                f"Image size is {size_kb:.1f} KB.",
             ],
-            "inferences": [
-                "Visual asset represents a user interface or architectural diagram."
-            ],
-            "assumptions": [
-                "Layout adheres to responsive design guidelines."
-            ],
+            "inferences": [],
+            "assumptions": [],
             "warnings": warnings,
         }
 
@@ -112,51 +98,36 @@ class MockMultimodalProvider(MultimodalProvider):
         try:
             text_content = doc_bytes.decode("utf-8", errors="ignore")
         except Exception:
-            text_content = "Binary document content."
+            text_content = ""
 
         sanitized = redact_secrets(text_content)
         warnings = detect_prompt_injection(sanitized)
 
-        sections = [
-            {"title": "Overview", "level": 1, "content": sanitized[:300] if sanitized else "Section Overview", "page": 1},
-            {"title": "Specifications", "level": 2, "content": "Detailed system specifications and requirements.", "page": 2},
-        ]
-        tables = [
-            {"headers": ["Item", "Specification", "Status"], "rows": [["Memory", "Bounded", "Active"], ["Isolation", "Multi-Tenant", "Enforced"]]}
-        ]
-
         return {
             "document_type": filename.split(".")[-1].upper() if "." in filename else "DOCUMENT",
-            "page_count": 2,
-            "sections": sections,
-            "tables": tables,
-            "metadata": {"author": "Kron-X System", "size_kb": f"{size_kb:.1f}"},
+            "page_count": 1 if sanitized else 0,
+            "sections": [{"title": "Document Content", "level": 1, "content": sanitized[:500], "page": 1}] if sanitized else [],
+            "tables": [],
+            "metadata": {"filename": filename, "size_kb": f"{size_kb:.1f}"},
             "text_preview": sanitized[:200] if sanitized else "",
-            "word_count": len(sanitized.split()) if sanitized else 50,
+            "word_count": len(sanitized.split()) if sanitized else 0,
             "facts": [
-                f"Document '{filename}' has 2 sections and 1 structured table.",
+                f"Document '{filename}' processed ({size_kb:.1f} KB).",
             ],
-            "inferences": [
-                "Document represents technical documentation or product requirements."
-            ],
-            "assumptions": [
-                "Content is structured for formal analysis."
-            ],
+            "inferences": [],
+            "assumptions": [],
             "warnings": warnings,
         }
 
     def extract_ocr(self, image_bytes: bytes, mime_type: str) -> Dict[str, Any]:
         return {
-            "extracted_text": "Kron-X Enterprise Architecture Engine\nZero Trust Security Layer\nMulti-Tenant Workspaces",
-            "word_count": 9,
-            "confidence": 0.98,
-            "blocks": [
-                {"text": "Kron-X Enterprise Architecture Engine", "bbox": [10, 10, 300, 40], "confidence": 0.99},
-                {"text": "Zero Trust Security Layer", "bbox": [10, 50, 250, 80], "confidence": 0.98},
-                {"text": "Multi-Tenant Workspaces", "bbox": [10, 90, 220, 120], "confidence": 0.97},
-            ],
-            "warnings": [],
+            "extracted_text": "",
+            "word_count": 0,
+            "confidence": 0.0,
+            "blocks": [],
+            "warnings": ["OCR requires active optical vision provider."],
         }
+
 
 
 

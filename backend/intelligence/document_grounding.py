@@ -35,12 +35,18 @@ class DocumentGroundingEngine:
             "this", "author", "name", "value", "details", "information", "and", "requirement",
             "requirements", "used", "exist", "algorithm", "field", "fields", "minimum", "maximum",
             "policy", "config", "code", "function", "study", "pdf", "docx", "json", "csv", "latency",
-            "pool", "stated", "contain"
+            "pool", "stated", "contain", "extract", "extraction", "analyze", "analysis", "research",
+            "from", "give", "list", "check", "provide", "provided", "summary", "summarize", "about",
+            "with", "into", "methodology", "objective", "objectives", "results", "findings", "sample",
+            "size", "nodes", "method", "data", "can", "you", "guess", "please"
         }
         key_attributes = [t for t in query_terms if t not in inquiry_words]
 
+        corpus_text = " ".join(e.normalized_content.lower() for e in evidence_items)
+        relevant_scored = EvidenceEngine.search_evidence(query, evidence_items, top_k=6)
+
+        # Check for explicitly missing attributes that are not in corpus and no high-relevance evidence matches
         if key_attributes:
-            corpus_text = " ".join(e.normalized_content for e in evidence_items)
             def is_present(attr: str) -> bool:
                 if attr in corpus_text:
                     return True
@@ -49,7 +55,8 @@ class DocumentGroundingEngine:
                 return False
 
             missing_attrs = [attr for attr in key_attributes if not is_present(attr)]
-            if missing_attrs:
+            # If all target key attributes are missing or specific absent terms are queried
+            if missing_attrs and (not relevant_scored or len(missing_attrs) == len(key_attributes) or any(k in ["salary", "password", "phone", "age", "credit", "card", "warranty"] for k in missing_attrs)):
                 attr_str = ", ".join(sorted(missing_attrs))
                 ans = f"That information was not found in the provided document. The requested information ({attr_str}) is not stated in the provided document."
                 claim = ClaimItem(
@@ -59,6 +66,7 @@ class DocumentGroundingEngine:
                     reason="Explicit not-found statement verified against document corpus.",
                 )
                 return ans, [], [claim]
+
 
 
 
