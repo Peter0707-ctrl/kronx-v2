@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+import { groqApiKeys, matchSimpleGreeting, needsLiveWebSearch, preferFastGroqModels } from '@/lib/fastChat'
+
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
@@ -26,9 +28,7 @@ const GREETINGS: Record<string, string> = {
 
 // Returns a greeting ONLY if the entire message is a pure greeting — no questions, no topics attached.
 function matchGreeting(query: string): string | null {
-  if (!query) return null
-  const q = query.toLowerCase().trim().replace(/[!?.،,]+$/, '').trim()
-  return GREETINGS[q] ?? null
+  return matchSimpleGreeting(query)
 }
 
 
@@ -257,11 +257,7 @@ function buildGroqMessages(
   return messages
 }
 
-const GROQ_API_KEYS = [
-  process.env.GROQ_API_KEY,
-  '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',
-  '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'
-].filter(Boolean) as string[]
+const GROQ_API_KEYS = groqApiKeys()
 
 async function callGroq(
   message: string,
@@ -277,27 +273,17 @@ async function callGroq(
   const hasVision = groqMessages.some(m => Array.isArray(m.content)) || message.includes('[IMAGE:')
   const isDocument = message.includes('DOCUMENT ATTACHED:') || message.includes('FILE ATTACHED:')
 
-  const models = hasVision
-    ? ['llama-3.2-11b-vision-preview', 'llama-3.2-90b-vision-preview']
-    : isDocument
-    ? [
-        'llama-3.3-70b-versatile',
-        'llama-3.1-8b-instant',
-        'gemma2-9b-it',
-        'mixtral-8x7b-32768'
-      ]
-    : [
-        'llama-3.3-70b-versatile',
-        'llama-3.1-8b-instant',
-        'gemma2-9b-it',
-        'mixtral-8x7b-32768'
-      ]
+  const models = preferFastGroqModels({
+    vision: hasVision,
+    document: isDocument,
+    long: isDocument || message.length > 800,
+  })
 
   for (const apiKey of keys) {
     for (const model of models) {
       try {
         const controller = new AbortController()
-        const timeoutMs = model.includes('70b') || model.includes('90b') ? 20000 : 8000
+        const timeoutMs = model.includes('70b') || model.includes('90b') ? 20000 : 12000
         const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
 
         const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -364,8 +350,7 @@ async function fetchWebSearch(query: string): Promise<string | null> {
 
     if (!cleanQuery || cleanQuery.length < 5) return null
 
-    const lower = cleanQuery.toLowerCase()
-    const needsSearch = /\b(current|president|weather|news|today|latest|who is|what is|search|live|update|api code|release)\b/i.test(lower)
+    const needsSearch = needsLiveWebSearch(cleanQuery)
     if (!needsSearch) return null
 
     const res = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(cleanQuery)}&format=json&no_redirect=1&no_html=1&skip_disambig=1`, {

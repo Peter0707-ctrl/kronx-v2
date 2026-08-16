@@ -16,7 +16,7 @@ export const maxDuration = 300
  * POST /api/gateway
  *
  * Auth: Authorization: Bearer <cpk_...>  OR  x-api-key: <cpk_...>
- * Valid project keys: unlimited tokens, no app-side rate limits.
+ * Valid project keys require Developer API granted (admin). Granted keys: unlimited tokens.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -37,7 +37,8 @@ export async function POST(req: NextRequest) {
     const stream = body.stream === true
     const model = typeof body.model === 'string' && body.model ? body.model : 'copetra-ai'
     const temperature = typeof body.temperature === 'number' ? body.temperature : 0.5
-    const maxTokens = resolveMaxTokens(body.max_tokens)
+    const unlimited = Boolean(auth.key.apiUnlimitedTokens)
+    const maxTokens = resolveMaxTokens(body.max_tokens, unlimited)
     const callbackUrl =
       body.callback_url || body.callbackUrl || body.webhook_url || body.webhookUrl || auth.key.callbackUrl
 
@@ -48,7 +49,7 @@ export async function POST(req: NextRequest) {
           temperature,
           maxTokens,
           stream: false,
-          unlimited: true,
+          unlimited,
         })
         const answer =
           result.ok && result.stream === false ? result.text : 'Generation failed.'
@@ -91,7 +92,7 @@ export async function POST(req: NextRequest) {
       temperature,
       maxTokens,
       stream,
-      unlimited: true,
+      unlimited,
     })
 
     if (!result.ok) {

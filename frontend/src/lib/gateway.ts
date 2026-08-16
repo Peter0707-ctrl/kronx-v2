@@ -1,37 +1,64 @@
 import { v4 as uuidv4 } from 'uuid'
+import {
+  groqApiKeys,
+  lastUserText,
+  matchSimpleGreeting,
+  preferFastGroqModels,
+} from './fastChat'
 
-/** Fast model first; larger models as fallback for long / complex prompts. */
-const GROQ_MODELS = [
-  'llama-3.1-8b-instant',
-  'llama-3.3-70b-versatile',
-  'llama-3.1-70b-versatile',
-]
-
-function groqKeys(): string[] {
-  const keys = [process.env.GROQ_API_KEY, process.env.GROQ_API_KEY_2].filter(
-    (k): k is string => Boolean(k && k.trim() && !k.includes('placeholder'))
-  )
-  return Array.from(new Set(keys))
+/** Fast model first; larger model only as fallback for long / complex prompts. */
+function groqModelsFor(messages: ChatMessage[], maxTokens: number): string[] {
+  const last = lastUserText(messages)
+  const vision = messages.some((m) => /\[IMAGE:|image_url/i.test(String(m.content || '')))
+  const document = /DOCUMENT ATTACHED:|FILE ATTACHED:/i.test(last)
+  const long = last.length > 800 || maxTokens > 2048
+  return preferFastGroqModels({ vision, document, long })
 }
 
-function upstreamTimeoutMs(wantStream: boolean): number {
+function groqKeys(): string[] {
+  return groqApiKeys()
+}
+
+function upstreamTimeoutMs(wantStream: boolean, fastModel: boolean): number {
   const fromEnv = Number(
     wantStream
       ? process.env.GATEWAY_STREAM_TIMEOUT_MS
       : process.env.GATEWAY_UPSTREAM_TIMEOUT_MS
   )
   if (Number.isFinite(fromEnv) && fromEnv > 0) return fromEnv
-  return wantStream ? 180_000 : 300_000
+  if (fastModel) return wantStream ? 45_000 : 25_000
+  return wantStream ? 90_000 : 60_000
 }
 
 function defaultMaxTokens(): number {
   const fromEnv = Number(process.env.GATEWAY_DEFAULT_MAX_TOKENS)
   if (Number.isFinite(fromEnv) && fromEnv > 0) return fromEnv
-  return 8192
+  return 2048
 }
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+function greetingAsGroqStream(text: string): Response {
+  const encoder = new TextEncoder()
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      const chunk = {
+        id: `chatcmpl-${uuidv4()}`,
+        object: 'chat.completion.chunk',
+        created: Math.floor(Date.now() / 1000),
+        model: 'copetra-ai',
+        choices: [{ index: 0, delta: { content: text }, finish_reason: null }],
+      }
+      controller.enqueue(encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`))
+      controller.enqueue(encoder.encode('data: [DONE]\n\n'))
+      controller.close()
+    },
+  })
+  return new Response(stream, {
+    headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' },
+  })
 }
 
 export type ChatMessage = { role: string; content: string }
@@ -51,11 +78,12 @@ export function normalizeMessages(body: Record<string, unknown>): ChatMessage[] 
   return []
 }
 
-/** No app-side cap for developer API — pass client value through to upstream. */
-export function resolveMaxTokens(requested: unknown, _unlimited = true): number {
+/** Granted developers: no app-side cap. Others capped at 4096 (if ever allowed). */
+export function resolveMaxTokens(requested: unknown, unlimited = true): number {
   const n = typeof requested === 'number' ? requested : parseInt(String(requested ?? ''), 10)
-  if (Number.isFinite(n) && n > 0) return Math.floor(n)
-  return defaultMaxTokens()
+  const raw = Number.isFinite(n) && n > 0 ? Math.floor(n) : defaultMaxTokens()
+  if (unlimited) return raw
+  return Math.min(Math.max(raw, 1), 4096)
 }
 
 const SYSTEM_PROMPT = `You are Copetra AI, an elite academic AI assistant powered by PJ Copetranova.
@@ -72,6 +100,20 @@ export async function createCompletion(opts: {
   | { ok: true; stream: false; text: string; usage: Record<string, number> }
   | { ok: false; status: number; message: string; code: string }
 > {
+  const wantStream = opts.stream === true
+  const greeting = matchSimpleGreeting(lastUserText(opts.messages))
+  if (greeting) {
+    if (wantStream) {
+      return { ok: true, stream: true, response: greetingAsGroqStream(greeting) }
+    }
+    return {
+      ok: true,
+      stream: false,
+      text: greeting,
+      usage: { prompt_tokens: 0, completion_tokens: greeting.length, total_tokens: greeting.length },
+    }
+  }
+
   const keys = groqKeys()
   if (keys.length === 0) {
     return {
@@ -85,8 +127,7 @@ export async function createCompletion(opts: {
   const formatted = [{ role: 'system', content: SYSTEM_PROMPT }, ...opts.messages]
   const temperature = typeof opts.temperature === 'number' ? opts.temperature : 0.5
   const maxTokens = resolveMaxTokens(opts.maxTokens, opts.unlimited !== false)
-  const wantStream = opts.stream === true
-  const timeoutMs = upstreamTimeoutMs(wantStream)
+  const models = groqModelsFor(opts.messages, maxTokens)
 
   let lastStatus = 0
   let lastDetail = ''
@@ -94,8 +135,9 @@ export async function createCompletion(opts: {
   let rateLimitHits = 0
 
   for (const apiKey of keys) {
-    for (const model of GROQ_MODELS) {
-      for (let attempt = 1; attempt <= 3; attempt++) {
+    for (const model of models) {
+      const timeoutMs = upstreamTimeoutMs(wantStream, model.includes('8b') || model.includes('instant'))
+      for (let attempt = 1; attempt <= 2; attempt++) {
         try {
           const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
@@ -124,15 +166,15 @@ export async function createCompletion(opts: {
 
             if (res.status === 429) {
               rateLimitHits++
-              if (attempt < 3) {
-                await sleep(1500 * attempt)
+              if (attempt < 2) {
+                await sleep(400 * attempt)
                 continue
               }
               continue
             }
 
-            if ([502, 503, 504].includes(res.status) && attempt < 3) {
-              await sleep(1000 * attempt)
+            if ([502, 503, 504].includes(res.status) && attempt < 2) {
+              await sleep(400 * attempt)
               continue
             }
 
@@ -161,8 +203,8 @@ export async function createCompletion(opts: {
               ? `timeout after ${timeoutMs}ms`
               : String(err?.message || err)
 
-          if (attempt < 3) {
-            await sleep(1000 * attempt)
+          if (attempt < 2) {
+            await sleep(400 * attempt)
             continue
           }
         }
