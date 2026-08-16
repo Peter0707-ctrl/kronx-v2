@@ -6,6 +6,8 @@ import {
   preferFastGroqModels,
 } from './fastChat'
 
+export type ChatMessage = { role: string; content: string }
+
 /** Fast model first; larger model only as fallback for long / complex prompts. */
 function groqModelsFor(messages: ChatMessage[], maxTokens: number): string[] {
   const last = lastUserText(messages)
@@ -60,8 +62,6 @@ function greetingAsGroqStream(text: string): Response {
     headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' },
   })
 }
-
-export type ChatMessage = { role: string; content: string }
 
 export function normalizeMessages(body: Record<string, unknown>): ChatMessage[] {
   const raw = body.messages
@@ -124,7 +124,10 @@ export async function createCompletion(opts: {
     }
   }
 
-  const formatted = [{ role: 'system', content: SYSTEM_PROMPT }, ...opts.messages]
+  const hasSystem = opts.messages.some((m) => m.role === 'system')
+  const formatted = hasSystem
+    ? opts.messages
+    : [{ role: 'system', content: SYSTEM_PROMPT }, ...opts.messages]
   const temperature = typeof opts.temperature === 'number' ? opts.temperature : 0.5
   const maxTokens = resolveMaxTokens(opts.maxTokens, opts.unlimited !== false)
   const models = groqModelsFor(opts.messages, maxTokens)

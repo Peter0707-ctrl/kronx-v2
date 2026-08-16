@@ -1,40 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+import { groqApiKeys, matchSimpleGreeting, needsLiveWebSearch, preferFastGroqModels } from '@/lib/fastChat'
+
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-const GROQ_API_KEYS = [
-  process.env.GROQ_API_KEY,
-  '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',
-  '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'
-].filter(Boolean) as string[]
+const GROQ_API_KEYS = groqApiKeys()
 
-// Greetings-only hardcoded table — fires ONLY when the message is a pure standalone greeting.
-// Any message with a question, topic, or extra content goes directly to the LLM.
-const GREETINGS: Record<string, string> = {
-  "hello":        `Hello! 👋 Welcome to **Copetra AI**! How can I help you today?`,
-  "hi":           `Hi there! 👋 How can I assist you today?`,
-  "hey":          `Hey! 👋 What can I do for you?`,
-  "habari":       `Habari njema! 👋 Karibu **Copetra AI**! Ninaweza kukusaidia nini leo?`,
-  "habari yako":  `Nzuri sana! 👋 Karibu! Una swali gani leo?`,
-  "habari za leo":`Salama! 👋 Karibu **Copetra AI**! Una swali gani leo?`,
-  "mambo":        `Poa sana! 🤙 Karibu **Copetra AI**! Unaweza kuniuliza chochote.`,
-  "mambo vipi":   `Poa kabisa! 🤙 Karibu! Nikusaidie nini?`,
-  "niaje":        `Poa! 🤙 Nikusaidie nini leo?`,
-  "shikamoo":     `Marahaba! 🙇 Karibu sana **Copetra AI**! Nikusaidie nini?`,
-  "jambo":        `Jambo! 👋 Karibu **Copetra AI**! Una swali gani?`,
-  "sasa":         `Sasa hivi! 👋 Nikusaidie nini leo?`,
-  "sasa hivi":    `Fiti! 👋 Karibu **Copetra AI**! Nikusaidie nini?`,
-  "za uzima":     `Salama kabisa! 👋 Nikusaidie nini leo?`,
-  "who are you":  `I am **Copetra AI** 🤖, your AI Assistant powered by **PJ COPETRANOVA**. How can I help you?`,
-  "wewe ni nani": `Mimi ni **Copetra AI** 🤖, msaidizi wako wa AI uliotengenezwa na **PJ COPETRANOVA**. Nikusaidie nini?`,
-}
-
-// Returns a greeting ONLY if the entire message is a pure greeting — no questions, no topics attached.
 function matchGreeting(query: string): string | null {
-  if (!query) return null
-  const q = query.toLowerCase().trim().replace(/[!?.،,]+$/, '').trim()
-  return GREETINGS[q] ?? null
+  return matchSimpleGreeting(query)
 }
 
 function getModeSystemPrompt(mode: string): string {
@@ -279,10 +253,7 @@ async function fetchWebSearch(query: string): Promise<string | null> {
       .trim()
 
     if (!cleanQuery || cleanQuery.length < 3) return null
-
-    const lower = cleanQuery.toLowerCase()
-    const needsSearch = /\b(who|what|when|where|why|how|which|current|president|weather|news|today|latest|search|live|update|release|2023|2024|2025|2026|winner|champion|score|match|tournament|election|result|happened|price|rate|capital|population|founder|ceo|history|definition|meaning|explain|overview|details|facts)\b/i.test(lower)
-    if (!needsSearch) return null
+    if (!needsLiveWebSearch(cleanQuery)) return null
 
     let searchSnippet = ''
 
@@ -347,7 +318,11 @@ export async function POST(req: NextRequest) {
   // to be injected instead of the AI analyzing the actual uploaded document.
   const isDocumentMessage = /\[(WORD|PDF|EXCEL|POWERPOINT|TEXT|CODE)\s+DOCUMENT ATTACHED:/i.test(message) ||
     message.includes('DOCUMENT ATTACHED:') || message.includes('FILE ATTACHED:')
-  const webSearchResults = isDocumentMessage ? null : await fetchWebSearch(message)
+  const greetingReply = matchGreeting(message)
+  const webSearchResults =
+    greetingReply || isDocumentMessage || !needsLiveWebSearch(message)
+      ? null
+      : await fetchWebSearch(message)
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -385,25 +360,11 @@ export async function POST(req: NextRequest) {
         
         const hasVision = groqMessages.some(m => Array.isArray(m.content)) || message.includes('[IMAGE:')
         const isDocument = message.includes('DOCUMENT ATTACHED:') || message.includes('FILE ATTACHED:')
-        const models = hasVision
-          ? [
-              'llama-3.2-11b-vision-preview',
-              'llama-3.1-8b-instant',
-              'llama-3.3-70b-versatile'
-            ]
-          : isDocument
-          ? [
-              'llama-3.3-70b-versatile',
-              'llama-3.1-8b-instant',
-              'gemma2-9b-it',
-              'mixtral-8x7b-32768'
-            ]
-          : [
-              'llama-3.3-70b-versatile',
-              'llama-3.1-8b-instant',
-              'gemma2-9b-it',
-              'mixtral-8x7b-32768'
-            ]
+        const models = preferFastGroqModels({
+          vision: hasVision,
+          document: isDocument,
+          long: isDocument || message.length > 800,
+        })
 
         for (const model of models) {
           if (streamedAny) break
@@ -412,11 +373,11 @@ export async function POST(req: NextRequest) {
             const currentGroqMessages = buildGroqMessages(message, mode, history, isVisionModel, webSearchResults)
 
             const abortCtrl = new AbortController()
-            const timeoutMs = isVisionModel 
-              ? 15000 
-              : isDocument 
-                ? (model.includes('70b') ? 25000 : 12000) 
-                : (model.includes('70b') ? 15000 : 8000)
+            const timeoutMs = isVisionModel
+              ? 15000
+              : isDocument
+                ? (model.includes('70b') ? 25000 : 15000)
+                : (model.includes('70b') ? 20000 : 12000)
             const timeoutId = setTimeout(() => abortCtrl.abort(), timeoutMs)
 
             const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {

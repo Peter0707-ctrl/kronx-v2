@@ -35,8 +35,7 @@ export async function* streamMessage(
 
   try {
     const controller = new AbortController()
-    // 30s timeout — Ollama needs time on first request
-    const timeoutId = setTimeout(() => controller.abort(), 30000)
+    const timeoutId = setTimeout(() => controller.abort(), 45000)
 
     const response = await fetch(`/api/chat/stream`, {
       method: 'POST',
@@ -62,7 +61,7 @@ export async function* streamMessage(
       const readPromise = reader.read()
       // 30s stall timeout for Ollama token generation
       const timeoutPromise = new Promise<{ done: boolean; value?: Uint8Array }>((_, reject) =>
-        setTimeout(() => reject(new Error('Stream read stall timeout')), 30000)
+        setTimeout(() => reject(new Error('Stream read stall timeout')), 20000)
       )
 
       const { done, value } = (await Promise.race([readPromise, timeoutPromise])) as {
