@@ -2,7 +2,6 @@ import { v4 as uuidv4 } from 'uuid'
 import {
   groqApiKeys,
   lastUserText,
-  matchSimpleGreeting,
   preferFastGroqModels,
 } from './fastChat'
 
@@ -42,25 +41,13 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-function greetingAsGroqStream(text: string): Response {
-  const encoder = new TextEncoder()
-  const stream = new ReadableStream<Uint8Array>({
-    start(controller) {
-      const chunk = {
-        id: `chatcmpl-${uuidv4()}`,
-        object: 'chat.completion.chunk',
-        created: Math.floor(Date.now() / 1000),
-        model: 'copetra-ai',
-        choices: [{ index: 0, delta: { content: text }, finish_reason: null }],
-      }
-      controller.enqueue(encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`))
-      controller.enqueue(encoder.encode('data: [DONE]\n\n'))
-      controller.close()
-    },
-  })
-  return new Response(stream, {
-    headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' },
-  })
+function capMessages(messages: ChatMessage[], maxChars = 10000): ChatMessage[] {
+  const copy = messages.map((m) => ({ ...m }))
+  const system = copy.find((m) => m.role === 'system')
+  if (system && system.content.length > maxChars) {
+    system.content = system.content.slice(0, maxChars) + '\n…[context truncated]'
+  }
+  return copy
 }
 
 export function normalizeMessages(body: Record<string, unknown>): ChatMessage[] {
@@ -101,19 +88,6 @@ export async function createCompletion(opts: {
   | { ok: false; status: number; message: string; code: string }
 > {
   const wantStream = opts.stream === true
-  const greeting = matchSimpleGreeting(lastUserText(opts.messages))
-  if (greeting) {
-    if (wantStream) {
-      return { ok: true, stream: true, response: greetingAsGroqStream(greeting) }
-    }
-    return {
-      ok: true,
-      stream: false,
-      text: greeting,
-      usage: { prompt_tokens: 0, completion_tokens: greeting.length, total_tokens: greeting.length },
-    }
-  }
-
   const keys = groqKeys()
   if (keys.length === 0) {
     return {
@@ -125,11 +99,12 @@ export async function createCompletion(opts: {
   }
 
   const hasSystem = opts.messages.some((m) => m.role === 'system')
-  const formatted = hasSystem
-    ? opts.messages
-    : [{ role: 'system', content: SYSTEM_PROMPT }, ...opts.messages]
-  const temperature = typeof opts.temperature === 'number' ? opts.temperature : 0.5
-  const maxTokens = resolveMaxTokens(opts.maxTokens, opts.unlimited !== false)
+  const formatted = capMessages(
+    hasSystem ? opts.messages : [{ role: 'system', content: SYSTEM_PROMPT }, ...opts.messages]
+  )
+  const temperature = typeof opts.temperature === 'number' ? opts.temperature : 0.4
+  const requestedTokens = resolveMaxTokens(opts.maxTokens, opts.unlimited !== false)
+  const maxTokens = wantStream ? Math.min(requestedTokens, 1024) : requestedTokens
   const models = groqModelsFor(opts.messages, maxTokens)
 
   let lastStatus = 0
@@ -344,7 +319,7 @@ export async function createCompletionWithFallback(opts: {
   }
 
   if (first.code === 'upstream_timeout' || first.code === 'rate_limited' || first.status >= 502) {
-    const fallback = await createCompletion({ ...opts, stream: false })
+    const fallback = await createCompletion({ ...opts, stream: false, maxTokens: Math.min(opts.maxTokens ?? 512, 512) })
     if (fallback.ok && !fallback.stream) {
       return { ...fallback, fellBack: true }
     }
