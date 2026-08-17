@@ -13,7 +13,7 @@ export default function LandingPage({ onStart }: Props) {
     <div className="landing-container">
       {/* Landing Navbar */}
       <header className="landing-nav">
-        <div className="landing-logo">
+        <div className="landing-logo" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div className="landing-logo-gem">
             <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={2} width={22} height={22}>
               <path d="M12 2L2 7l10 5 10-5-10-5z" />
@@ -21,8 +21,20 @@ export default function LandingPage({ onStart }: Props) {
               <path d="M2 12l10 5 10-5" />
             </svg>
           </div>
-          <span className="landing-logo-title">Copetra AI</span>
+          <span
+            className="landing-logo-title instagram-font"
+            style={{
+              fontSize: '32px',
+              fontFamily: "'Grand Hotel', 'Billabong', 'Cookie', 'Satisfy', cursive",
+              fontWeight: 'normal',
+              color: '#ffffff',
+              letterSpacing: '0.5px'
+            }}
+          >
+            Copetra AI
+          </span>
         </div>
+
 
         <div className="landing-nav-right" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
           <button

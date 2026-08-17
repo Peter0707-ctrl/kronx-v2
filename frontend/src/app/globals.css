@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Grand+Hotel&family=Dancing+Script:wght@600;700&family=Satisfy&family=Cookie&family=Inter:wght@400;500;600;700;800;900&display=swap');
 
 :root {
   --primary-bg: #f8fafc;
@@ -29,9 +29,24 @@ body, html {
   overflow: hidden;
 }
 
-h1, h2, h3, h4, h5, h6, p, span, button, input, textarea {
-  font-family: "Calibri", "Calibri Light", sans-serif !important;
+h1:not(.instagram-font), h2:not(.instagram-font), h3:not(.instagram-font),
+h4:not(.instagram-font), h5:not(.instagram-font), h6:not(.instagram-font),
+p:not(.instagram-font), span:not(.instagram-font):not(.copetra-brand-instagram):not(.landing-logo-title),
+button:not(.instagram-font), input, textarea {
+  font-family: "Calibri", "Calibri Light", sans-serif;
 }
+
+/* Instagram Logo Font styling for Copetra AI */
+.instagram-font,
+.copetra-brand-instagram,
+.landing-logo-title {
+  font-family: 'Grand Hotel', 'Billabong', 'Cookie', 'Satisfy', cursive !important;
+  font-weight: 400 !important;
+  letter-spacing: 0.5px !important;
+  text-rendering: optimizeLegibility !important;
+  -webkit-font-smoothing: antialiased !important;
+}
+
 
 .shell {
   display: flex;

@@ -183,17 +183,55 @@ export default function TopBar() {
         )}
       </div>
 
-      {/* Center KRON X Brand Header & Down Arrow Dropdown Trigger */}
+      {/* Center Copetra AI Brand Header & Down Arrow Dropdown Trigger (Instagram Font Style) */}
       <div ref={brandMenuRef} style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
         <div
           onClick={() => setBrandMenuOpen(!brandMenuOpen)}
-          style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', padding: '4px 10px', borderRadius: '12px', background: brandMenuOpen ? 'rgba(255,255,255,0.8)' : 'transparent' }}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            cursor: 'pointer',
+            padding: '2px 10px',
+            borderRadius: '12px',
+            background: brandMenuOpen ? 'rgba(0,0,0,0.06)' : 'transparent',
+            transition: 'background-color 0.2s ease',
+            userSelect: 'none'
+          }}
         >
-          <span style={{ fontSize: '20px', fontWeight: '900', color: '#000000', fontFamily: "Calibri, 'Calibri Light', sans-serif", letterSpacing: '-0.5px' }}>Copetra AI</span>
-          <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth={3} style={{ transform: brandMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}>
+          <span
+            className="copetra-brand-instagram instagram-font"
+            style={{
+              fontSize: '28px',
+              fontWeight: '400',
+              color: '#000000',
+              fontFamily: "'Grand Hotel', 'Billabong', 'Cookie', 'Satisfy', cursive",
+              letterSpacing: '0.5px',
+              lineHeight: 1.1,
+              paddingTop: '2px'
+            }}
+          >
+            Copetra AI
+          </span>
+          <svg
+            width={14}
+            height={14}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#000000"
+            strokeWidth={2.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            style={{
+              transform: brandMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+              transition: 'transform 0.2s ease',
+              marginTop: '4px'
+            }}
+          >
             <polyline points="6 9 12 15 18 9" />
           </svg>
         </div>
+
 
         {/* Invisible Click-Outside Backdrop to auto-close dropdowns */}
         {(brandMenuOpen || menuOpen) && (
