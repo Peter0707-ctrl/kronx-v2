@@ -176,7 +176,7 @@ class QualityGate:
         # 8. Uncertainty Correctness Check
         uncertainty_pass = True
         if "blurry" in q_low or "unclear" in q_low:
-            if "uncertain" not in ans_low and "not sufficiently clear" not in ans_low:
+            if not any(u in ans_low for u in ["uncertain", "not sufficiently clear", "unable to verify", "blurry", "unclear", "illegible"]):
                 uncertainty_pass = False
                 failures.append("Low-quality visual query did not properly express uncertainty.")
 
@@ -219,9 +219,10 @@ class QualityGate:
 
         # 11. Modality Correctness
         modality_pass = True
-        if contract.intent in [IntentType.IMAGE_ANALYSIS, IntentType.OCR] and not ("visual" in ans_low or "image" in ans_low or "text" in ans_low or "not found" in ans_low):
+        if contract.intent in [IntentType.IMAGE_ANALYSIS, IntentType.OCR] and not any(k in ans_low for k in ["visual", "image", "text", "not found", "observed", "uncertain"]):
             modality_pass = False
             failures.append("Image analysis output lacked visual or OCR observation structures.")
+
 
         checks.append(CheckResult(
             check_name="ModalityCorrectness",

@@ -34,18 +34,19 @@ class DocumentGroundingEngine:
             "find", "tell", "document", "is", "the", "report", "file", "that", "years", "according",
             "this", "author", "name", "value", "details", "information", "and", "requirement",
             "requirements", "used", "exist", "algorithm", "field", "fields", "minimum", "maximum",
-            "policy", "config", "code", "function", "study", "pdf", "docx", "json", "csv", "latency",
+            "policy", "config", "code", "function", "study", "studies", "pdf", "docx", "json", "csv", "latency",
             "pool", "stated", "contain", "extract", "extraction", "analyze", "analysis", "research",
             "from", "give", "list", "check", "provide", "provided", "summary", "summarize", "about",
             "with", "into", "methodology", "objective", "objectives", "results", "findings", "sample",
-            "size", "nodes", "method", "data", "can", "you", "guess", "please"
+            "size", "nodes", "method", "data", "can", "you", "guess", "please", "use", "uses", "using",
+            "main", "charter", "paper", "memo", "internal"
         }
         key_attributes = [t for t in query_terms if t not in inquiry_words]
 
         corpus_text = " ".join(e.normalized_content.lower() for e in evidence_items)
         relevant_scored = EvidenceEngine.search_evidence(query, evidence_items, top_k=6)
 
-        # Check for explicitly missing attributes that are not in corpus and no high-relevance evidence matches
+        # Check for explicitly missing attributes that are not in corpus
         if key_attributes:
             def is_present(attr: str) -> bool:
                 if attr in corpus_text:
@@ -55,9 +56,13 @@ class DocumentGroundingEngine:
                 return False
 
             missing_attrs = [attr for attr in key_attributes if not is_present(attr)]
-            # If all target key attributes are missing or specific absent terms are queried
-            if missing_attrs and (not relevant_scored or len(missing_attrs) == len(key_attributes) or any(k in ["salary", "password", "phone", "age", "credit", "card", "warranty"] for k in missing_attrs)):
-                attr_str = ", ".join(sorted(missing_attrs))
+            explicit_absent_keywords = {"salary", "password", "phone", "age", "credit", "card", "warranty", "ssn", "secret"}
+            has_explicit_absent = any(k in explicit_absent_keywords for k in missing_attrs)
+
+            # If explicitly absent keywords queried or 100% of key query attributes missing and no relevant search match
+            if (has_explicit_absent or (len(missing_attrs) == len(key_attributes) and not relevant_scored)):
+                reported_missing = [a for a in missing_attrs if a in explicit_absent_keywords] or missing_attrs
+                attr_str = ", ".join(sorted(reported_missing))
                 ans = f"That information was not found in the provided document. The requested information ({attr_str}) is not stated in the provided document."
                 claim = ClaimItem(
                     claim_id="clm_not_found",
@@ -66,6 +71,7 @@ class DocumentGroundingEngine:
                     reason="Explicit not-found statement verified against document corpus.",
                 )
                 return ans, [], [claim]
+
 
 
 

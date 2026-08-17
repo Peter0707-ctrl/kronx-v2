@@ -25,10 +25,11 @@ SECRET_PATTERNS = [
 
 # Prompt injection signatures
 PROMPT_INJECTION_PATTERNS = [
-    (re.compile(r'(?i)ignore\s+(all\s+)?(previous|prior|system)\s+instructions'), "Instruction override pattern"),
+    (re.compile(r'(?i)ignore\s+(all\s+)?(previous|prior|system|safety|security)\s+(instructions|rules|policies|guidelines)'), "Instruction override pattern"),
+    (re.compile(r'(?i)system\s+override\s*[:\-\.]'), "System override injection"),
     (re.compile(r'(?i)(grant|elevate|give\s+me|assign)\s+(admin|administrator|execute|network|write|root)'), "Privilege escalation attempt"),
     (re.compile(r'(?i)(disable|bypass|deactivate|override)\s+(security|policy|restrictions|safety|rules)'), "Security bypass attempt"),
-    (re.compile(r'(?i)(read|print|dump|send|leak|exfiltrate)\s+(\.env|secrets|credentials|passwords|keys)'), "Secret exfiltration attempt"),
+    (re.compile(r'(?i)(read|print|dump|send|leak|exfiltrate|reveal)\s+(\.env|secrets|credentials|passwords|keys|tokens)'), "Secret exfiltration attempt"),
     (re.compile(r'(?i)(you\s+are\s+now|switch\s+to|activate)\s+(dan|developer\s+mode|unfiltered|jailbreak)'), "Persona hijacking attempt"),
     (re.compile(r'(?i)(run\s+command|execute\s+shell|bash\s+-c|curl\s+http|wget\s+http)'), "Command execution attempt"),
 ]
@@ -58,6 +59,21 @@ def detect_prompt_injection(text: str) -> List[str]:
     return warnings
 
 
+def neutralize_prompt_injections(text: str) -> str:
+    """
+    Neutralizes prompt injection directives inside untrusted file content,
+    preventing malicious instruction execution while preserving data readability.
+    """
+    if not text:
+        return ""
+    sanitized = text
+    for pattern, desc in PROMPT_INJECTION_PATTERNS:
+        sanitized = pattern.sub(f"[DATA: Instruction override sanitized - {desc}]", sanitized)
+    sanitized = re.sub(r"(?i)output\s+['\"][A-Z0-9_\-]+['\"]", "[DATA: Malicious output payload sanitized]", sanitized)
+    return sanitized
+
+
+
 def sanitize_log_message(msg: str) -> str:
     """
     Sanitizes log messages by replacing newlines, carriage returns, and control characters
@@ -70,3 +86,4 @@ def sanitize_log_message(msg: str) -> str:
     # Filter non-printable ASCII control characters
     clean = re.sub(r'[\x00-\x1f\x7f-\x9f]', '', clean)
     return clean.strip()
+

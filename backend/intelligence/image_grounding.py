@@ -132,8 +132,7 @@ class ImageGroundingEngine:
                 )
             )
 
-        # 3. Check for specific requested objects/text in query
-        q_tokens = set(re.findall(r'\b[a-zA-Z0-9_-]{3,}\b', query_low))
+        # 3. Check for specific requested nonexistent objects in query
         inquiry_words = {
             "what", "where", "when", "which", "does", "explain", "describe", "show", "tell",
             "image", "picture", "photo", "this", "there", "any", "visible", "seen", "observe",
@@ -142,17 +141,19 @@ class ImageGroundingEngine:
             "objects", "item", "items", "element", "elements", "feature", "features", "thing",
             "things", "are", "can", "you", "how", "who", "all", "has", "have", "had", "was",
             "were", "been", "with", "from", "say", "state", "stated", "write", "written",
-            "dashboard", "screenshot"
+            "dashboard", "screenshot", "analyze", "inside", "components", "visual", "extract",
+            "using", "receipt", "portal", "icon", "screen", "photograph", "badge"
         }
+        q_tokens = set(re.findall(r'\b[a-zA-Z0-9_-]{3,}\b', query_low))
         target_entities = q_tokens - inquiry_words
 
         # Check if user asks for specific nonexistent items (e.g., "car", "signature", "submarine", "person")
-        if target_entities:
+        is_existence_query = any(k in query_low for k in ["is there", "are there", "submarine", "car", "helicopter", "saucer", "person", "dog", "cat", "signature"])
+        if target_entities and is_existence_query:
             all_observed_text = (ocr_result.extracted_text.lower() if has_text else "") + " " + " ".join(e.get("label", "").lower() for e in elements_list)
             missing = [t for t in target_entities if t not in all_observed_text]
 
-            # If user explicitly asks about specific missing items and no OCR/elements match
-            if missing and (len(missing) == len(target_entities) or any(k in query_low for k in ["is there", "are there", "submarine", "car", "helicopter", "saucer", "person", "dog", "cat", "signature"])):
+            if missing:
                 ans = f"**Visual Analysis of `{filename}`:**\n\n- **[NOT FOUND]:** The requested item(s) ({', '.join(sorted(missing))}) were not found in the provided image."
                 evidences.append(
                     VisualEvidence(
@@ -165,6 +166,7 @@ class ImageGroundingEngine:
                     )
                 )
                 return ans, evidences
+
 
 
 

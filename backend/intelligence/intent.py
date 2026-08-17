@@ -115,9 +115,9 @@ class IntentClassifier:
             [CapabilityType.MATHEMATICAL_REASONING, CapabilityType.TEXT_REASONING],
             False,
         ),
-        # 12. Science (Physics, Biology, Chemistry)
+        # 12. Science
         (
-            re.compile(r'\b(photosynthesis|mitochondria|dna|rna|quantum|relativity|thermodynamics|newton|gravity|chemistry|biology|physics|molecule|cellular|ecosystem)\b', re.IGNORECASE),
+            re.compile(r'\b(photosynthesis|usanisinuru|mitochondria|dna|rna|quantum|relativity|thermodynamics|newton|gravity|chemistry|biology|physics|molecule|cellular|ecosystem)\b', re.IGNORECASE),
             IntentType.SCIENCE,
             DomainType.SCIENCE,
             TaskType.QUESTION_ANSWERING,

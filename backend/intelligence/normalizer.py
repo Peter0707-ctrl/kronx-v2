@@ -1,5 +1,5 @@
 """
-Phase 4.0 — Request Normalization Engine
+Phase 4.3 — Request Normalization Engine
 Deterministically inspects and structures incoming intelligence requests, modalities, language, and constraints.
 """
 from __future__ import annotations
@@ -15,12 +15,16 @@ class RequestNormalizer:
     def detect_language(text: str) -> str:
         """Detects whether prompt is Swahili, English, or Mixed."""
         t_low = text.lower()
+        if "kwa kiswahili" in t_low or "eleza kwa kiswahili" in t_low or "fafanua kwa kiswahili" in t_low:
+            return "sw"
+
         sw_words = {
             "habari", "mambo", "shule", "chuo", "tafiti", "mada", "mafunzo",
             "jinsi", "eleza", "toa", "kwa", "nini", "gani", "wapi", "lini",
             "mwalimu", "maswali", "majibu", "uhakiki", "mbinu", "nadharia",
             "takwimu", "uchambuzi", "taarifa", "picha", "faili", "biashara",
-            "kazi", "tafadhali", "nisaidie", "kiswahili", "shilingi", "tzs"
+            "kazi", "tafadhali", "nisaidie", "kiswahili", "shilingi", "tzs",
+            "usanisinuru", "mchakato", "mimea", "majani", "jua", "mwanga"
         }
         en_words = {
             "what", "how", "why", "where", "when", "explain", "analyze", "describe",
@@ -33,28 +37,31 @@ class RequestNormalizer:
         sw_count = len(tokens.intersection(sw_words))
         en_count = len(tokens.intersection(en_words))
 
-        if sw_count > 0 and en_count > 0:
+        if sw_count > 0 and en_count > 0 and not ("kwa kiswahili" in t_low):
             return "mixed"
-        if sw_count > en_count and sw_count > 0:
+        if sw_count > 0 and sw_count >= en_count:
             return "sw"
         return "en"
 
     @staticmethod
     def extract_requested_detail_level(text: str) -> str:
         t_low = text.lower()
-        if any(w in t_low for w in ["step by step", "step-by-step", "teach me", "hatua kwa hatua", "in depth", "detailed", "in detail", "kwa kina", "comprehensive", "full analysis"]):
+        if any(w in t_low for w in ["step by step", "step-by-step", "teach me step by step", "hatua kwa hatua", "in steps", "in depth", "detailed", "in detail", "kwa kina", "comprehensive", "full analysis"]):
             return "DETAILED"
-        if any(w in t_low for w in ["brief", "short", "kwa ufupi", "summary", "quick", "one sentence", "only the answer", "only answer", "just the answer"]):
+        if any(w in t_low for w in ["brief", "short", "kwa ufupi", "summary", "quick", "one sentence", "in only one sentence", "only the answer", "only answer", "just the answer", "kwa sentensi moja"]):
             return "CONCISE"
         return "STANDARD"
+
 
 
     @classmethod
     def normalize(cls, req: IntelligenceRequest) -> Dict[str, Any]:
         """Normalizes request parameters and extracts structural goals."""
         clean_msg = req.message.strip()
-        lang = req.language or cls.detect_language(clean_msg)
+        detected_lang = cls.detect_language(clean_msg)
+        lang = detected_lang if (detected_lang == "sw" or not req.language or req.language == "en") else req.language
         detail_level = cls.extract_requested_detail_level(clean_msg)
+
 
         has_files = len(req.files) > 0
         has_images = len(req.images) > 0

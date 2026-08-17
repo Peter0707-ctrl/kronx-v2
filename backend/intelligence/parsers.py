@@ -16,6 +16,7 @@ from typing import List, Dict, Any, Optional, Tuple
 
 from intelligence.schemas import EvidenceItem, EvidenceProvenance
 from llm.sanitizer import sanitize_secrets
+from multimodal.sanitizer import neutralize_prompt_injections
 
 
 class SpecializedParsers:
@@ -30,13 +31,14 @@ class SpecializedParsers:
     @classmethod
     def parse_txt_or_md(cls, filename: str, content: str) -> List[EvidenceItem]:
         """Parses Markdown and Plain Text files into paragraph and section evidence."""
-        sanitized = sanitize_secrets(content)
+        sanitized = neutralize_prompt_injections(sanitize_secrets(content))
         file_sha = cls.calculate_sha256(sanitized)
         file_id = f"src_{file_sha[:10]}"
 
         paragraphs = [p.strip() for p in re.split(r'\n{2,}', sanitized) if p.strip()]
         if not paragraphs:
             paragraphs = [sanitized] if sanitized.strip() else []
+
 
         items: List[EvidenceItem] = []
         current_section = "General"
@@ -128,9 +130,10 @@ class SpecializedParsers:
         current_heading = "Document Body"
 
         for idx, line in enumerate(lines, 1):
-            if re.match(r'^(?:Heading\s+\d+|#+\s*|\d+\.\d+)', line, re.IGNORECASE):
-                current_heading = line
+            if (re.match(r'^(?:Heading\s+\d+|#+\s*|\d+\.\d+)', line, re.IGNORECASE) or line.endswith(":")) and len(line) < 60:
+                current_heading = line.rstrip(":")
 
+            item_norm = f"{current_heading} {line}".lower().strip()
             items.append(
                 EvidenceItem(
                     evidence_id=f"evi_{uuid.uuid4().hex[:10]}",
@@ -138,7 +141,7 @@ class SpecializedParsers:
                     filename=filename,
                     source_type="DOCX_PARAGRAPH",
                     content=line,
-                    normalized_content=line.lower().strip(),
+                    normalized_content=item_norm,
                     sha256=cls.calculate_sha256(line),
                     extraction_method="docx_extractor",
                     confidence=1.0,
@@ -153,6 +156,7 @@ class SpecializedParsers:
                 )
             )
         return items
+
 
     @classmethod
     def parse_csv_or_tsv(cls, filename: str, content: str, delimiter: str = ",") -> List[EvidenceItem]:
