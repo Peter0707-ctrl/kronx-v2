@@ -41,6 +41,39 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
+function groqOutputText(data: any): string {
+  const msg = data?.choices?.[0]?.message ?? {}
+  const content = typeof msg.content === 'string' ? msg.content : ''
+  const reasoning =
+    typeof msg.reasoning === 'string'
+      ? msg.reasoning
+      : typeof msg.reasoning_content === 'string'
+        ? msg.reasoning_content
+        : ''
+  return (content || reasoning || '').trim()
+}
+
+function groqChatPayload(opts: {
+  model: string
+  messages: ChatMessage[]
+  temperature: number
+  maxTokens: number
+  stream: boolean
+}) {
+  const payload: Record<string, unknown> = {
+    model: opts.model,
+    messages: opts.messages,
+    temperature: opts.temperature,
+    max_tokens: opts.maxTokens,
+    max_completion_tokens: opts.maxTokens,
+    stream: opts.stream,
+  }
+  if (opts.model.includes('gpt-oss')) {
+    payload.reasoning_effort = 'low'
+  }
+  return payload
+}
+
 function capMessages(messages: ChatMessage[], maxChars = 10000): ChatMessage[] {
   const copy = messages.map((m) => ({ ...m }))
   const system = copy.find((m) => m.role === 'system')
@@ -104,7 +137,8 @@ export async function createCompletion(opts: {
   )
   const temperature = typeof opts.temperature === 'number' ? opts.temperature : 0.4
   const requestedTokens = resolveMaxTokens(opts.maxTokens, opts.unlimited !== false)
-  const maxTokens = wantStream ? Math.min(requestedTokens, 1024) : requestedTokens
+  // gpt-oss spends completion tokens on reasoning first; tiny budgets return empty content.
+  const maxTokens = Math.max(wantStream ? Math.min(requestedTokens, 2048) : requestedTokens, 1024)
   const models = groqModelsFor(opts.messages, maxTokens)
 
   let lastStatus = 0
@@ -126,13 +160,15 @@ export async function createCompletion(opts: {
               'Content-Type': 'application/json',
               Authorization: `Bearer ${apiKey}`,
             },
-            body: JSON.stringify({
-              model,
-              messages: formatted,
-              temperature,
-              max_tokens: maxTokens,
-              stream: wantStream,
-            }),
+            body: JSON.stringify(
+              groqChatPayload({
+                model,
+                messages: formatted,
+                temperature,
+                maxTokens,
+                stream: wantStream,
+              })
+            ),
             signal: AbortSignal.timeout(timeoutMs),
           })
 
@@ -171,7 +207,7 @@ export async function createCompletion(opts: {
           }
 
           const data = await res.json()
-          const text = data.choices?.[0]?.message?.content || ''
+          const text = groqOutputText(data)
           if (text) {
             return {
               ok: true,
@@ -326,7 +362,7 @@ export async function createCompletionWithFallback(opts: {
   }
 
   if (first.code === 'upstream_timeout' || first.code === 'rate_limited' || first.status >= 502) {
-    const fallback = await createCompletion({ ...opts, stream: false, maxTokens: Math.min(opts.maxTokens ?? 512, 512) })
+    const fallback = await createCompletion({ ...opts, stream: false, maxTokens: Math.max(opts.maxTokens ?? 1024, 1024) })
     if (fallback.ok && !fallback.stream) {
       return { ...fallback, fellBack: true }
     }
