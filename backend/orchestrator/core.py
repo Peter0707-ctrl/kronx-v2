@@ -367,7 +367,7 @@ class KronxOrchestrator:
         if not self.api_key or self.api_key == "YOUR_GEMINI_API_KEY_HERE":
             groq_api_key = os.getenv("GROQ_API_KEY", "")
             if groq_api_key:
-                active = "groq-llama-3.3-70b"
+                active = "groq-gpt-oss-120b"
         else:
             client = get_client()
             for m in models_to_try:
@@ -464,7 +464,7 @@ class KronxOrchestrator:
             try:
                 groq_url = "https://api.groq.com/openai/v1/chat/completions"
                 groq_payload = {
-                    "model": "llama-3.3-70b-versatile",
+                    "model": "openai/gpt-oss-120b",
                     "messages": [{"role": "system", "content": system}, {"role": "user", "content": message}],
                     "temperature": 0.7,
                     "max_tokens": 2048
@@ -594,12 +594,12 @@ class KronxOrchestrator:
             except Exception as e:
                 logger.error(f"[Gemini Exception] Model {m}: {e}", exc_info=True)
 
-        # Provider 2: Groq Cloud API Failover (Llama 3.3 70B - Ultra Fast)
+        # Provider 2: Groq Cloud API Failover (GPT-OSS 120B)
         if not success and groq_api_key:
             try:
                 groq_url = "https://api.groq.com/openai/v1/chat/completions"
                 groq_payload = {
-                    "model": "llama-3.3-70b-versatile",
+                    "model": "openai/gpt-oss-120b",
                     "messages": [{"role": "system", "content": system}, {"role": "user", "content": message}],
                     "temperature": 0.7,
                     "max_tokens": 2048

@@ -373,11 +373,12 @@ export async function POST(req: NextRequest) {
             const currentGroqMessages = buildGroqMessages(message, mode, history, isVisionModel, webSearchResults)
 
             const abortCtrl = new AbortController()
+            const isLargeModel = /120b|70b|90b|27b/.test(model)
             const timeoutMs = isVisionModel
               ? 15000
               : isDocument
-                ? (model.includes('70b') ? 25000 : 15000)
-                : (model.includes('70b') ? 20000 : 12000)
+                ? (isLargeModel ? 25000 : 15000)
+                : (isLargeModel ? 20000 : 12000)
             const timeoutId = setTimeout(() => abortCtrl.abort(), timeoutMs)
 
             const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {

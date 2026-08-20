@@ -114,7 +114,10 @@ export async function createCompletion(opts: {
 
   for (const apiKey of keys) {
     for (const model of models) {
-      const timeoutMs = upstreamTimeoutMs(wantStream, model.includes('8b') || model.includes('instant'))
+      const timeoutMs = upstreamTimeoutMs(
+        wantStream,
+        model.includes('20b') || model.includes('instant') || model.includes('8b')
+      )
       for (let attempt = 1; attempt <= 2; attempt++) {
         try {
           const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -136,6 +139,10 @@ export async function createCompletion(opts: {
           if (!res.ok) {
             lastStatus = res.status
             lastDetail = await res.text().catch(() => '')
+
+            if (res.status === 400 || res.status === 404) {
+              break
+            }
 
             if (res.status === 401 || res.status === 403) {
               sawAuthFailure = true

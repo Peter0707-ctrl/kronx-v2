@@ -41,18 +41,23 @@ export function groqApiKeys(): string[] {
   return Array.from(new Set(keys))
 }
 
+/** Groq retired llama-3.1-8b-instant and llama-3.3-70b-versatile on 2026-08-16. */
+export const GROQ_FAST_MODEL = 'openai/gpt-oss-20b'
+export const GROQ_STRONG_MODEL = 'openai/gpt-oss-120b'
+export const GROQ_VISION_MODEL = 'qwen/qwen3.6-27b'
+
 export function preferFastGroqModels(opts: {
   vision?: boolean
   document?: boolean
   long?: boolean
 }): string[] {
   if (opts.vision) {
-    return ['llama-3.2-11b-vision-preview', 'llama-3.1-8b-instant']
+    return [GROQ_VISION_MODEL, GROQ_FAST_MODEL]
   }
   if (opts.document || opts.long) {
-    return ['llama-3.1-8b-instant', 'llama-3.3-70b-versatile']
+    return [GROQ_FAST_MODEL, GROQ_STRONG_MODEL]
   }
-  return ['llama-3.1-8b-instant']
+  return [GROQ_FAST_MODEL, GROQ_STRONG_MODEL]
 }
 
 export function needsLiveWebSearch(query: string): boolean {

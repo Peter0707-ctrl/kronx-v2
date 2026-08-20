@@ -77,7 +77,7 @@ class CapabilityRouter:
             if providers["groq"]:
                 return {
                     "provider": "groq",
-                    "model": "llama-3.3-70b-versatile",
+                    "model": "openai/gpt-oss-120b",
                     "capabilities": [CapabilityType.DOCUMENT_ANALYSIS, CapabilityType.LONG_CONTEXT],
                     "fallback_provider": "internal_grounded",
                 }
@@ -93,7 +93,7 @@ class CapabilityRouter:
             if providers["groq"]:
                 return {
                     "provider": "groq",
-                    "model": "llama-3.3-70b-versatile",
+                    "model": "openai/gpt-oss-120b",
                     "capabilities": [CapabilityType.TEXT_REASONING, CapabilityType.LONG_CONTEXT],
                     "fallback_provider": "gemini" if providers["gemini"] else "internal_grounded",
                 }
@@ -116,7 +116,7 @@ class CapabilityRouter:
             if providers["groq"]:
                 return {
                     "provider": "groq",
-                    "model": "llama-3.3-70b-versatile",
+                    "model": "openai/gpt-oss-120b",
                     "capabilities": [CapabilityType.CODE_REASONING, CapabilityType.TEXT_REASONING],
                     "fallback_provider": "gemini" if providers["gemini"] else "internal_grounded",
                 }
@@ -146,7 +146,7 @@ class CapabilityRouter:
             if providers["groq"]:
                 return {
                     "provider": "groq",
-                    "model": "llama-3.3-70b-versatile",
+                    "model": "openai/gpt-oss-120b",
                     "capabilities": [CapabilityType.MATHEMATICAL_REASONING, CapabilityType.TEXT_REASONING],
                     "fallback_provider": "internal_grounded",
                 }
@@ -155,7 +155,7 @@ class CapabilityRouter:
         if providers["groq"]:
             return {
                 "provider": "groq",
-                "model": "llama-3.1-8b-instant",
+                "model": "openai/gpt-oss-20b",
                 "capabilities": [CapabilityType.TEXT_REASONING],
                 "fallback_provider": "internal_grounded",
             }
