@@ -345,5 +345,62 @@ if __name__ == "__main__":
     }
   }
 
+  // 4. BIOLOGY: Photosynthesis & Cellular Respiration
+  if (
+    lower.includes('photosynthesis') ||
+    lower.includes('usanisinuru') ||
+    (lower.includes('chlorophyll') && lower.includes('plant'))
+  ) {
+    if (language === 'sw' || lower.includes('kwa kiswahili') || lower.includes('eleza') || lower.includes('rahisi')) {
+      return {
+        matched: true,
+        answer: `### 🌿 Mchakato wa Usanisinuru (Photosynthesis)
+
+**Usanisinuru** ni mchakato wa kibiolojia ambapo mimea ya kijani, mwani, na baadhi ya bakteria hutumia nishati ya mwanga wa jua, maji, na gesi ya kabonidioksidi kutengeneza chakula chao (glukosi) na kutoa gesi ya oksijeni kwa ajili ya viumbe hai kupumua.
+
+---
+
+### 🔬 Mlinganyo wa Kikemia wa Usanisinuru:
+$$6\\text{CO}_2 + 6\\text{H}_2\\text{O} \\xrightarrow{\\text{Mwanga wa Jua + Klorofili}} \\text{C}_6\\text{H}_{12}\\text{O}_6 + 6\\text{O}_2$$
+
+### 📌 Mahitaji Makuu 4 ya Usanisinuru:
+1. **Mwanga wa Jua:** Hutoa nishati ya mionzi inayoendesha mchakato.
+2. **Klorofili (Chlorophyll):** Rangi ya kijani ndani ya seli za majani inayofyonza mwanga.
+3. **Maji ($H_2O$):** Hufyonzwa kutoka ardhini kupitia mizizi.
+4. **Kabonidioksidi ($CO_2$):** Huingia kupitia matundu madogo ya majani (*stomata*).
+
+---
+
+### 📋 Hatua Kuu Mbili:
+1. **Hatua ya Mwanga (Light Stage):** Hutokea kwenye *thylakoid*; maji hugawanyika na kutoa gesi ya oksijeni na nishati (ATP).
+2. **Hatua ya Giza / Mzunguko wa Calvin (Dark Stage):** Hutokea kwenye *stroma*; kabonidioksidi hubadilishwa kuwa glukosi.`
+      }
+    }
+
+    return {
+      matched: true,
+      answer: `### 🌿 The Process of Photosynthesis
+
+**Photosynthesis** is the fundamental biochemical process by which green plants, algae, and certain bacteria synthesize carbohydrates (glucose) from carbon dioxide and water using sunlight absorbed by chlorophyll, releasing oxygen as a vital byproduct.
+
+---
+
+### 🔬 Balanced Chemical Equation:
+$$6\\text{CO}_2 + 6\\text{H}_2\\text{O} \\xrightarrow{\\text{Sunlight + Chlorophyll}} \\text{C}_6\\text{H}_{12}\\text{O}_6 + 6\\text{O}_2$$
+
+### 📌 The 4 Essential Requirements:
+1. **Sunlight:** Provides radiant electromagnetic energy.
+2. **Chlorophyll:** Green photoreceptor pigment inside chloroplasts.
+3. **Water ($H_2O$):** Drawn from the soil via xylem vessels.
+4. **Carbon Dioxide ($CO_2$):** Diffuses through stomatal pores.
+
+---
+
+### 📋 Two Main Biochemical Stages:
+1. **Light-Dependent Reactions (in Thylakoid Membranes):** Photolysis of water releases $O_2$ and generates ATP and NADPH.
+2. **Light-Independent Reactions / Calvin Cycle (in Stroma):** Enzyme RuBisCO fixes $CO_2$ into glucose using ATP and NADPH.`
+    }
+  }
+
   return { matched: false, answer: '' }
 }
