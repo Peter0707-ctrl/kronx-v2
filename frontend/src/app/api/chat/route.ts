@@ -334,15 +334,19 @@ async function callGemini(message: string, mode: string): Promise<string | null>
       try {
         const controller = new AbortController()
         const timeoutId = setTimeout(() => controller.abort(), 20000)
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`
         
         // Build multimodal contents with inline_data for attached images
         const parts: any[] = []
-        const imageMatch = message.match(/\[IMAGE:(data:image\/([a-zA-Z0-9+]+);base64,([^\]]+))\]/i)
-        const cleanText = message.replace(/\[IMAGE:[^\]]+\]/gi, '').trim()
+        const imageMatch = message.match(/\[IMAGE:\s*(data:image\/([a-zA-Z0-9+]+);base64,([^\]\s]+))\s*\]/i)
+        const cleanText = message.replace(/\[IMAGE:[\s\S]*?\]/gi, '').trim()
+
+        const promptText = cleanText
+          ? `Please examine the attached image carefully and answer the user query with high precision.\n\nUser Question: ${cleanText}`
+          : `Please examine the attached image thoroughly, detailing all visual elements, UI components, text, metrics, and key data shown.`
 
         parts.push({
-          text: `${getModeSystemPrompt(mode)}\n\nUser Request: ${cleanText || 'Please analyze this attached image in detail.'}`
+          text: `${getModeSystemPrompt(mode)}\n\n${promptText}`
         })
 
         if (imageMatch) {
