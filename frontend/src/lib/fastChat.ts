@@ -164,6 +164,18 @@ export function cleanAiResponse(text: string): string {
 
 export function solveDeterministically(query: string, mode: string = 'Academic', language: string = 'en'): { matched: boolean; answer: string } {
   if (!query) return { matched: false, answer: '' }
+  
+  // Never intercept document attachments or image analysis queries
+  if (
+    query.includes('DOCUMENT ATTACHED:') ||
+    query.includes('Document Content:') ||
+    query.includes('FILE ATTACHED:') ||
+    query.includes('[IMAGE:') ||
+    query.length > 300
+  ) {
+    return { matched: false, answer: '' }
+  }
+
   const q = query.trim()
   const lower = q.toLowerCase()
 
