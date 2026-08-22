@@ -295,8 +295,11 @@ async function callGroq(
 
         if (res.ok) {
           const data = await res.json()
-          const text = data.choices?.[0]?.message?.content?.trim()
-          if (text) return text
+          let text = data.choices?.[0]?.message?.content?.trim()
+          if (text) {
+            text = text.replace(/<think>[\s\S]*?(?:<\/think>|$)/gi, '').trim()
+            if (text) return text
+          }
         }
       } catch (e) {
         console.warn(`Groq key or model ${model} failed, trying next. Error:`, e)

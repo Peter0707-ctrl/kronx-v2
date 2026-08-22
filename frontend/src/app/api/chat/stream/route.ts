@@ -185,11 +185,6 @@ function parseMessageContent(text: string, isVisionModel: boolean = true): any {
     return cleanText
   }
 
-  if (!isVisionModel) {
-    const userQuery = cleanText.replace(/\[PERSISTENT USER BRAIN MEMORY\][\s\S]*/gi, '').trim()
-    return `${userQuery ? userQuery + '\n\n' : ''}[IMAGE ATTACHMENT ANALYZED]: User attached an image asset for analysis. Provide a comprehensive breakdown of the visual features, layout, OCR text, and technical concept.`
-  }
-
   const contentArray: any[] = []
   const userQuery = cleanText.replace(/\[PERSISTENT USER BRAIN MEMORY\][\s\S]*/gi, '').trim()
   if (userQuery) {
