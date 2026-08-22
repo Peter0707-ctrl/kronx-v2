@@ -250,7 +250,7 @@ async function callGroq(
   history: HistoryMessage[] = [],
   webSearchResults: string | null = null
 ): Promise<string | null> {
-  const keys = GROQ_API_KEYS
+  const keys = groqApiKeys()
   if (keys.length === 0) return null
 
   const groqMessages = buildGroqMessages(message, mode, history, webSearchResults)
@@ -388,11 +388,19 @@ export async function POST(req: NextRequest) {
   const greetingReply = matchGreeting(message)
   if (greetingReply) return NextResponse.json({ response: greetingReply })
 
-  // 1. Try Backend Master Agent
+  // 1. Try Direct Groq call (Fastest path)
+  const isDocumentMessage = /\[(WORD|PDF|EXCEL|POWERPOINT|TEXT|CODE)\s+DOCUMENT ATTACHED:/i.test(message) ||
+    message.includes('DOCUMENT ATTACHED:') || message.includes('FILE ATTACHED:')
+
+  const webSearchResults = isDocumentMessage ? null : await fetchWebSearch(message)
+  const groqAnswer = await callGroq(message, mode, history, webSearchResults)
+  if (groqAnswer) return NextResponse.json({ response: groqAnswer })
+
+  // 2. Try Backend Master Agent
   try {
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000'
     const abortCtrl = new AbortController()
-    const timeoutId = setTimeout(() => abortCtrl.abort(), 15000)
+    const timeoutId = setTimeout(() => abortCtrl.abort(), 8000)
 
     const backendRes = await fetch(`${backendUrl}/api/copetra/task`, {
       method: 'POST',
@@ -415,14 +423,6 @@ export async function POST(req: NextRequest) {
       if (data.answer) return NextResponse.json({ response: data.answer, artifacts: data.artifacts })
     }
   } catch { }
-
-  // 2. Try Direct Groq call
-  const isDocumentMessage = /\[(WORD|PDF|EXCEL|POWERPOINT|TEXT|CODE)\s+DOCUMENT ATTACHED:/i.test(message) ||
-    message.includes('DOCUMENT ATTACHED:') || message.includes('FILE ATTACHED:')
-
-  const webSearchResults = isDocumentMessage ? null : await fetchWebSearch(message)
-  const groqAnswer = await callGroq(message, mode, history, webSearchResults)
-  if (groqAnswer) return NextResponse.json({ response: groqAnswer })
 
   // 3. Try Wikipedia live summary
   if (!isDocumentMessage) {
