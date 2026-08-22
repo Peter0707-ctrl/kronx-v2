@@ -466,6 +466,11 @@ export async function POST(req: NextRequest) {
       // If user uploaded an image, execute Google Gemini Multimodal Vision FIRST
       if (hasAttachedImage) {
         streamedAny = await tryGemini()
+        if (streamedAny) {
+          controller.enqueue(encoder.encode('data: [DONE]\n\n'))
+          controller.close()
+          return
+        }
       }
 
       // Provider: Groq Cloud (Ultra Fast for Text, Math, Science & Code)
@@ -560,6 +565,11 @@ export async function POST(req: NextRequest) {
       // Provider 2: Google Gemini Cloud fallback if not already executed
       if (!streamedAny && !hasAttachedImage) {
         streamedAny = await tryGemini()
+        if (streamedAny) {
+          controller.enqueue(encoder.encode('data: [DONE]\n\n'))
+          controller.close()
+          return
+        }
       }
 
       // Provider 3: OpenAI Cloud
