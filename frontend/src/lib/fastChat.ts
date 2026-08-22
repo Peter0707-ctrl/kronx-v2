@@ -434,9 +434,9 @@ export function matchImageGenerationRequest(query: string): { isImageGen: boolea
   let clean = query
     .replace(/\[IMAGE:.*?\]/gi, '')
     .replace(/\[(WORD|PDF|EXCEL|POWERPOINT|TEXT|CODE) DOCUMENT ATTACHED:.*?\][\s\S]*/gi, '')
-    .replace(/\[PERSISTENT USER BRAIN MEMORY\][\s\S]*/gi, '')
-    .replace(/\[FEEDBACK HISTORY\][\s\S]*/gi, '')
-    .replace(/\[REAL-TIME VERIFIED WEB SEARCH DATA\][\s\S]*/gi, '')
+    .replace(/\[PERSISTENT USER BRAIN MEMORY[\s\S]*/gi, '')
+    .replace(/\[FEEDBACK HISTORY[\s\S]*/gi, '')
+    .replace(/\[REAL-TIME VERIFIED WEB SEARCH DATA[\s\S]*/gi, '')
     .replace(/\[MEMORIZE:.*?\]/gi, '')
     .replace(/\[VISUAL_SUMMARY:.*?\]/gi, '')
     .trim()

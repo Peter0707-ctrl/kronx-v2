@@ -500,19 +500,28 @@ export async function POST(req: NextRequest) {
 
   if (!message) return NextResponse.json({ response: 'Please provide a message.' }, { status: 400 })
 
+  // Sanitize user message from background memory headers
+  const cleanUserMessage = message
+    .replace(/\[PERSISTENT USER BRAIN MEMORY[\s\S]*/gi, '')
+    .replace(/\[FEEDBACK HISTORY[\s\S]*/gi, '')
+    .replace(/\[REAL-TIME VERIFIED WEB SEARCH DATA[\s\S]*/gi, '')
+    .replace(/\[MEMORIZE:.*?\]/gi, '')
+    .replace(/\[VISUAL_SUMMARY:.*?\]/gi, '')
+    .trim()
+
   // Greetings-only instant response: fires ONLY when message is a pure greeting.
   // If user adds a question or topic, it goes to the LLM instead.
-  const greetingReply = matchGreeting(message)
+  const greetingReply = matchGreeting(cleanUserMessage || message)
   if (greetingReply) return NextResponse.json({ response: greetingReply })
 
   // Deterministic Academic & Math & Code Solver: Instant 10/10 Accurate Response
-  const detSolution = solveDeterministically(message, mode, 'en')
+  const detSolution = solveDeterministically(cleanUserMessage || message, mode, 'en')
   if (detSolution.matched && detSolution.answer) {
     return NextResponse.json({ response: detSolution.answer })
   }
 
   // Image Generation Request in Chat: Instant Neural Canvas Renderer
-  const imgGen = matchImageGenerationRequest(message)
+  const imgGen = matchImageGenerationRequest(cleanUserMessage || message)
   if (imgGen.isImageGen && imgGen.markdown) {
     return NextResponse.json({ response: imgGen.markdown })
   }
