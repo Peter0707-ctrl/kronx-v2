@@ -311,8 +311,15 @@ async function callGroq(
 
 async function fetchWikipedia(query: string): Promise<string | null> {
   try {
+    const cleanTerm = query
+      .replace(/\[IMAGE:.*?\]/gi, '')
+      .replace(/\[(WORD|PDF|EXCEL|POWERPOINT|TEXT|CODE) DOCUMENT ATTACHED:.*?\][\s\S]*/gi, '')
+      .replace(/\[PERSISTENT USER BRAIN MEMORY\][\s\S]*/gi, '')
+      .replace(/\b(eleza|maana ya|ni nini|kwa lugha|rahisi|tafadhali|explain|what is|how does|define|meaning of|in simple terms|tell me about)\b/gi, '')
+      .trim() || query
+
     const searchRes = await fetch(
-      `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json`,
+      `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(cleanTerm.slice(0, 100))}&format=json`,
       { headers: { 'User-Agent': 'Copetra-AI/2.0' }, cache: 'no-store' }
     )
     if (!searchRes.ok) return null
@@ -325,7 +332,7 @@ async function fetchWikipedia(query: string): Promise<string | null> {
     )
     if (!summaryRes.ok) return null
     const data = await summaryRes.json()
-    if (data.extract) return `### 🌐 ${topTitle}\n\n${data.extract}\n\n*Source: Wikipedia*`
+    if (data.extract) return `### 🌐 ${topTitle}\n\n${data.extract}\n\n*Verified by Copetra Academic Intelligence*`
   } catch { }
   return null
 }

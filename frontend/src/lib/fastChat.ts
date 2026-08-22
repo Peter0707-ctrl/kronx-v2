@@ -35,7 +35,13 @@ export function lastUserText(messages: { role?: string; content?: unknown }[]): 
 }
 
 export function groqApiKeys(): string[] {
-  const keys = [process.env.GROQ_API_KEY, process.env.GROQ_API_KEY_2].filter(
+  const keys = [
+    process.env.GROQ_API_KEY,
+    process.env.GROQ_API_KEY_2,
+    process.env.GROQ_KEY,
+    process.env.GROQ_SECRET_KEY,
+    process.env.NEXT_PUBLIC_GROQ_API_KEY,
+  ].filter(
     (k): k is string => Boolean(k && k.trim() && !k.includes('placeholder') && k.startsWith('gsk_'))
   )
   return Array.from(new Set(keys))
