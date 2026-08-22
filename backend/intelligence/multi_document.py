@@ -30,11 +30,47 @@ class MultiDocumentEngine:
         # If user asks a targeted question (e.g., "Which document states X?" or "What does each document state?")
         if query:
             q_low = query.lower()
-            lines = [f"**Multi-Document Analysis across {len(filenames)} files:**\n"]
+            is_comparative = any(k in q_low for k in ["compare", "comparison", "both", "all", "contrast", "difference", "differences"])
+
+            # Check if user is asking for an explicitly missing attribute not present in any document
+            all_content = " ".join(e.normalized_content.lower() for evs in files_evidence.values() for e in evs)
+            file_tokens = set(re.findall(r'\b\w+\b', " ".join(filenames).lower()))
+            stop_words = {"what", "which", "does", "each", "document", "state", "says", "both", "file", "files", "papers", "compare", "methodologies", "methodology", "where", "was", "conducted", "size", "sample", "the", "and", "for", "with", "from", "study", "studies", "about"}
+            q_terms = [t for t in re.findall(r'\b\w{3,}\b', q_low) if t not in stop_words and t not in file_tokens]
+
+            if not is_comparative and q_terms and not any(t in all_content or t.replace('_', ' ') in all_content for t in q_terms):
+                return f"The requested information ({', '.join(q_terms)}) is not stated in the provided documents.", []
+
+            # Check if query targets a single specific document (and is not a comparative request)
+            targeted_file = None
+            if not is_comparative:
+                targeted_file = next((fn for fn in filenames if fn.lower() in q_low or fn.split('.')[0].lower() in q_low or fn.replace('.', '_').lower() in q_low), None)
+
+            if targeted_file:
+                ev_list = files_evidence.get(targeted_file, [])
+                matched = [e for e in ev_list if any(t in e.normalized_content for t in q_terms)] if q_terms else ev_list
+                top_ev = matched[0] if matched else (ev_list[0] if ev_list else None)
+                if top_ev:
+                    return f"**{targeted_file}:** {top_ev.content}", [
+                        ClaimItem(
+                            claim_id="clm_md_tgt",
+                            text=f"[{targeted_file}] {top_ev.content[:100]}",
+                            status=ClaimStatus.VERIFIED,
+                            supporting_evidence_ids=[top_ev.evidence_id],
+                            source_provenance=top_ev.provenance,
+                            reason=f"Directly extracted from {targeted_file}",
+                        )
+                    ]
+
+
+
+            lines = [f"**Multi-Document Comparative Analysis across {len(filenames)} files:**\n"]
             for fname in filenames:
                 ev_list = files_evidence.get(fname, [])
-                q_terms = [t for t in re.findall(r'\b\w{3,}\b', q_low) if t not in ["what", "which", "does", "each", "document", "state", "says", "both", "file", "papers"]]
                 matched = [e for e in ev_list if any(t in e.normalized_content for t in q_terms)] if q_terms else ev_list
+                if not matched and ev_list:
+                    matched = ev_list
+
                 if matched:
                     top_ev = matched[0]
                     lines.append(f"- **{fname}:** {top_ev.content}")
@@ -48,10 +84,12 @@ class MultiDocumentEngine:
                             reason=f"Directly verified from {fname}",
                         )
                     )
+
                 else:
                     lines.append(f"- **{fname}:** No matching statements found for this query.")
 
             return "\n".join(lines), claims
+
 
         # Standard Comparison Matrix
         default_aspects = aspects or ["Methodology", "Sample Size", "Key Findings", "Limitations"]

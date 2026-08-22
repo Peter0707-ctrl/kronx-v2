@@ -94,6 +94,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <head>
         <link rel="canonical" href="https://miraculous-forgiveness-production-10d4.up.railway.app" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Grand+Hotel&family=Dancing+Script:wght@600;700&family=Satisfy&family=Cookie&family=Pacifico&display=swap" rel="stylesheet" />
         <meta name="application-name" content="Copetra AI" />
         <meta name="apple-mobile-web-app-title" content="Copetra AI" />
         <meta name="apple-mobile-web-app-capable" content="yes" />

@@ -112,15 +112,15 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
       {/* LEFT SIDE: KRONX AI INTRODUCTORY BRAND PANEL */}
       <div className="auth-brand-panel">
         <div className="auth-brand-content">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '28px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
             <div style={{ width: '44px', height: '44px', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.2)' }}>
               <img src="/kronx_logo.jpg" alt="Kronx Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
-            <span style={{ fontSize: '24px', fontWeight: '900', letterSpacing: '-0.5px' }}>KRON X</span>
+            <span className="copetra-script-font instagram-font" style={{ fontSize: '36px', fontFamily: "'Grand Hotel', 'Pacifico', cursive", color: '#ffffff', letterSpacing: '0.5px' }}>Copetra AI</span>
           </div>
 
-          <h3 style={{ fontSize: '32px', fontWeight: '800', margin: '0 0 12px 0', letterSpacing: '-0.5px', color: '#ffffff' }}>
-            Copetra AI Companion
+          <h3 style={{ fontSize: '26px', fontWeight: '800', margin: '0 0 12px 0', letterSpacing: '-0.5px', color: '#ffffff' }}>
+            <span className="copetra-script-font" style={{ fontFamily: "'Grand Hotel', cursive", fontSize: '36px', marginRight: '6px' }}>Copetra AI</span> Companion
           </h3>
           <p className="auth-brand-desc">
             Copetra AI is an advanced AI study companion created by PJ Copetranova to empower students with step-by-step academic explanations, homework guidance, research thesis writing, and programming.

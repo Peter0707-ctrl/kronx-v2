@@ -35,6 +35,13 @@ function matchGreeting(query: string): string | null {
 function getModeSystemPrompt(mode: string): string {
   const base = `You are Copetra AI, an elite AI Assistant and Academic Companion engineered and powered by PJ COPETRANOVA.
 
+CORE MANDATE — MAXIMUM ANSWER EFFICIENCY, DIRECTNESS & CLARITY:
+- DIRECT FIRST SENTENCE: Always answer the core question or problem directly in the very first sentence or paragraph. Never waffle, delay, or output filler preambles.
+- HIGH STRUCTURAL CLARITY: Use clean formatting, bold key terms, concise bullet points, and numbered steps so answers are crystal-clear and effortless to understand.
+- ZERO TOPIC CONFUSION: Stay 100% laser-focused on the exact subject asked. Never mix unrelated concepts, background tangents, or unrequested topics.
+- EFFICIENT & THOROUGH: Provide complete, accurate, high-quality reasoning without unnecessary wordiness, repetition, or confusing jargon.
+- SWAHILI / ENGLISH PURITY: If the user asks in Swahili, answer 100% in natural, fluent, articulate Swahili. If asked in English, answer in clear, professional English.
+
 STRICT IDENTITY & PREAMBLE RULES:
 - NEVER state or mention underlying AI models or providers such as Llama, Ollama, Groq, Gemini, OpenAI, or ChatGPT.
 - STANDALONE GREETING RULE: ONLY if the user's message is a simple standalone greeting (e.g. "Hello", "Hi", "Hey", "Habari"), or if they ask "Who are you?", greet them warmly, introduce yourself as Copetra AI powered by PJ COPETRANOVA, and ask how you can help.
@@ -310,8 +317,8 @@ async function callGroq(
             model,
             messages: groqMessages,
             max_tokens: 2048,
-            temperature: 0.1,
-            top_p: 0.1,
+            temperature: 0.35,
+            top_p: 0.9,
             stream: false,
           }),
           signal: controller.signal,
@@ -365,7 +372,7 @@ async function fetchWebSearch(query: string): Promise<string | null> {
     if (!cleanQuery || cleanQuery.length < 5) return null
 
     const lower = cleanQuery.toLowerCase()
-    const needsSearch = /\b(current|president|weather|news|today|latest|who is|what is|search|live|update|api code|release)\b/i.test(lower)
+    const needsSearch = /\b(latest news|breaking news|live score|today's weather|current price of|who is the current (president|prime minister|ceo)|tournament results? (2025|2026)|match score|election results? (2025|2026)|search the web for|what is the date today|today's date)\b/i.test(lower)
     if (!needsSearch) return null
 
     const res = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(cleanQuery)}&format=json&no_redirect=1&no_html=1&skip_disambig=1`, {
@@ -412,11 +419,35 @@ export async function POST(req: NextRequest) {
   const greetingReply = matchGreeting(message)
   if (greetingReply) return NextResponse.json({ response: greetingReply })
 
-  // All other messages go directly to the AI model for genuine intelligent responses.
+  // 1. Try Backend Master Agent
+  try {
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000'
+    const abortCtrl = new AbortController()
+    const timeoutId = setTimeout(() => abortCtrl.abort(), 15000)
 
-  // CRITICAL: Skip web search entirely when a document is attached.
-  // Web search on a document message causes random Wikipedia/web results
-  // instead of the AI deeply analyzing the actual uploaded document.
+    const backendRes = await fetch(`${backendUrl}/api/copetra/task`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Tenant-ID': 'tenant_default',
+        'X-User-ID': 'user_default',
+      },
+      body: JSON.stringify({
+        message: message,
+        mode: mode,
+        detail_level: 'DETAILED',
+      }),
+      signal: abortCtrl.signal,
+    })
+    clearTimeout(timeoutId)
+
+    if (backendRes.ok) {
+      const data = await backendRes.json()
+      if (data.answer) return NextResponse.json({ response: data.answer, artifacts: data.artifacts })
+    }
+  } catch { }
+
+  // 2. Try Direct Groq call
   const isDocumentMessage = /\[(WORD|PDF|EXCEL|POWERPOINT|TEXT|CODE)\s+DOCUMENT ATTACHED:/i.test(message) ||
     message.includes('DOCUMENT ATTACHED:') || message.includes('FILE ATTACHED:')
 
@@ -424,13 +455,14 @@ export async function POST(req: NextRequest) {
   const groqAnswer = await callGroq(message, mode, history, webSearchResults)
   if (groqAnswer) return NextResponse.json({ response: groqAnswer })
 
-  // Also skip Wikipedia fallback for documents - the AI must analyze the doc itself
+  // 3. Try Wikipedia live summary
   if (!isDocumentMessage) {
     const wikiAnswer = await fetchWikipedia(message)
     if (wikiAnswer) return NextResponse.json({ response: wikiAnswer })
   }
 
   return NextResponse.json({
-    response: `**Copetra AI** is experiencing a temporary issue. Please try again in a moment.`
+    response: `I couldn't generate a reliable answer for this request at this moment. Please check your connection and try again.`
   })
 }
+

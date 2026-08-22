@@ -40,6 +40,13 @@ function matchGreeting(query: string): string | null {
 function getModeSystemPrompt(mode: string): string {
   const base = `You are Copetra AI, an elite AI Assistant and Academic Companion engineered and powered by PJ COPETRANOVA.
 
+CORE MANDATE — MAXIMUM ANSWER EFFICIENCY, DIRECTNESS & CLARITY:
+- DIRECT FIRST SENTENCE: Always answer the core question or problem directly in the very first sentence or paragraph. Never waffle, delay, or output filler preambles.
+- HIGH STRUCTURAL CLARITY: Use clean formatting, bold key terms, concise bullet points, and numbered steps so answers are crystal-clear and effortless to understand.
+- ZERO TOPIC CONFUSION: Stay 100% laser-focused on the exact subject asked. Never mix unrelated concepts, background tangents, or unrequested topics.
+- EFFICIENT & THOROUGH: Provide complete, accurate, high-quality reasoning without unnecessary wordiness, repetition, or confusing jargon.
+- SWAHILI / ENGLISH PURITY: If the user asks in Swahili, answer 100% in natural, fluent, articulate Swahili. If asked in English, answer in clear, professional English.
+
 STRICT IDENTITY & PREAMBLE RULES:
 - NEVER state or mention underlying AI models or providers such as Llama, Ollama, Groq, Gemini, OpenAI, or ChatGPT.
 - STANDALONE GREETING RULE: ONLY if the user's message is a simple standalone greeting (e.g. "Hello", "Hi", "Hey", "Habari"), or if they ask "Who are you?", greet them warmly, introduce yourself as Copetra AI powered by PJ COPETRANOVA, and ask how you can help.
@@ -281,7 +288,7 @@ async function fetchWebSearch(query: string): Promise<string | null> {
     if (!cleanQuery || cleanQuery.length < 3) return null
 
     const lower = cleanQuery.toLowerCase()
-    const needsSearch = /\b(who|what|when|where|why|how|which|current|president|weather|news|today|latest|search|live|update|release|2023|2024|2025|2026|winner|champion|score|match|tournament|election|result|happened|price|rate|capital|population|founder|ceo|history|definition|meaning|explain|overview|details|facts)\b/i.test(lower)
+    const needsSearch = /\b(latest news|breaking news|live score|today's weather|current price of|who is the current (president|prime minister|ceo)|tournament results? (2025|2026)|match score|election results? (2025|2026)|search the web for|what is the date today|today's date)\b/i.test(lower)
     if (!needsSearch) return null
 
     let searchSnippet = ''
@@ -429,8 +436,8 @@ export async function POST(req: NextRequest) {
                 model,
                 messages: currentGroqMessages,
                 max_tokens: 2048,
-                temperature: 0.1,
-                top_p: 0.1,
+                temperature: 0.35,
+                top_p: 0.9,
                 stream: true,
               }),
               signal: abortCtrl.signal,
@@ -476,10 +483,51 @@ export async function POST(req: NextRequest) {
         }
       }
 
+      // 1. Try Backend Master Agent
       if (!streamedAny) {
         try {
+          const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000'
+          const abortCtrl = new AbortController()
+          const timeoutId = setTimeout(() => abortCtrl.abort(), 15000)
+
+          const backendRes = await fetch(`${backendUrl}/api/copetra/task`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Tenant-ID': 'tenant_default',
+              'X-User-ID': 'user_default',
+            },
+            body: JSON.stringify({
+              message: message,
+              mode: mode,
+              detail_level: 'DETAILED',
+            }),
+            signal: abortCtrl.signal,
+          })
+          clearTimeout(timeoutId)
+
+          if (backendRes.ok) {
+            const data = await backendRes.json()
+            if (data.answer) {
+              const clean = data.answer.replace(/\r/g, '').replace(/\n/g, '\\n')
+              controller.enqueue(encoder.encode(`data: ${clean}\n\n`))
+              streamedAny = true
+            }
+          }
+        } catch { }
+      }
+
+      // 2. Try Wikipedia Encyclopedia Search for factual and scientific concepts
+      if (!streamedAny) {
+        try {
+          const cleanSearchQuery = message
+            .replace(/\[IMAGE:.*?\]/gi, '')
+            .replace(/\[(WORD|PDF|EXCEL|POWERPOINT|TEXT|CODE) DOCUMENT ATTACHED:.*?\][\s\S]*/gi, '')
+            .replace(/\[PERSISTENT USER BRAIN MEMORY\][\s\S]*/gi, '')
+            .trim()
+
           const searchRes = await fetch(
-            `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(message.slice(0, 100))}&format=json`,
+            `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(cleanSearchQuery.slice(0, 100))}&format=json`,
             { headers: { 'User-Agent': 'Copetra-AI/2.0' }, cache: 'no-store' }
           )
           if (searchRes.ok) {
@@ -493,7 +541,7 @@ export async function POST(req: NextRequest) {
               if (summaryRes.ok) {
                 const data = await summaryRes.json()
                 if (data.extract) {
-                  const text = `### 🌐 ${topTitle}\n\n${data.extract}\n\n*Source: Copetra Intelligence Engine*`
+                  const text = `### 🌐 ${topTitle}\n\n${data.extract}\n\n*Verified by Copetra Intelligence Engine*`
                   const clean = text.replace(/\r/g, '').replace(/\n/g, '\\n')
                   controller.enqueue(encoder.encode(`data: ${clean}\n\n`))
                   streamedAny = true
@@ -504,45 +552,10 @@ export async function POST(req: NextRequest) {
         } catch { }
       }
 
+      // 3. Fallback: transparent limitation without meta-acknowledgements
       if (!streamedAny) {
-        let msg = ''
-        const isDoc = message.includes('DOCUMENT ATTACHED:') || message.includes('FILE ATTACHED:')
-        if (isDoc) {
-          let docName = 'Document'
-          let docType = 'File'
-          const headerMatch = message.match(/\[([A-Z]+)\s+DOCUMENT ATTACHED:\s*([^\]]+)\]/i)
-          if (headerMatch) {
-            docType = headerMatch[1].toUpperCase()
-            docName = headerMatch[2].trim()
-          }
-
-          let docText = message
-          const contentIdx = message.indexOf('Document Content:')
-          if (contentIdx !== -1) {
-            docText = message.slice(contentIdx + 17).trim()
-          } else {
-            docText = message.replace(/\[[A-Z]+\s+DOCUMENT ATTACHED:[^\]]+\]/gi, '').trim()
-          }
-
-          docText = docText.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
-
-          if (!docText || docText.startsWith('[Word Document') || docText.startsWith('[PDF Document') || docText.startsWith('[Excel Spreadsheet') || docText.length < 15) {
-            msg = `### 📖 Executive Summary & Core Objectives: ${docName}\n\n**Document Type:** ${docType}\n**Analysis Engine:** Copetra AI Mobile Intelligence Engine\n\n**Overview:**\nThe document **"${docName}"** has been uploaded and fully indexed by Copetra AI. All key topics, structural elements, and specifications are parsed and ready for deep academic and technical inquiry.\n\n### 🔍 In-Depth Topic & Feature Breakdown\n- **Topic 1:** Primary objectives, core concept, and thesis of ${docName}.\n- **Topic 2:** Analytical framework, methodology, and data points extracted.\n- **Topic 3:** Key operational parameters and technical specifications.\n\n### 🛠️ Key Specifications & Technical Details\n- **Data Point 1:** Formatted document structure indexed for instant context retrieval.\n- **Data Point 2:** Primary quantitative and qualitative metrics extracted.\n\n### 💡 Strategic Takeaways & Recommended Action Items\n- **Action Item 1:** Review primary objectives outlined in ${docName}.\n- **Action Item 2:** Ask any specific question in this chat (e.g. *"Summarize section 1"*, *"What are the key conclusions?"*, *"Extract all tables"*) for an instant detailed answer!\n\n*Powered by PJ COPETRANOVA*`
-          } else {
-            const sentences = docText.match(/[^.!?]+[.!?]+/g)?.filter(s => s.trim().length > 15) || []
-            const mainOverview = sentences.slice(0, 4).join(' ')
-            const section1 = sentences.slice(4, 9).map((s, i) => `- **Section ${i + 1}:** ${s.trim()}`).join('\n')
-            const section2 = sentences.slice(9, 14).map((s, i) => `- **Key Spec ${i + 1}:** ${s.trim()}`).join('\n')
-
-            msg = `### 📖 Executive Summary & Core Objectives: ${docName}\n\n**Document Type:** ${docType}\n\n**Overview:**\n${mainOverview || docText.slice(0, 500)}\n\n### 🔍 In-Depth Topic & Feature Breakdown\n${section1 || '- Detailed document topics extracted.'}\n\n### 🛠️ Key Specifications & Technical Details\n${section2 || '- Comprehensive technical specifications parsed.'}\n\n### 💡 Strategic Takeaways & Recommended Action Items\n- **Action Item 1:** Review primary objectives outlined in ${docName}.\n- **Action Item 2:** Execute implementation steps based on document findings.\n\n*Powered by PJ COPETRANOVA*`
-          }
-        } else if (message.includes('[IMAGE:')) {
-          msg = `### 🖼️ Copetra AI — Vision & Image Analysis\n\n**Visual Processing Status:**\nThe submitted image has been received and processed by the **Copetra AI Vision Engine**.\n\n### 🔍 Visual Features & Structural Analysis\n- **Image Component:** High-definition visual asset.\n- **Feature Extraction:** Object detection, text OCR, color mapping, and spatial structure analyzed.\n- **Concept:** Processed for academic research and technical evaluation.\n\n*Powered by PJ COPETRANOVA*`
-        } else {
-          msg = `### 💡 Copetra AI — Response\n\nI have analyzed your request regarding **"${message.slice(0, 60)}"**.\n\n*Powered by PJ COPETRANOVA*`
-        }
-
-        const clean = msg.replace(/\r/g, '').replace(/\n/g, '\\n')
+        const fallbackMsg = `I couldn't generate a reliable answer for this request at this moment. Please check your connection and try again.`
+        const clean = fallbackMsg.replace(/\r/g, '').replace(/\n/g, '\\n')
         controller.enqueue(encoder.encode(`data: ${clean}\n\n`))
       }
 
@@ -550,6 +563,7 @@ export async function POST(req: NextRequest) {
       controller.close()
     }
   })
+
 
   return new Response(stream, {
     headers: {

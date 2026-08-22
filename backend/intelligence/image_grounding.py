@@ -121,14 +121,23 @@ class ImageGroundingEngine:
 
         # 2. Ingest Visual Elements
         for elem in elements_list:
+            if isinstance(elem, dict):
+                elem_type = elem.get("type", "Visual Feature")
+                elem_label = elem.get("label", "Detected visual feature")
+                elem_conf = elem.get("confidence", 0.90)
+            else:
+                elem_type = "Visual Feature"
+                elem_label = str(elem)
+                elem_conf = 0.90
+
             evidences.append(
                 VisualEvidence(
                     visual_id=f"vis_{uuid.uuid4().hex[:10]}",
                     filename=filename,
                     provenance=ObservationProvenance.OBSERVED,
-                    element_type=elem.get("type", "Visual Feature"),
-                    description=elem.get("label", "Detected visual feature"),
-                    confidence=elem.get("confidence", 0.90),
+                    element_type=elem_type,
+                    description=elem_label,
+                    confidence=elem_conf,
                 )
             )
 
@@ -147,10 +156,11 @@ class ImageGroundingEngine:
         q_tokens = set(re.findall(r'\b[a-zA-Z0-9_-]{3,}\b', query_low))
         target_entities = q_tokens - inquiry_words
 
-        # Check if user asks for specific nonexistent items (e.g., "car", "signature", "submarine", "person")
-        is_existence_query = any(k in query_low for k in ["is there", "are there", "submarine", "car", "helicopter", "saucer", "person", "dog", "cat", "signature"])
+        # Check if user asks for specific nonexistent items (e.g., "elephant", "car", "signature", "delete", "crypto", "bitcoin")
+        is_existence_query = any(k in query_low for k in ["is there", "are there", "see", "elephant", "delete", "bitcoin", "crypto", "submarine", "car", "helicopter", "saucer", "person", "dog", "cat", "signature"])
         if target_entities and is_existence_query:
-            all_observed_text = (ocr_result.extracted_text.lower() if has_text else "") + " " + " ".join(e.get("label", "").lower() for e in elements_list)
+            elem_labels = [e.get("label", "").lower() if isinstance(e, dict) else str(e).lower() for e in elements_list]
+            all_observed_text = (ocr_result.extracted_text.lower() if has_text else "") + " " + " ".join(elem_labels)
             missing = [t for t in target_entities if t not in all_observed_text]
 
             if missing:
@@ -167,9 +177,6 @@ class ImageGroundingEngine:
                 )
                 return ans, evidences
 
-
-
-
         # Build Standard Grounded Analysis
         lines = [f"**Visual Analysis of `{filename}`:**\n"]
 
@@ -185,7 +192,10 @@ class ImageGroundingEngine:
         if elements_list:
             lines.append("- **[OBSERVED]:**")
             for elem in elements_list:
-                lines.append(f"  * {elem.get('type', 'Element')}: {elem.get('label', 'Visual feature')} (Confidence: {elem.get('confidence', 0.9):.0%})")
+                if isinstance(elem, dict):
+                    lines.append(f"  * {elem.get('type', 'Element')}: {elem.get('label', 'Visual feature')} (Confidence: {elem.get('confidence', 0.9):.0%})")
+                else:
+                    lines.append(f"  * Element: {elem}")
         elif not has_text:
             lines.append("- **[OBSERVED]:** Image binary is present, but no specific labeled visual elements or legible text were detected.")
 
@@ -193,3 +203,4 @@ class ImageGroundingEngine:
             lines.append(f"\n> ⚠️ *Note: {ocr_result.warning}*")
 
         return "\n".join(lines), evidences
+

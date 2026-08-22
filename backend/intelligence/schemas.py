@@ -331,8 +331,19 @@ class AcademicStructure(BaseModel):
     sections: List[AcademicSectionData] = []
 
 
+class AttachmentPayload(BaseModel):
+    filename: str
+    file_type: str = "txt"
+    mime_type: str = "text/plain"
+    content_bytes: Any = ""
+    size_bytes: int = 0
+    visual_elements: List[Any] = []
+    ocr_confidence: float = 0.95
+
+
+
 class IntelligenceRequest(BaseModel):
-    request_id: str
+    request_id: Optional[str] = None
     message: str
     mode: Optional[str] = "Academic"
     language: Optional[str] = "en"
@@ -340,9 +351,12 @@ class IntelligenceRequest(BaseModel):
     workspace_id: Optional[str] = None
     files: List[Dict[str, Any]] = []
     images: List[Dict[str, Any]] = []
+    attachments: List[AttachmentPayload] = []
     history: List[Dict[str, Any]] = []
     constraints: List[str] = []
     expected_output: Optional[str] = None
+    requested_detail_level: Optional[str] = "DETAILED"
+
 
 
 class DecisionTrace(BaseModel):

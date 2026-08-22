@@ -157,14 +157,9 @@ async def _is_current_events_query(query: str) -> bool:
     """
     query_lower = query.lower()
     current_events_keywords = [
-        "current", "latest", "recent", "now", "today", "2024", "2025", "2026",
-        "new", "just", "breaking", "update", "news", "who is the president",
-        "who is president", "who won", "who is the prime minister", "who is pm",
-        "rais wa sasa", "waziri mkuu wa sasa", "habari za leo",
-        "latest news", "what happened", "when did", "retired", "resigned",
-        "elected", "appointed", "died", "new government", "new minister",
-        "price of", "rate of", "exchange rate", "dollar rate", "bei ya",
-        "weather", "hali ya hewa", "score", "match result",
+        "latest news", "breaking news", "today's news", "habari za leo",
+        "live score", "match result today", "election results 2025", "election results 2026",
+        "current exchange rate", "bei ya dola leo", "hali ya hewa leo", "today's weather"
     ]
     return any(kw in query_lower for kw in current_events_keywords)
 
@@ -205,38 +200,18 @@ KNOWLEDGE_BASE = {
 }
 
 def _search_knowledge_base(query: str) -> str | None:
-    """Search the embedded knowledge base for matching answers."""
-    query_lower = query.lower().strip()
+    """Search the embedded knowledge base ONLY for exact standalone inquiries."""
+    query_lower = query.lower().strip().rstrip("?.! ")
     
-    # Direct key match
+    # Do not intercept longer or nuanced questions; send them to the intelligent model
+    if len(query_lower.split()) > 6:
+        return None
+    
     for key, answer in KNOWLEDGE_BASE.items():
-        if key in query_lower:
+        if query_lower == key or query_lower == f"who is {key}" or query_lower == f"what is {key}" or query_lower == f"nani ni {key}" or query_lower == f"nini ni {key}":
             return answer
     
-    # Keyword-based partial matches
-    keyword_map = {
-        ("president", "tanzania"): "president of tanzania",
-        ("rais", "tanzania"): "president of tanzania",
-        ("cabinet", "tanzania"): "president of tanzania",
-        ("baraza la mawaziri", "tanzania"): "waziri mkuu wa tanzania",
-        ("samia",): "samia suluhu",
-        ("hassan", "president"): "samia suluhu",
-        ("capital", "tanzania"): "capital of tanzania",
-        ("mji mkuu", "tanzania"): "mji mkuu wa tanzania",
-        ("president", "usa"): "president of usa",
-        ("president", "america"): "president of usa",
-        ("president", "kenya"): "president of kenya",
-        ("president", "uganda"): "president of uganda",
-        ("president", "south africa"): "president of south africa",
-        ("kilimanjaro",): "kilimanjaro",
-        ("pythagorean",): "pythagorean theorem",
-        ("artificial intelligence", "what"): "what is ai",
-        ("nini ni ai",): "what is ai",
-    }
-    
-    for keywords, kb_key in keyword_map.items():
-        if all(kw in query_lower for kw in keywords):
-            return KNOWLEDGE_BASE.get(kb_key)
+    return None
     
     return None
 

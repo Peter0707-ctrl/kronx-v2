@@ -22,10 +22,10 @@ export default function LandingPage({ onStart }: Props) {
             </svg>
           </div>
           <span
-            className="landing-logo-title instagram-font"
+            className="landing-logo-title instagram-font copetra-script-font copetra-brand-title"
             style={{
-              fontSize: '32px',
-              fontFamily: "'Grand Hotel', 'Billabong', 'Cookie', 'Satisfy', cursive",
+              fontSize: '36px',
+              fontFamily: "'Grand Hotel', 'Pacifico', 'Dancing Script', 'Satisfy', cursive",
               fontWeight: 'normal',
               color: '#ffffff',
               letterSpacing: '0.5px'

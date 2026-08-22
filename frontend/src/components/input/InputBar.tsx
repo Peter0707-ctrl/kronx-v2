@@ -49,57 +49,9 @@ export default function InputBar({ onSend }: Props) {
         text = `${text}\n\n[IMAGE: ${attachedFile.content}]`.trim()
       } else {
         const catName = attachedFile.category.toUpperCase()
-        
-        // Dynamic Semantic RAG retrieval chunker
-        const performSemanticRetrieval = (documentText: string, userQuery: string): string => {
-          if (documentText.length < 12000) return documentText
-          const paragraphs = documentText.split(/\n+/).map(p => p.trim()).filter(Boolean)
-          if (paragraphs.length <= 6) return documentText
-
-          const queryWords = userQuery
-            .toLowerCase()
-            .replace(/[^\w\s]/g, '')
-            .split(/\s+/)
-            .filter(w => w.length > 2)
-
-          if (queryWords.length === 0) {
-            const firstSection = paragraphs.slice(0, 5).join('\n\n')
-            const lastSection = paragraphs.slice(-3).join('\n\n')
-            return `${firstSection}\n\n... [Middle sections omitted for token budget efficiency] ...\n\n${lastSection}`
-          }
-
-          const scoredParagraphs = paragraphs.map((p, index) => {
-            const lowerP = p.toLowerCase()
-            let score = 0
-            for (const word of queryWords) {
-              const regex = new RegExp(`\\b${word}\\b`, 'g')
-              const count = (lowerP.match(regex) || []).length
-              score += count * 5
-              if (lowerP.includes(word)) score += 2
-            }
-            return { paragraph: p, score, index }
-          })
-
-          const topScored = scoredParagraphs
-            .filter(item => item.score > 0)
-            .sort((a, b) => b.score - a.score)
-            .slice(0, 10)
-
-          if (topScored.length === 0) {
-            const firstSection = paragraphs.slice(0, 5).join('\n\n')
-            const lastSection = paragraphs.slice(-3).join('\n\n')
-            return `${firstSection}\n\n... [Middle sections omitted for token budget efficiency] ...\n\n${lastSection}`
-          }
-
-          const sortedChunks = topScored
-            .sort((a, b) => a.index - b.index)
-            .map(item => item.paragraph)
-
-          return `[Semantic Retrieval Mode: Extracted query-relevant sections]\n\n${sortedChunks.join('\n\n')}`
-        }
-
-        const retrievedContent = performSemanticRetrieval(attachedFile.content, text)
-        text = `${text}\n\n[${catName} DOCUMENT ATTACHED: ${attachedFile.name}]\nDocument Content:\n${retrievedContent}`.trim()
+        // Pass full extracted document content directly to ensure 100% grounding and accuracy
+        const docContent = attachedFile.content.slice(0, 30000)
+        text = `${text}\n\n[${catName} DOCUMENT ATTACHED: ${attachedFile.name}]\nDocument Content:\n${docContent}`.trim()
       }
     }
 

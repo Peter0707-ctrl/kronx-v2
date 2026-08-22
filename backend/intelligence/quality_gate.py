@@ -1,23 +1,22 @@
 """
-Phase 4.2 — 15-Point Response Quality Gate
+Phase 5 — Enhanced 15-Point Response Quality Gate
 Authoritative multi-factor validator evaluating every draft response before client return.
 Validates:
  1. Intent Match
- 2. Topic Match
- 3. Evidence Support
- 4. Claim Support
- 5. Source Fidelity
- 6. Language Match
- 7. Completeness
+ 2. Topic Match (No Forex/unrelated domain contamination)
+ 3. Evidence Support (Factual backing)
+ 4. Claim Support (No unsupported assertions)
+ 5. Source Fidelity (No mock/synthetic hallucinations)
+ 6. Language Match (Fluid English/Swahili)
+ 7. Completeness & Non-Empty
  8. Uncertainty Correctness
- 9. Hallucination Check
+ 9. Hallucination Check (Absent document/image facts)
  10. User Question Coverage
  11. Modality Correctness
  12. Model Capability Correctness
  13. Context Contamination Check
  14. Academic Attribution Check
- 15. Answer Directness
-Triggers bounded auto-regeneration (up to 2 attempts) or transparent limitation returns.
+ 15. Actual Answer & Anti-Acknowledgement Check (Strictly rejects "I have analyzed your request...")
 """
 from __future__ import annotations
 import re
@@ -58,6 +57,26 @@ class QualityGate:
         "multi-tenant workspaces",
         "navigation bar",
         "authentication input",
+    ]
+
+    _META_ACKNOWLEDGEMENT_PATTERNS = [
+        r"i have analyzed your request regarding",
+        r"i analyzed your request",
+        r"your request concerns",
+        r"i understand your question",
+        r"i have received your request",
+        r"i have analyzed your document",
+        r"your inquiry regarding",
+        r"^### 💡 copetra ai — response\s*i have analyzed your request",
+    ]
+
+    _LEAKED_INTERNAL_TAGS = [
+        r"\[persi\]",
+        r"\[persi",
+        r"\[persistent user brain memory\]",
+        r"\[task_contract",
+        r"\[capability\]",
+        r"\[internal_",
     ]
 
     @classmethod
@@ -162,7 +181,7 @@ class QualityGate:
             reason="Language conforms to contract." if lang_pass else failures[-1],
         ))
 
-        # 7. Completeness Check
+        # 7. Completeness & Non-Empty Check
         comp_pass = len(answer_text.strip()) > 5
         if not comp_pass:
             failures.append("Response is empty or truncated.")
@@ -207,7 +226,6 @@ class QualityGate:
         coverage_pass = True
         for key_q in ["sample size", "ram", "latency", "pool size"]:
             if key_q in q_low and key_q in ans_low:
-                # Answer addressed key query term
                 coverage_pass = True
                 break
 
@@ -222,7 +240,6 @@ class QualityGate:
         if contract.intent in [IntentType.IMAGE_ANALYSIS, IntentType.OCR] and not any(k in ans_low for k in ["visual", "image", "text", "not found", "observed", "uncertain"]):
             modality_pass = False
             failures.append("Image analysis output lacked visual or OCR observation structures.")
-
 
         checks.append(CheckResult(
             check_name="ModalityCorrectness",
@@ -259,15 +276,36 @@ class QualityGate:
             reason="Academic statements attributed with provenance." if academic_pass else failures[-1],
         ))
 
-        # 15. Answer Directness
-        directness_pass = not ("As an AI language model" in answer_text or "I am an artificial intelligence" in answer_text)
-        if not directness_pass:
+        # 15. Actual Answer & Anti-Acknowledgement Check
+        # Strictly rejects responses that only acknowledge the request or leak internal tags
+        actual_answer_pass = True
+        
+        # Check for leaked internal tags
+        for leak_pat in cls._LEAKED_INTERNAL_TAGS:
+            if re.search(leak_pat, ans_low):
+                actual_answer_pass = False
+                failures.append(f"Response contains leaked internal tag: {leak_pat}")
+                break
+
+        # Check for meta-acknowledgement fallbacks
+        if actual_answer_pass:
+            for ack_pat in cls._META_ACKNOWLEDGEMENT_PATTERNS:
+                if re.search(ack_pat, ans_low):
+                    # If it contains acknowledgement pattern and is short (< 250 chars), it's a non-answer
+                    if len(answer_text.strip()) < 250:
+                        actual_answer_pass = False
+                        failures.append("Response only contains a meta-acknowledgement instead of answering the question.")
+                        break
+
+        # Check conversational filler
+        if actual_answer_pass and ("As an AI language model" in answer_text or "I am an artificial intelligence" in answer_text):
+            actual_answer_pass = False
             failures.append("Response contains conversational filler instead of direct answer.")
 
         checks.append(CheckResult(
-            check_name="AnswerDirectness",
-            status="PASS" if directness_pass else "FAIL",
-            reason="Direct answer without conversational filler." if directness_pass else failures[-1],
+            check_name="ActualAnswerCheck",
+            status="PASS" if actual_answer_pass else "FAIL",
+            reason="Direct substantive answer delivered without meta-acknowledgements or tag leaks." if actual_answer_pass else failures[-1],
         ))
 
         passed_count = sum(1 for c in checks if c.status == "PASS")

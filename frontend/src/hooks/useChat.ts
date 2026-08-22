@@ -148,12 +148,22 @@ export function useChat() {
       if (typeof window !== 'undefined') {
         let cachedRes = localStorage.getItem(cacheKey) || localStorage.getItem(`kx_cache:${currentState.mode}:${currentState.language}:${text.toLowerCase().trim()}`)
         
-        // Invalidate cache if it contains old preambles or identity strings
-        if (cachedRes && (cachedRes.toLowerCase().includes('hello! i am copetra ai') || cachedRes.toLowerCase().includes('welcome to copetra ai') || cachedRes.toLowerCase().includes('hi there! i am copetra ai'))) {
+        // Invalidate cache if it contains old preambles, acknowledgements, or internal tag leaks
+        if (
+          cachedRes && (
+            cachedRes.toLowerCase().includes('hello! i am copetra ai') ||
+            cachedRes.toLowerCase().includes('welcome to copetra ai') ||
+            cachedRes.toLowerCase().includes('hi there! i am copetra ai') ||
+            cachedRes.toLowerCase().includes('i have analyzed your request regarding') ||
+            cachedRes.toLowerCase().includes('[persi]') ||
+            cachedRes.toLowerCase().includes('[persi')
+          )
+        ) {
           localStorage.removeItem(cacheKey)
           localStorage.removeItem(`kx_cache:${currentState.mode}:${currentState.language}:${text.toLowerCase().trim()}`)
           cachedRes = null
         }
+
 
         if (cachedRes && !text.includes('[IMAGE:') && !text.includes('DOCUMENT ATTACHED:')) {
           currentState.addMessage(text, 'user')

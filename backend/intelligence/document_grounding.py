@@ -39,8 +39,10 @@ class DocumentGroundingEngine:
             "from", "give", "list", "check", "provide", "provided", "summary", "summarize", "about",
             "with", "into", "methodology", "objective", "objectives", "results", "findings", "sample",
             "size", "nodes", "method", "data", "can", "you", "guess", "please", "use", "uses", "using",
-            "main", "charter", "paper", "memo", "internal"
+            "main", "charter", "paper", "memo", "internal", "create", "generate", "word", "excel",
+            "powerpoint", "presentation", "deck", "spreadsheet", "proposal", "export", "cross", "verify"
         }
+
         key_attributes = [t for t in query_terms if t not in inquiry_words]
 
         corpus_text = " ".join(e.normalized_content.lower() for e in evidence_items)
@@ -77,11 +79,11 @@ class DocumentGroundingEngine:
 
 
         relevant_scored = EvidenceEngine.search_evidence(query, evidence_items, top_k=6)
-        if not relevant_scored:
+        matched_evidence = [item for item, score in relevant_scored] if relevant_scored else evidence_items[:6]
+        if not matched_evidence:
             ans = "I could not find information addressing that question in the provided document."
             return ans, [], []
 
-        matched_evidence = [item for item, score in relevant_scored]
 
         # Formulate grounded answer with explicit citations
         citations = []

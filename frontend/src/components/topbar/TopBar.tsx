@@ -200,15 +200,16 @@ export default function TopBar() {
           }}
         >
           <span
-            className="copetra-brand-instagram instagram-font"
+            className="copetra-brand-instagram instagram-font copetra-script-font"
             style={{
-              fontSize: '28px',
+              fontSize: '34px',
               fontWeight: '400',
               color: '#000000',
-              fontFamily: "'Grand Hotel', 'Billabong', 'Cookie', 'Satisfy', cursive",
+              fontFamily: "'Grand Hotel', 'Pacifico', 'Dancing Script', 'Satisfy', 'Cookie', cursive",
               letterSpacing: '0.5px',
               lineHeight: 1.1,
-              paddingTop: '2px'
+              paddingTop: '2px',
+              display: 'inline-block'
             }}
           >
             Copetra AI

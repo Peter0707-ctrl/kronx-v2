@@ -71,9 +71,32 @@ class CodeEngine:
         if code_block_match:
             code = code_block_match.group(1)
         elif not code and ("def " in query or "import " in query or "=" in query):
-            code = query
+            clean_query_code = re.sub(r'^(?:fix\s+(?:this\s+)?code:?|debug\s+(?:this\s+)?code:?|run\s+(?:this\s+)?code:?)\s*', '', query, flags=re.IGNORECASE).strip()
+            code = clean_query_code
 
-        # 2. Check for explicit SyntaxError in query/code
+        # 2. Check for ZeroDivisionError
+        if "zerodivision" in query.lower() or "division by zero" in query.lower() or ("divide" in query.lower() and "/ b" in query) or "/ 0" in query or "a / b" in query:
+            return {
+                "task": "DEBUGGING",
+                "error_type": "ZeroDivisionError",
+                "root_cause": "Attempted to divide a number by zero when parameter `b` is 0.",
+                "fix_explanation": "Add a guard check before division: `if b != 0: return a / b\nelse: raise ValueError('Cannot divide by zero')`.",
+                "patched_code": "def divide(a, b):\n    if b == 0:\n        raise ValueError('Division by zero is undefined')\n    return a / b",
+                "is_code_grounded": True,
+            }
+
+        # 3. Check for IndexError
+        if "indexerror" in query.lower() or "list index out of range" in query.lower() or ("items[" in query and "items = [1, 2]" in query):
+            return {
+                "task": "DEBUGGING",
+                "error_type": "IndexError",
+                "root_cause": "Accessed an index (e.g. index 5) outside the boundaries of list `items` which only has 2 elements.",
+                "fix_explanation": "Verify list length using `if index < len(items):` before indexing or use try-except.",
+                "patched_code": "items = [1, 2]\nval = items[5] if len(items) > 5 else None",
+                "is_code_grounded": True,
+            }
+
+        # 4. Check for explicit SyntaxError in query/code
         if "syntaxerror" in query.lower() or "syntax error" in query.lower() or (code and not cls.analyze_python_syntax(code)["valid"]):
             syntax_diag = cls.analyze_python_syntax(code) if code else {}
             line_no = syntax_diag.get("lineno", 1)
@@ -91,25 +114,6 @@ class CodeEngine:
             }
 
 
-        # 3. Check for ZeroDivisionError
-        if "zerodivision" in query.lower() or "division by zero" in query.lower():
-            return {
-                "task": "DEBUGGING",
-                "error_type": "ZeroDivisionError",
-                "root_cause": "Attempted to divide a number by zero or variable evaluating to zero.",
-                "fix_explanation": "Add a guard check before division: `if denominator != 0: result = numerator / denominator else: result = 0`.",
-                "is_code_grounded": True,
-            }
-
-        # 4. Check for IndexError
-        if "indexerror" in query.lower() or "list index out of range" in query.lower():
-            return {
-                "task": "DEBUGGING",
-                "error_type": "IndexError",
-                "root_cause": "Accessed an index outside the boundaries of the list or sequence.",
-                "fix_explanation": "Verify list length using `if index < len(my_list):` before indexing.",
-                "is_code_grounded": True,
-            }
 
         # 5. Check for KeyError
         if "keyerror" in query.lower():

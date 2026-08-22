@@ -225,7 +225,34 @@ class SpecializedParsers:
                     ),
                 )
             )
+
+        # 3. Summary row count item
+        data_row_count = len(rows) - 1
+        summary_str = f"Total Records: {data_row_count} rows/records/students in dataset."
+        items.append(
+            EvidenceItem(
+                evidence_id=f"evi_{uuid.uuid4().hex[:10]}",
+                source_file_id=file_id,
+                filename=filename,
+                source_type="CSV_SUMMARY",
+                content=summary_str,
+                normalized_content=summary_str.lower(),
+                sha256=cls.calculate_sha256(summary_str),
+                extraction_method="csv_parser",
+                confidence=1.0,
+                provenance=EvidenceProvenance(
+                    source_file=filename,
+                    source_type="CSV",
+                    page=1,
+                    section="Table Summary",
+                    row_or_line="Dataset Summary",
+                    confidence=1.0,
+                ),
+            )
+        )
+
         return items
+
 
     @classmethod
     def parse_json(cls, filename: str, content: str) -> List[EvidenceItem]:
