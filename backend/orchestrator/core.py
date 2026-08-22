@@ -527,20 +527,15 @@ class KronxOrchestrator:
         groq_api_key = os.getenv("GROQ_API_KEY", "")
         openai_api_key = os.getenv("OPENAI_API_KEY", "")
 
-        full_response = ""
-        success = False
-
-        client = get_client()
-
-        # Provider 1: Google Gemini API Models
+        full_response = ""        # Provider 1: Google Gemini API Models
         models_to_try = [
-            "gemini-2.0-flash-lite",
-            "gemini-2.5-flash",
             "gemini-2.0-flash",
-            "gemini-3.5-flash"
+            "gemini-1.5-flash",
+            "gemini-1.5-pro",
+            "gemini-2.0-flash-lite"
         ]
         for m in models_to_try:
-            if success:
+            if success or not self.api_key:
                 break
             direct_url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent?key={self.api_key}"
             payload = {
@@ -569,27 +564,32 @@ class KronxOrchestrator:
             except Exception as e:
                 logger.error(f"[Gemini Exception] Model {m}: {e}", exc_info=True)
 
-        # Provider 2: Groq Cloud API Failover (GPT-OSS 120B)
+        # Provider 2: Groq Cloud API Failover
         if not success and groq_api_key:
-            try:
-                groq_url = "https://api.groq.com/openai/v1/chat/completions"
-                groq_payload = {
-                    "model": "openai/gpt-oss-120b",
-                    "messages": [{"role": "system", "content": system}, {"role": "user", "content": message}],
-                    "temperature": 0.7,
-                    "max_tokens": 2048
-                }
-                groq_headers = {"Authorization": f"Bearer {groq_api_key}", "Content-Type": "application/json"}
-                resp = await client.post(groq_url, json=groq_payload, headers=groq_headers, timeout=20.0)
-                if resp.status_code == 200:
-                    groq_data = resp.json()
-                    text_result = groq_data["choices"][0]["message"]["content"].strip()
-                    if text_result:
-                        full_response = text_result
-                        success = True
-                        yield text_result
-            except Exception as e:
-                logger.error(f"[Groq Stream Failover Exception]: {e}", exc_info=True)
+            groq_models = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"]
+            for gm in groq_models:
+                if success:
+                    break
+                try:
+                    groq_url = "https://api.groq.com/openai/v1/chat/completions"
+                    groq_payload = {
+                        "model": gm,
+                        "messages": [{"role": "system", "content": system}, {"role": "user", "content": message}],
+                        "temperature": 0.7,
+                        "max_tokens": 2048
+                    }
+                    groq_headers = {"Authorization": f"Bearer {groq_api_key}", "Content-Type": "application/json"}
+                    resp = await client.post(groq_url, json=groq_payload, headers=groq_headers, timeout=20.0)
+                    if resp.status_code == 200:
+                        groq_data = resp.json()
+                        text_result = groq_data["choices"][0]["message"]["content"].strip()
+                        if text_result:
+                            full_response = text_result
+                            success = True
+                            yield text_result
+                            break
+                except Exception as e:
+                    logger.error(f"[Groq Stream Failover Exception]: {e}", exc_info=True)
 
         # Provider 3: OpenAI API Failover (GPT-4o-mini)
         if not success and openai_api_key:
@@ -602,7 +602,7 @@ class KronxOrchestrator:
                     "max_tokens": 2048
                 }
                 openai_headers = {"Authorization": f"Bearer {openai_api_key}", "Content-Type": "application/json"}
-                resp = await client.post(openai_url, json=openai_payload, headers=openai_headers, timeout=15.0)
+                resp = await client.post(openai_url, json=openai_payload, headers=openai_headers, timeout=20.0)
                 if resp.status_code == 200:
                     openai_data = resp.json()
                     text_result = openai_data["choices"][0]["message"]["content"].strip()
@@ -612,6 +612,36 @@ class KronxOrchestrator:
                         yield text_result
             except Exception as e:
                 logger.error(f"[OpenAI Stream Failover Exception]: {e}", exc_info=True)
+
+        # Provider 4: Dedicated Ollama Cluster on Railway
+        if not success:
+            ollama_hosts = [
+                os.getenv("OLLAMA_URL"),
+                "http://ollama.railway.internal:11434",
+                "http://127.0.0.1:11434"
+            ]
+            for ohost in [h for h in ollama_hosts if h]:
+                if success:
+                    break
+                try:
+                    ollama_url = f"{ohost}/api/chat"
+                    ollama_payload = {
+                        "model": "llama3.2:3b",
+                        "messages": [{"role": "system", "content": system}, {"role": "user", "content": message}],
+                        "stream": False,
+                        "options": {"temperature": 0.5}
+                    }
+                    resp = await client.post(ollama_url, json=ollama_payload, timeout=25.0)
+                    if resp.status_code == 200:
+                        odata = resp.json()
+                        text_result = odata.get("message", {}).get("content", "").strip()
+                        if text_result:
+                            full_response = text_result
+                            success = True
+                            yield text_result
+                            break
+                except Exception as e:
+                    logger.debug(f"Ollama {ohost} query failed: {e}")
 
         # PJKRONX Real Fact Extraction Engine — Last Resort
         if not success:
