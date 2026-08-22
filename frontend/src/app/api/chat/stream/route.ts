@@ -433,6 +433,7 @@ export async function POST(req: NextRequest) {
                     const parsed = JSON.parse(jsonStr)
                     const token = parsed.choices?.[0]?.delta?.content
                     if (token) {
+                      if (token.includes('<think>') || token.includes('</think>')) continue
                       streamedAny = true
                       const clean = token.replace(/\r/g, '').replace(/\n/g, '\\n')
                       controller.enqueue(encoder.encode(`data: ${clean}\n\n`))

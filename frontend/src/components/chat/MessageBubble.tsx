@@ -677,29 +677,40 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
     }
   }
 
-  // Extract attached images & documents from user message
+  // Extract attached images & documents from user message without catastrophic regex lag
   const attachedImages: string[] = []
   const attachedDocs: string[] = []
 
   let displayContent = message.content.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
   
   if (!isAi) {
-    const imageRegex = /\[IMAGE:\s*(data:image\/[a-zA-Z]+;base64,[^\]]+)\]/g
-    let imgMatch
-    while ((imgMatch = imageRegex.exec(message.content)) !== null) {
-      attachedImages.push(imgMatch[1])
+    let raw = displayContent
+    
+    // Fast O(1) image extraction avoiding regex locks on multi-megabyte base64 strings
+    let imgStart = raw.indexOf('[IMAGE:')
+    while (imgStart !== -1) {
+      const imgEnd = raw.indexOf(']', imgStart)
+      if (imgEnd === -1) break
+      const imgData = raw.slice(imgStart + 7, imgEnd).trim()
+      if (imgData) attachedImages.push(imgData)
+      raw = raw.slice(0, imgStart) + raw.slice(imgEnd + 1)
+      imgStart = raw.indexOf('[IMAGE:')
     }
 
-    const docRegex = /\[(WORD|PDF|EXCEL|POWERPOINT|TEXT|CODE)\s+DOCUMENT ATTACHED:\s*([^\]]+)\]/gi
-    let docMatch
-    while ((docMatch = docRegex.exec(message.content)) !== null) {
-      attachedDocs.push(`${docMatch[1]}: ${docMatch[2]}`)
+    // Fast O(1) document extraction
+    const docStart = raw.indexOf(' DOCUMENT ATTACHED:')
+    if (docStart !== -1) {
+      const bracketStart = raw.lastIndexOf('[', docStart)
+      const bracketEnd = raw.indexOf(']', docStart)
+      if (bracketStart !== -1 && bracketEnd !== -1) {
+        attachedDocs.push(raw.slice(bracketStart + 1, bracketEnd))
+        raw = raw.slice(0, bracketStart)
+      }
     }
-
-    displayContent = displayContent
-      .replace(/\[IMAGE:\s*data:image\/[a-zA-Z]+;base64,[^\]]+\]/g, '')
-      .replace(/\[(WORD|PDF|EXCEL|POWERPOINT|TEXT|CODE)\s+DOCUMENT ATTACHED:\s*([^\]]+)\][\s\S]*/gi, '')
-      .trim()
+    displayContent = raw.trim()
+  } else {
+    // Strip <think>...</think> reasoning traces from output so user receives clean, direct answers
+    displayContent = displayContent.replace(/<think>[\s\S]*?(?:<\/think>|$)/gi, '').trim()
   }
 
   // Check if AI response has multiple/any code blocks for project ZIP download
