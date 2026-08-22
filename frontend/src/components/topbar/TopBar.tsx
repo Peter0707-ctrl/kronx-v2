@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useKronxStore } from '@/store/useKronxStore'
 
 export default function TopBar() {
@@ -58,29 +58,31 @@ export default function TopBar() {
     if (menuOpen) setMenuOpen(false)
   }
 
-  // Extract images and code files from active messages
-  const msgs = activeMessages()
-  const extractedFiles: { type: 'image' | 'code'; content: string; name: string }[] = []
-  msgs.forEach((m) => {
-    if (m.content) {
-      // Find Markdown images ![alt](url) or HTML <img src="...">
-      const imgRegex = /!\[.*?\]\((.*?)\)|<img.*?src=["'](.*?)["']/g
-      let match
-      while ((match = imgRegex.exec(m.content)) !== null) {
-        const url = match[1] || match[2]
-        if (url) {
-          extractedFiles.push({ type: 'image', content: url, name: `Image ${extractedFiles.length + 1}` })
+  // Extract images and code files only when the modal is opened
+  const extractedFiles = useMemo(() => {
+    if (!viewFilesModalOpen) return []
+    const msgs = activeMessages()
+    const files: { type: 'image' | 'code'; content: string; name: string }[] = []
+    msgs.forEach((m) => {
+      if (m.content && m.role === 'ai') {
+        const imgRegex = /!\[.*?\]\((.*?)\)/g
+        let match
+        while ((match = imgRegex.exec(m.content)) !== null) {
+          const url = match[1]
+          if (url && !url.startsWith('data:')) {
+            files.push({ type: 'image', content: url, name: `Image ${files.length + 1}` })
+          }
+        }
+        const codeRegex = /```(\w+)?\n([\s\S]*?)```/g
+        let codeMatch
+        while ((codeMatch = codeRegex.exec(m.content)) !== null) {
+          const lang = codeMatch[1] || 'code'
+          files.push({ type: 'code', content: codeMatch[2], name: `Snippet ${files.length + 1} (.${lang})` })
         }
       }
-      // Find code blocks ```lang ... ```
-      const codeRegex = /```(\w+)?\n([\s\S]*?)```/g
-      let codeMatch
-      while ((codeMatch = codeRegex.exec(m.content)) !== null) {
-        const lang = codeMatch[1] || 'code'
-        extractedFiles.push({ type: 'code', content: codeMatch[2], name: `Snippet ${extractedFiles.length + 1} (.${lang})` })
-      }
-    }
-  })
+    })
+    return files
+  }, [viewFilesModalOpen, activeMessages])
 
   return (
     <header className="topbar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', background: 'transparent', position: 'relative' }}>

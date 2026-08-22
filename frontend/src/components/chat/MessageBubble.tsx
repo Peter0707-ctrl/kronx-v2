@@ -1438,6 +1438,10 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
       )}
     </div>
   )
+}, (prev, next) => {
+  return prev.message.id === next.message.id &&
+         prev.message.content === next.message.content &&
+         prev.isStreaming === next.isStreaming
 })
 
 export default MessageBubble
