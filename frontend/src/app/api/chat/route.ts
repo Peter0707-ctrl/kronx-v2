@@ -526,7 +526,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ response: imgGen.markdown })
   }
 
-  // 1. Try Direct Groq call (Fastest path)
+  const hasAttachedImage = message.includes('[IMAGE:')
+
+  // If user uploaded an image, execute Google Gemini Multimodal Vision FIRST
+  if (hasAttachedImage) {
+    const geminiAnswer = await callGemini(message, mode)
+    if (geminiAnswer) return NextResponse.json({ response: geminiAnswer })
+  }
+
+  // 1. Try Direct Groq call (Fastest path for text/code/math)
   const isDocumentMessage = /\[(WORD|PDF|EXCEL|POWERPOINT|TEXT|CODE)\s+DOCUMENT ATTACHED:/i.test(message) ||
     message.includes('DOCUMENT ATTACHED:') || message.includes('FILE ATTACHED:')
 
@@ -535,8 +543,10 @@ export async function POST(req: NextRequest) {
   if (groqAnswer) return NextResponse.json({ response: groqAnswer })
 
   // 2. Try Direct Google Gemini
-  const geminiAnswer = await callGemini(message, mode)
-  if (geminiAnswer) return NextResponse.json({ response: geminiAnswer })
+  if (!hasAttachedImage) {
+    const geminiAnswer = await callGemini(message, mode)
+    if (geminiAnswer) return NextResponse.json({ response: geminiAnswer })
+  }
 
   // 3. Try Direct OpenAI
   const openAiAnswer = await callOpenAi(message, mode)

@@ -388,133 +388,13 @@ export async function POST(req: NextRequest) {
         return
       }
 
-      const keys = groqApiKeys()
       let streamedAny = false
+      const hasAttachedImage = message.includes('[IMAGE:')
 
-      for (const apiKey of keys) {
-        if (streamedAny) break
-
-        const groqMessages = buildGroqMessages(message, mode, history, true, webSearchResults)
-        
-        const hasVision = groqMessages.some(m => Array.isArray(m.content)) || message.includes('[IMAGE:')
-        const isDocument = message.includes('DOCUMENT ATTACHED:') || message.includes('FILE ATTACHED:')
-        const models = preferFastGroqModels({
-          vision: hasVision,
-          document: isDocument,
-          long: isDocument || message.length > 800,
-        })
-
-        for (const model of models) {
-          if (streamedAny) break
-          try {
-            const isVisionModel = model.includes('vision')
-            const currentGroqMessages = buildGroqMessages(message, mode, history, isVisionModel, webSearchResults)
-
-            const abortCtrl = new AbortController()
-            const isLargeModel = /120b|70b|90b|27b/.test(model)
-            const timeoutMs = isVisionModel
-              ? 15000
-              : isDocument
-                ? (isLargeModel ? 25000 : 15000)
-                : (isLargeModel ? 20000 : 12000)
-            const timeoutId = setTimeout(() => abortCtrl.abort(), timeoutMs)
-
-            const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${apiKey}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                model,
-                messages: currentGroqMessages,
-                max_tokens: 2048,
-                max_completion_tokens: 2048,
-                temperature: 0.35,
-                top_p: 0.9,
-                stream: true,
-              }),
-              signal: abortCtrl.signal,
-              cache: 'no-store',
-            })
-
-            clearTimeout(timeoutId)
-
-            if (groqRes.ok && groqRes.body) {
-              const reader = groqRes.body.getReader()
-              const decoder = new TextDecoder('utf-8')
-              let buffer = ''
-              let inThinkingBlock = false
-              let rawStreamedAccumulator = ''
-
-              while (true) {
-                const { done, value } = await reader.read()
-                if (done) break
-                buffer += decoder.decode(value, { stream: true })
-                const lines = buffer.split('\n')
-                buffer = lines.pop() ?? ''
-
-                for (const line of lines) {
-                  const trimmed = line.trim()
-                  if (!trimmed.startsWith('data: ')) continue
-                  const jsonStr = trimmed.slice(6)
-                  if (jsonStr === '[DONE]') break
-                  try {
-                    const parsed = JSON.parse(jsonStr)
-                    const token = parsed.choices?.[0]?.delta?.content
-                    if (token) {
-                      rawStreamedAccumulator += token
-                      const lowerAcc = rawStreamedAccumulator.toLowerCase()
-
-                      if (
-                        token.includes('<think>') ||
-                        token.includes('<reasoning>') ||
-                        lowerAcc.includes("here's a thinking process") ||
-                        lowerAcc.includes("thinking process:") ||
-                        lowerAcc.includes("key constraints from system prompt")
-                      ) {
-                        inThinkingBlock = true
-                      }
-
-                      if (
-                        token.includes('</think>') ||
-                        token.includes('</reasoning>') ||
-                        (inThinkingBlock && (
-                          token.includes('```') ||
-                          token.includes('###') ||
-                          token.includes('\n\n1.') ||
-                          token.includes('def ') ||
-                          token.includes('import ') ||
-                          token.includes('Here is')
-                        ))
-                      ) {
-                        inThinkingBlock = false
-                        continue
-                      }
-
-                      if (inThinkingBlock) continue
-
-                      streamedAny = true
-                      const clean = token.replace(/\r/g, '').replace(/\n/g, '\\n')
-                      controller.enqueue(encoder.encode(`data: ${clean}\n\n`))
-                    }
-                  } catch { }
-                }
-              }
-            } else {
-              console.warn(`Groq model ${model} with key prefix ${apiKey.slice(0, 10)} returned status ${groqRes.status}`)
-            }
-          } catch (e) {
-            console.error(`Groq stream ${model} error:`, e)
-          }
-        }
-      }
-
-      // Provider 2: Google Gemini Cloud (Native Multimodal Vision & Academic Reasoning)
-      if (!streamedAny) {
+      // Function to call Gemini Multimodal Vision / Academic Reasoning
+      async function tryGemini(): Promise<boolean> {
         const geminiKeys = geminiApiKeys()
         for (const gKey of geminiKeys) {
-          if (streamedAny) break
           const geminiModels = [
             'gemini-3.6-flash',
             'gemini-3.7-flash',
@@ -524,11 +404,10 @@ export async function POST(req: NextRequest) {
             'gemini-2.0-flash'
           ]
           for (const gModel of geminiModels) {
-            if (streamedAny) break
             try {
               const abortCtrl = new AbortController()
-              const timeoutId = setTimeout(() => abortCtrl.abort(), 20000)
-              const gUrl = `https://generativelanguage.googleapis.com/v1beta/models/${gModel}:generateContent?key=${gKey}`
+              const timeoutId = setTimeout(() => abortCtrl.abort(), 25000)
+              const gUrl = `https://generativelanguage.googleapis.com/v1beta/models/${gModel}:generateContent`
               
               // Build multimodal contents with inline_data for attached images
               const parts: any[] = []
@@ -571,13 +450,112 @@ export async function POST(req: NextRequest) {
                 if (cleanTextResult) {
                   const clean = cleanTextResult.replace(/\r/g, '').replace(/\n/g, '\\n')
                   controller.enqueue(encoder.encode(`data: ${clean}\n\n`))
-                  streamedAny = true
-                  break
+                  return true
                 }
               }
             } catch { }
           }
         }
+        return false
+      }
+
+      // If user uploaded an image, execute Google Gemini Multimodal Vision FIRST
+      if (hasAttachedImage) {
+        streamedAny = await tryGemini()
+      }
+
+      // Provider: Groq Cloud (Ultra Fast for Text, Math, Science & Code)
+      if (!streamedAny) {
+        const keys = groqApiKeys()
+        for (const apiKey of keys) {
+          if (streamedAny) break
+
+          const groqMessages = buildGroqMessages(message, mode, history, true, webSearchResults)
+          const isDocument = message.includes('DOCUMENT ATTACHED:') || message.includes('FILE ATTACHED:')
+          const models = preferFastGroqModels({
+            vision: false,
+            document: isDocument,
+            long: isDocument || message.length > 800,
+          })
+
+          for (const model of models) {
+            if (streamedAny) break
+            try {
+              const currentGroqMessages = buildGroqMessages(message, mode, history, false, webSearchResults)
+              const abortCtrl = new AbortController()
+              const isLargeModel = /120b|70b|90b|27b/.test(model)
+              const timeoutMs = isDocument
+                ? (isLargeModel ? 25000 : 15000)
+                : (isLargeModel ? 20000 : 12000)
+              const timeoutId = setTimeout(() => abortCtrl.abort(), timeoutMs)
+
+              const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${apiKey}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  model,
+                  messages: currentGroqMessages,
+                  max_tokens: 2048,
+                  max_completion_tokens: 2048,
+                  temperature: 0.35,
+                  top_p: 0.9,
+                  stream: true,
+                }),
+                signal: abortCtrl.signal,
+                cache: 'no-store',
+              })
+
+              clearTimeout(timeoutId)
+
+              if (groqRes.ok && groqRes.body) {
+                const reader = groqRes.body.getReader()
+                const decoder = new TextDecoder()
+                let buffer = ''
+                let hasStarted = false
+
+                try {
+                  while (true) {
+                    const { done, value } = await reader.read()
+                    if (done) break
+
+                    buffer += decoder.decode(value, { stream: true })
+                    const lines = buffer.split('\n')
+                    buffer = lines.pop() || ''
+
+                    for (const line of lines) {
+                      const trimmed = line.trim()
+                      if (!trimmed || trimmed === 'data: [DONE]') continue
+                      if (trimmed.startsWith('data: ')) {
+                        try {
+                          const json = JSON.parse(trimmed.slice(6))
+                          const delta = json.choices?.[0]?.delta?.content
+                          if (delta) {
+                            hasStarted = true
+                            const clean = delta.replace(/\r/g, '').replace(/\n/g, '\\n')
+                            controller.enqueue(encoder.encode(`data: ${clean}\n\n`))
+                          }
+                        } catch { }
+                      }
+                    }
+                  }
+
+                  if (hasStarted) {
+                    streamedAny = true
+                    break
+                  }
+                } catch { }
+              }
+            } catch { }
+          }
+        }
+      }
+
+      // Provider 2: Google Gemini Cloud fallback if not already executed
+      if (!streamedAny && !hasAttachedImage) {
+        streamedAny = await tryGemini()
       }
 
       // Provider 3: OpenAI Cloud
