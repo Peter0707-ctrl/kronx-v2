@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { groqApiKeys, matchSimpleGreeting, needsLiveWebSearch, preferFastGroqModels, cleanAiResponse } from '@/lib/fastChat'
+import {
+  groqApiKeys,
+  geminiApiKeys,
+  openAiApiKeys,
+  matchSimpleGreeting,
+  needsLiveWebSearch,
+  preferFastGroqModels,
+  cleanAiResponse
+} from '@/lib/fastChat'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -475,7 +483,82 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // 1. Try Backend Master Agent
+      // Provider 2: Google Gemini Cloud
+      if (!streamedAny) {
+        const geminiKeys = geminiApiKeys()
+        for (const gKey of geminiKeys) {
+          if (streamedAny) break
+          const geminiModels = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.0-flash-lite']
+          for (const gModel of geminiModels) {
+            if (streamedAny) break
+            try {
+              const abortCtrl = new AbortController()
+              const timeoutId = setTimeout(() => abortCtrl.abort(), 15000)
+              const gUrl = `https://generativelanguage.googleapis.com/v1beta/models/${gModel}:generateContent?key=${gKey}`
+              const gRes = await fetch(gUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  contents: [{ role: 'user', parts: [{ text: `${getModeSystemPrompt(mode)}\n\n${message}` }] }],
+                  generationConfig: { temperature: 0.35, maxOutputTokens: 2048 }
+                }),
+                signal: abortCtrl.signal,
+                cache: 'no-store'
+              })
+              clearTimeout(timeoutId)
+              if (gRes.ok) {
+                const gData = await gRes.json()
+                const rawText = gData.candidates?.[0]?.content?.parts?.[0]?.text
+                const cleanText = cleanAiResponse(rawText || '')
+                if (cleanText) {
+                  const clean = cleanText.replace(/\r/g, '').replace(/\n/g, '\\n')
+                  controller.enqueue(encoder.encode(`data: ${clean}\n\n`))
+                  streamedAny = true
+                  break
+                }
+              }
+            } catch { }
+          }
+        }
+      }
+
+      // Provider 3: OpenAI Cloud
+      if (!streamedAny) {
+        const oKeys = openAiApiKeys()
+        for (const oKey of oKeys) {
+          if (streamedAny) break
+          try {
+            const abortCtrl = new AbortController()
+            const timeoutId = setTimeout(() => abortCtrl.abort(), 15000)
+            const oRes = await fetch('https://api.openai.com/v1/chat/completions', {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${oKey}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                model: 'gpt-4o-mini',
+                messages: [{ role: 'system', content: getModeSystemPrompt(mode) }, { role: 'user', content: message }],
+                temperature: 0.35,
+                max_tokens: 2048
+              }),
+              signal: abortCtrl.signal,
+              cache: 'no-store'
+            })
+            clearTimeout(timeoutId)
+            if (oRes.ok) {
+              const oData = await oRes.json()
+              const rawText = oData.choices?.[0]?.message?.content
+              const cleanText = cleanAiResponse(rawText || '')
+              if (cleanText) {
+                const clean = cleanText.replace(/\r/g, '').replace(/\n/g, '\\n')
+                controller.enqueue(encoder.encode(`data: ${clean}\n\n`))
+                streamedAny = true
+                break
+              }
+            }
+          } catch { }
+        }
+      }
+
+      // Provider 4: Backend Master Agent
       if (!streamedAny) {
         try {
           const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000'
@@ -501,7 +584,8 @@ export async function POST(req: NextRequest) {
           if (backendRes.ok) {
             const data = await backendRes.json()
             if (data.answer) {
-              const clean = data.answer.replace(/\r/g, '').replace(/\n/g, '\\n')
+              const cleanText = cleanAiResponse(data.answer)
+              const clean = cleanText.replace(/\r/g, '').replace(/\n/g, '\\n')
               controller.enqueue(encoder.encode(`data: ${clean}\n\n`))
               streamedAny = true
             }
@@ -509,44 +593,9 @@ export async function POST(req: NextRequest) {
         } catch { }
       }
 
-      // 2. Try Wikipedia Encyclopedia Search for factual and scientific concepts
+      // Final transparent notification if network is down
       if (!streamedAny) {
-        try {
-          const cleanSearchQuery = message
-            .replace(/\[IMAGE:.*?\]/gi, '')
-            .replace(/\[(WORD|PDF|EXCEL|POWERPOINT|TEXT|CODE) DOCUMENT ATTACHED:.*?\][\s\S]*/gi, '')
-            .replace(/\[PERSISTENT USER BRAIN MEMORY\][\s\S]*/gi, '')
-            .trim()
-
-          const searchRes = await fetch(
-            `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(cleanSearchQuery.slice(0, 100))}&format=json`,
-            { headers: { 'User-Agent': 'Copetra-AI/2.0' }, cache: 'no-store' }
-          )
-          if (searchRes.ok) {
-            const searchData = await searchRes.json()
-            const topTitle = searchData.query?.search?.[0]?.title
-            if (topTitle) {
-              const summaryRes = await fetch(
-                `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(topTitle)}`,
-                { headers: { 'User-Agent': 'Copetra-AI/2.0' }, cache: 'no-store' }
-              )
-              if (summaryRes.ok) {
-                const data = await summaryRes.json()
-                if (data.extract) {
-                  const text = `### 🌐 ${topTitle}\n\n${data.extract}\n\n*Verified by Copetra Intelligence Engine*`
-                  const clean = text.replace(/\r/g, '').replace(/\n/g, '\\n')
-                  controller.enqueue(encoder.encode(`data: ${clean}\n\n`))
-                  streamedAny = true
-                }
-              }
-            }
-          }
-        } catch { }
-      }
-
-      // 3. Fallback: transparent limitation without meta-acknowledgements
-      if (!streamedAny) {
-        const fallbackMsg = `I couldn't generate a reliable answer for this request at this moment. Please check your connection and try again.`
+        const fallbackMsg = `I couldn't generate a reliable answer for this request at this moment. Please check your network connection and try again.`
         const clean = fallbackMsg.replace(/\r/g, '').replace(/\n/g, '\\n')
         controller.enqueue(encoder.encode(`data: ${clean}\n\n`))
       }

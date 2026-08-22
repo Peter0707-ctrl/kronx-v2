@@ -47,6 +47,29 @@ export function groqApiKeys(): string[] {
   return Array.from(new Set(keys))
 }
 
+export function geminiApiKeys(): string[] {
+  const keys = [
+    process.env.GEMINI_API_KEY,
+    process.env.GOOGLE_API_KEY,
+    process.env.NEXT_PUBLIC_GEMINI_API_KEY,
+    process.env.GEMINI_API_KEY_2,
+  ].filter(
+    (k): k is string => Boolean(k && k.trim() && !k.includes('placeholder') && k.length > 20)
+  )
+  return Array.from(new Set(keys))
+}
+
+export function openAiApiKeys(): string[] {
+  const keys = [
+    process.env.OPENAI_API_KEY,
+    process.env.OPENAI_KEY,
+    process.env.NEXT_PUBLIC_OPENAI_API_KEY,
+  ].filter(
+    (k): k is string => Boolean(k && k.trim() && !k.includes('placeholder') && k.startsWith('sk-'))
+  )
+  return Array.from(new Set(keys))
+}
+
 export const GROQ_FAST_MODEL = 'llama-3.3-70b-versatile'
 export const GROQ_STRONG_MODEL = 'llama-3.3-70b-versatile'
 export const GROQ_VISION_MODELS = [

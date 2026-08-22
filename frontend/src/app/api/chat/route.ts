@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { groqApiKeys, matchSimpleGreeting, needsLiveWebSearch, preferFastGroqModels, cleanAiResponse } from '@/lib/fastChat'
+import {
+  groqApiKeys,
+  geminiApiKeys,
+  openAiApiKeys,
+  matchSimpleGreeting,
+  needsLiveWebSearch,
+  preferFastGroqModels,
+  cleanAiResponse
+} from '@/lib/fastChat'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -309,31 +317,65 @@ async function callGroq(
   return null
 }
 
-async function fetchWikipedia(query: string): Promise<string | null> {
-  try {
-    const cleanTerm = query
-      .replace(/\[IMAGE:.*?\]/gi, '')
-      .replace(/\[(WORD|PDF|EXCEL|POWERPOINT|TEXT|CODE) DOCUMENT ATTACHED:.*?\][\s\S]*/gi, '')
-      .replace(/\[PERSISTENT USER BRAIN MEMORY\][\s\S]*/gi, '')
-      .replace(/\b(eleza|maana ya|ni nini|kwa lugha|rahisi|tafadhali|explain|what is|how does|define|meaning of|in simple terms|tell me about)\b/gi, '')
-      .trim() || query
+async function callGemini(message: string, mode: string): Promise<string | null> {
+  const keys = geminiApiKeys()
+  for (const key of keys) {
+    const models = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.0-flash-lite']
+    for (const model of models) {
+      try {
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 12000)
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ role: 'user', parts: [{ text: `${getModeSystemPrompt(mode)}\n\n${message}` }] }],
+            generationConfig: { temperature: 0.35, maxOutputTokens: 2048 }
+          }),
+          signal: controller.signal,
+          cache: 'no-store'
+        })
+        clearTimeout(timeoutId)
+        if (res.ok) {
+          const data = await res.json()
+          const raw = data.candidates?.[0]?.content?.parts?.[0]?.text
+          const clean = cleanAiResponse(raw || '')
+          if (clean) return clean
+        }
+      } catch { }
+    }
+  }
+  return null
+}
 
-    const searchRes = await fetch(
-      `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(cleanTerm.slice(0, 100))}&format=json`,
-      { headers: { 'User-Agent': 'Copetra-AI/2.0' }, cache: 'no-store' }
-    )
-    if (!searchRes.ok) return null
-    const searchData = await searchRes.json()
-    const topTitle = searchData.query?.search?.[0]?.title
-    if (!topTitle) return null
-    const summaryRes = await fetch(
-      `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(topTitle)}`,
-      { headers: { 'User-Agent': 'Copetra-AI/2.0' }, cache: 'no-store' }
-    )
-    if (!summaryRes.ok) return null
-    const data = await summaryRes.json()
-    if (data.extract) return `### 🌐 ${topTitle}\n\n${data.extract}\n\n*Verified by Copetra Academic Intelligence*`
-  } catch { }
+async function callOpenAi(message: string, mode: string): Promise<string | null> {
+  const keys = openAiApiKeys()
+  for (const key of keys) {
+    try {
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 12000)
+      const res = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [{ role: 'system', content: getModeSystemPrompt(mode) }, { role: 'user', content: message }],
+          temperature: 0.35,
+          max_tokens: 2048
+        }),
+        signal: controller.signal,
+        cache: 'no-store'
+      })
+      clearTimeout(timeoutId)
+      if (res.ok) {
+        const data = await res.json()
+        const raw = data.choices?.[0]?.message?.content
+        const clean = cleanAiResponse(raw || '')
+        if (clean) return clean
+      }
+    } catch { }
+  }
   return null
 }
 
@@ -403,7 +445,15 @@ export async function POST(req: NextRequest) {
   const groqAnswer = await callGroq(message, mode, history, webSearchResults)
   if (groqAnswer) return NextResponse.json({ response: groqAnswer })
 
-  // 2. Try Backend Master Agent
+  // 2. Try Direct Google Gemini
+  const geminiAnswer = await callGemini(message, mode)
+  if (geminiAnswer) return NextResponse.json({ response: geminiAnswer })
+
+  // 3. Try Direct OpenAI
+  const openAiAnswer = await callOpenAi(message, mode)
+  if (openAiAnswer) return NextResponse.json({ response: openAiAnswer })
+
+  // 4. Try Backend Master Agent
   try {
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000'
     const abortCtrl = new AbortController()
@@ -427,18 +477,17 @@ export async function POST(req: NextRequest) {
 
     if (backendRes.ok) {
       const data = await backendRes.json()
-      if (data.answer) return NextResponse.json({ response: data.answer, artifacts: data.artifacts })
+      if (data.answer) {
+        return NextResponse.json({
+          response: cleanAiResponse(data.answer),
+          artifacts: data.artifacts
+        })
+      }
     }
   } catch { }
 
-  // 3. Try Wikipedia live summary
-  if (!isDocumentMessage) {
-    const wikiAnswer = await fetchWikipedia(message)
-    if (wikiAnswer) return NextResponse.json({ response: wikiAnswer })
-  }
-
   return NextResponse.json({
-    response: `I couldn't generate a reliable answer for this request at this moment. Please check your connection and try again.`
+    response: `I couldn't generate a reliable answer for this request at this moment. Please check your network connection and try again.`
   })
 }
 
