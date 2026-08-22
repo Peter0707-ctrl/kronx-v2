@@ -358,7 +358,10 @@ async function callGemini(message: string, mode: string): Promise<string | null>
 
         const res = await fetch(url, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'X-goog-api-key': key
+          },
           body: JSON.stringify({
             contents: [{ role: 'user', parts }],
             generationConfig: { temperature: 0.35, maxOutputTokens: 2048 }

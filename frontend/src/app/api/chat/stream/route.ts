@@ -543,7 +543,10 @@ export async function POST(req: NextRequest) {
 
               const gRes = await fetch(gUrl, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                  'Content-Type': 'application/json',
+                  'X-goog-api-key': gKey
+                },
                 body: JSON.stringify({
                   contents: [{ role: 'user', parts }],
                   generationConfig: { temperature: 0.35, maxOutputTokens: 2048 }
