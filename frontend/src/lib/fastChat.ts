@@ -154,7 +154,8 @@ export function cleanAiResponse(text: string): string {
 
   // 3. Remove internal system/attachment tags if echoed
   cleaned = cleaned.replace(/\[IMAGE ATTACHMENT ANALYZED\]:[^\n]*/gi, '')
-  cleaned = cleaned.replace(/\[PERSISTENT USER BRAIN MEMORY\][\s\S]*?(?=\n\n|$)/gi, '')
+  cleaned = cleaned.replace(/\[PERSISTENT USER BRAIN MEMORY\][\s\S]*/gi, '')
+  cleaned = cleaned.replace(/\[FEEDBACK HISTORY\][\s\S]*/gi, '')
   cleaned = cleaned.replace(/\[REAL-TIME VERIFIED WEB SEARCH DATA\][\s\S]*?(?=\n\n|$)/gi, '')
   cleaned = cleaned.replace(/Key Constraints from System Prompt:[\s\S]*?(?=\n\n(?:[#A-Z0-9`]|```|\d+\.)|$)/gi, '')
 
@@ -430,17 +431,22 @@ $$6\\text{CO}_2 + 6\\text{H}_2\\text{O} \\xrightarrow{\\text{Sunlight + Chloroph
 
 export function matchImageGenerationRequest(query: string): { isImageGen: boolean; prompt: string; markdown: string } {
   if (!query) return { isImageGen: false, prompt: '', markdown: '' }
-  const clean = query
+  let clean = query
     .replace(/\[IMAGE:.*?\]/gi, '')
     .replace(/\[(WORD|PDF|EXCEL|POWERPOINT|TEXT|CODE) DOCUMENT ATTACHED:.*?\][\s\S]*/gi, '')
+    .replace(/\[PERSISTENT USER BRAIN MEMORY\][\s\S]*/gi, '')
+    .replace(/\[FEEDBACK HISTORY\][\s\S]*/gi, '')
+    .replace(/\[REAL-TIME VERIFIED WEB SEARCH DATA\][\s\S]*/gi, '')
+    .replace(/\[MEMORIZE:.*?\]/gi, '')
+    .replace(/\[VISUAL_SUMMARY:.*?\]/gi, '')
     .trim()
 
   const lower = clean.toLowerCase()
   const isGen =
-    /^(generate|create|draw|make|design|render|produce|tengeneza|chora|leta)\s+(an?\s+)?(image|picture|photo|illustration|art|drawing|picha|mchoro)\s+(of|about|ya|za|showing|depicting)?/i.test(
+    /^(generate|create|draw|make|design|render|produce|tengeneza|chora|leta)\s+(an?\s+)?(image|picture|photo|illustration|art|drawing|picha|mchoro)\s+(of|for|about|ya|za|showing|depicting)?/i.test(
       lower
     ) ||
-    /^(tengeneza|chora)\s+picha\s+(ya|za)?/i.test(lower) ||
+    /^(tengeneza|chora)\s+picha\s+(ya|za|kwa ajili ya)?/i.test(lower) ||
     /^(draw|paint)\s+(an?\s+)?(image|picture|photo|mchoro)/i.test(lower) ||
     /^(generate|create)\s+([a-zA-Z0-9\s]+)\s+(picture|image|photo|drawing)/i.test(lower)
 
@@ -448,13 +454,14 @@ export function matchImageGenerationRequest(query: string): { isImageGen: boolea
 
   let extractedPrompt = clean
     .replace(
-      /^(generate|create|draw|make|design|render|produce|tengeneza|chora|leta)\s+(an?\s+)?(image|picture|photo|illustration|art|drawing|picha|mchoro)\s+(of|about|ya|za|showing|depicting)?/i,
+      /^(generate|create|draw|make|design|render|produce|tengeneza|chora|leta)\s+(an?\s+)?(image|picture|photo|illustration|art|drawing|picha|mchoro)\s+(of|for|about|ya|za|showing|depicting)?/i,
       ''
     )
-    .replace(/^(tengeneza|chora)\s+picha\s+(ya|za)?/i, '')
+    .replace(/^(tengeneza|chora)\s+picha\s+(ya|za|kwa ajili ya)?/i, '')
     .replace(/^(draw|paint)\s+(an?\s+)?(image|picture|photo|mchoro)/i, '')
     .replace(/^(generate|create)\s+/i, '')
     .replace(/\s+(picture|image|photo|drawing)$/i, '')
+    .replace(/^(for|of|about)\s+/i, '')
     .trim()
 
   if (!extractedPrompt || extractedPrompt.length < 2) {
