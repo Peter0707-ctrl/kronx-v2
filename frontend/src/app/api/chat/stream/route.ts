@@ -565,53 +565,10 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // Provider 4: Private Ollama Cluster on Railway (Free, Dedicated LLM)
-      if (!streamedAny) {
-        const ollamaHosts = [
-          process.env.OLLAMA_URL,
-          'http://ollama.railway.internal:11434',
-          'http://127.0.0.1:11434'
-        ].filter(Boolean) as string[]
-
-        for (const host of ollamaHosts) {
-          if (streamedAny) break
-          try {
-            const abortCtrl = new AbortController()
-            const timeoutId = setTimeout(() => abortCtrl.abort(), 20000)
-            const oRes = await fetch(`${host}/api/chat`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                model: 'llama3.2:3b',
-                messages: [
-                  { role: 'system', content: getModeSystemPrompt(mode) },
-                  { role: 'user', content: message }
-                ],
-                stream: false,
-                options: { temperature: 0.35 }
-              }),
-              signal: abortCtrl.signal
-            })
-            clearTimeout(timeoutId)
-            if (oRes.ok) {
-              const oData = await oRes.json()
-              const rawText = oData.message?.content
-              const cleanText = cleanAiResponse(rawText || '')
-              if (cleanText) {
-                const clean = cleanText.replace(/\r/g, '').replace(/\n/g, '\\n')
-                controller.enqueue(encoder.encode(`data: ${clean}\n\n`))
-                streamedAny = true
-                break
-              }
-            }
-          } catch { }
-        }
-      }
-
-      // Provider 5: Backend Master Agent
+      // Provider 4: Backend Master Agent
       if (!streamedAny) {
         try {
-          const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://kronx-v2-production.up.railway.app'
+          const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000'
           const abortCtrl = new AbortController()
           const timeoutId = setTimeout(() => abortCtrl.abort(), 15000)
 

@@ -380,43 +380,6 @@ async function callOpenAi(message: string, mode: string): Promise<string | null>
   return null
 }
 
-async function callOllama(message: string, mode: string): Promise<string | null> {
-  const ollamaHosts = [
-    process.env.OLLAMA_URL,
-    'http://ollama.railway.internal:11434',
-    'http://127.0.0.1:11434'
-  ].filter(Boolean) as string[]
-
-  for (const host of ollamaHosts) {
-    try {
-      const abortCtrl = new AbortController()
-      const timeoutId = setTimeout(() => abortCtrl.abort(), 20000)
-      const res = await fetch(`${host}/api/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'llama3.2:3b',
-          messages: [
-            { role: 'system', content: getModeSystemPrompt(mode) },
-            { role: 'user', content: message }
-          ],
-          stream: false,
-          options: { temperature: 0.35 }
-        }),
-        signal: abortCtrl.signal
-      })
-      clearTimeout(timeoutId)
-      if (res.ok) {
-        const data = await res.json()
-        const rawText = data.message?.content
-        const clean = cleanAiResponse(rawText || '')
-        if (clean) return clean
-      }
-    } catch { }
-  }
-  return null
-}
-
 async function fetchWebSearch(query: string): Promise<string | null> {
   try {
     const cleanQuery = query
@@ -497,13 +460,9 @@ export async function POST(req: NextRequest) {
   const openAiAnswer = await callOpenAi(message, mode)
   if (openAiAnswer) return NextResponse.json({ response: openAiAnswer })
 
-  // 4. Try Private Dedicated Ollama Cluster on Railway
-  const ollamaAnswer = await callOllama(message, mode)
-  if (ollamaAnswer) return NextResponse.json({ response: ollamaAnswer })
-
-  // 5. Try Backend Master Agent
+  // 4. Try Backend Master Agent
   try {
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://kronx-v2-production.up.railway.app'
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000'
     const abortCtrl = new AbortController()
     const timeoutId = setTimeout(() => abortCtrl.abort(), 8000)
 
