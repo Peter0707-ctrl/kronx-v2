@@ -3,6 +3,7 @@ import {
   groqApiKeys,
   lastUserText,
   preferFastGroqModels,
+  cleanAiResponse,
 } from './fastChat'
 
 export type ChatMessage = { role: string; content: string }
@@ -44,13 +45,7 @@ function sleep(ms: number): Promise<void> {
 function groqOutputText(data: any): string {
   const msg = data?.choices?.[0]?.message ?? {}
   const content = typeof msg.content === 'string' ? msg.content : ''
-  const reasoning =
-    typeof msg.reasoning === 'string'
-      ? msg.reasoning
-      : typeof msg.reasoning_content === 'string'
-        ? msg.reasoning_content
-        : ''
-  return (content || reasoning || '').trim()
+  return cleanAiResponse(content)
 }
 
 function groqChatPayload(opts: {

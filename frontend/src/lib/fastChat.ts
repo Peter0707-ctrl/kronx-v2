@@ -42,11 +42,10 @@ export function groqApiKeys(): string[] {
 }
 
 export const GROQ_FAST_MODEL = 'llama-3.3-70b-versatile'
-export const GROQ_STRONG_MODEL = 'openai/gpt-oss-120b'
+export const GROQ_STRONG_MODEL = 'llama-3.3-70b-versatile'
 export const GROQ_VISION_MODELS = [
   'llama-3.2-11b-vision-preview',
-  'llama-3.2-90b-vision-preview',
-  'qwen/qwen3.6-27b'
+  'llama-3.2-90b-vision-preview'
 ]
 
 export function preferFastGroqModels(opts: {
@@ -58,24 +57,14 @@ export function preferFastGroqModels(opts: {
     return [
       'llama-3.2-11b-vision-preview',
       'llama-3.2-90b-vision-preview',
-      'qwen/qwen3.6-27b',
-      'openai/gpt-oss-120b',
       'llama-3.3-70b-versatile'
-    ]
-  }
-  if (opts.document || opts.long) {
-    return [
-      'llama-3.3-70b-versatile',
-      'openai/gpt-oss-120b',
-      'llama-3.1-8b-instant',
-      'openai/gpt-oss-20b'
     ]
   }
   return [
     'llama-3.3-70b-versatile',
-    'openai/gpt-oss-120b',
     'llama-3.1-8b-instant',
-    'openai/gpt-oss-20b'
+    'mixtral-8x7b-32768',
+    'gemma2-9b-it'
   ]
 }
 
@@ -89,7 +78,33 @@ export function needsLiveWebSearch(query: string): boolean {
   if (!clean || clean.length < 8) return false
   if (matchSimpleGreeting(clean)) return false
 
-  return /\b(current|latest|today|news|weather|president|election|score|winner|price|rate|release)\b/i.test(
+  return /\b(current news|breaking news|live score|today's weather|current price of|who is the current (president|prime minister|ceo)|election results? (2025|2026)|match score)\b/i.test(
     clean
   )
+}
+
+/** 
+ * Authoritative response cleaner: removes all thinking processes, internal headers,
+ * system prompt echoes, and reasoning traces to guarantee 100% brand protection and direct answers.
+ */
+export function cleanAiResponse(text: string): string {
+  if (!text) return ''
+  let cleaned = text
+
+  // 1. Remove XML/think/reasoning tags
+  cleaned = cleaned.replace(/<think>[\s\S]*?(?:<\/think>|$)/gi, '')
+  cleaned = cleaned.replace(/<reasoning>[\s\S]*?(?:<\/reasoning>|$)/gi, '')
+
+  // 2. Remove plain-text thinking process blocks
+  cleaned = cleaned.replace(/^Here('?s| is) a thinking process:[\s\S]*?(?=\n\n(?:[#A-Z0-9`]|```|\d+\.)|$)/gi, '')
+  cleaned = cleaned.replace(/^Thinking Process:[\s\S]*?(?=\n\n(?:[#A-Z0-9`]|```|\d+\.)|$)/gi, '')
+  cleaned = cleaned.replace(/^Here is my thought process:[\s\S]*?(?=\n\n(?:[#A-Z0-9`]|```|\d+\.)|$)/gi, '')
+
+  // 3. Remove internal system/attachment tags if echoed
+  cleaned = cleaned.replace(/\[IMAGE ATTACHMENT ANALYZED\]:[^\n]*/gi, '')
+  cleaned = cleaned.replace(/\[PERSISTENT USER BRAIN MEMORY\][\s\S]*?(?=\n\n|$)/gi, '')
+  cleaned = cleaned.replace(/\[REAL-TIME VERIFIED WEB SEARCH DATA\][\s\S]*?(?=\n\n|$)/gi, '')
+  cleaned = cleaned.replace(/Key Constraints from System Prompt:[\s\S]*?(?=\n\n(?:[#A-Z0-9`]|```|\d+\.)|$)/gi, '')
+
+  return cleaned.trim()
 }

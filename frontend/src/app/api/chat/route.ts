@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { groqApiKeys, matchSimpleGreeting, needsLiveWebSearch, preferFastGroqModels } from '@/lib/fastChat'
+import { groqApiKeys, matchSimpleGreeting, needsLiveWebSearch, preferFastGroqModels, cleanAiResponse } from '@/lib/fastChat'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -297,7 +297,7 @@ async function callGroq(
           const data = await res.json()
           let text = data.choices?.[0]?.message?.content?.trim()
           if (text) {
-            text = text.replace(/<think>[\s\S]*?(?:<\/think>|$)/gi, '').trim()
+            text = cleanAiResponse(text)
             if (text) return text
           }
         }

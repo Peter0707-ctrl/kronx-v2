@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-
-import { groqApiKeys, matchSimpleGreeting, needsLiveWebSearch, preferFastGroqModels } from '@/lib/fastChat'
+import { groqApiKeys, matchSimpleGreeting, needsLiveWebSearch, preferFastGroqModels, cleanAiResponse } from '@/lib/fastChat'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -399,7 +398,6 @@ export async function POST(req: NextRequest) {
                 temperature: 0.35,
                 top_p: 0.9,
                 stream: true,
-                ...(model.includes('gpt-oss') ? { reasoning_effort: 'low' } : {}),
               }),
               signal: abortCtrl.signal,
               cache: 'no-store',
@@ -411,6 +409,8 @@ export async function POST(req: NextRequest) {
               const reader = groqRes.body.getReader()
               const decoder = new TextDecoder('utf-8')
               let buffer = ''
+              let inThinkingBlock = false
+              let rawStreamedAccumulator = ''
 
               while (true) {
                 const { done, value } = await reader.read()
@@ -428,7 +428,37 @@ export async function POST(req: NextRequest) {
                     const parsed = JSON.parse(jsonStr)
                     const token = parsed.choices?.[0]?.delta?.content
                     if (token) {
-                      if (token.includes('<think>') || token.includes('</think>')) continue
+                      rawStreamedAccumulator += token
+                      const lowerAcc = rawStreamedAccumulator.toLowerCase()
+
+                      if (
+                        token.includes('<think>') ||
+                        token.includes('<reasoning>') ||
+                        lowerAcc.includes("here's a thinking process") ||
+                        lowerAcc.includes("thinking process:") ||
+                        lowerAcc.includes("key constraints from system prompt")
+                      ) {
+                        inThinkingBlock = true
+                      }
+
+                      if (
+                        token.includes('</think>') ||
+                        token.includes('</reasoning>') ||
+                        (inThinkingBlock && (
+                          token.includes('```') ||
+                          token.includes('###') ||
+                          token.includes('\n\n1.') ||
+                          token.includes('def ') ||
+                          token.includes('import ') ||
+                          token.includes('Here is')
+                        ))
+                      ) {
+                        inThinkingBlock = false
+                        continue
+                      }
+
+                      if (inThinkingBlock) continue
+
                       streamedAny = true
                       const clean = token.replace(/\r/g, '').replace(/\n/g, '\\n')
                       controller.enqueue(encoder.encode(`data: ${clean}\n\n`))

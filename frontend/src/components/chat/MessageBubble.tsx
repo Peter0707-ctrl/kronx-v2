@@ -15,6 +15,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import JSZip from 'jszip'
 import { useKronxStore } from '@/store/useKronxStore'
+import { cleanAiResponse } from '@/lib/fastChat'
 
 function getExtensionForLang(lang?: string): string {
   const l = (lang || '').toLowerCase()
@@ -709,8 +710,8 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
     }
     displayContent = raw.trim()
   } else {
-    // Strip <think>...</think> reasoning traces from output so user receives clean, direct answers
-    displayContent = displayContent.replace(/<think>[\s\S]*?(?:<\/think>|$)/gi, '').trim()
+    // Thoroughly clean reasoning, think headers, and prompt traces
+    displayContent = cleanAiResponse(displayContent)
   }
 
   // Check if AI response has multiple/any code blocks for project ZIP download
