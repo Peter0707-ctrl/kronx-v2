@@ -490,7 +490,7 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // Provider 2: Google Gemini Cloud
+      // Provider 2: Google Gemini Cloud (Native Multimodal Vision & Academic Reasoning)
       if (!streamedAny) {
         const geminiKeys = geminiApiKeys()
         for (const gKey of geminiKeys) {
@@ -500,13 +500,34 @@ export async function POST(req: NextRequest) {
             if (streamedAny) break
             try {
               const abortCtrl = new AbortController()
-              const timeoutId = setTimeout(() => abortCtrl.abort(), 15000)
+              const timeoutId = setTimeout(() => abortCtrl.abort(), 20000)
               const gUrl = `https://generativelanguage.googleapis.com/v1beta/models/${gModel}:generateContent?key=${gKey}`
+              
+              // Build multimodal contents with inline_data for attached images
+              const parts: any[] = []
+              const imageMatch = message.match(/\[IMAGE:(data:image\/([a-zA-Z0-9+]+);base64,([^\]]+))\]/i)
+              const cleanText = message.replace(/\[IMAGE:[^\]]+\]/gi, '').trim()
+
+              parts.push({
+                text: `${getModeSystemPrompt(mode)}\n\nUser Request: ${cleanText || 'Please analyze this attached image in detail.'}`
+              })
+
+              if (imageMatch) {
+                const rawSub = imageMatch[2].toLowerCase()
+                const mimeType = `image/${rawSub === 'jpg' ? 'jpeg' : rawSub}`
+                parts.push({
+                  inline_data: {
+                    mime_type: mimeType,
+                    data: imageMatch[3]
+                  }
+                })
+              }
+
               const gRes = await fetch(gUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                  contents: [{ role: 'user', parts: [{ text: `${getModeSystemPrompt(mode)}\n\n${message}` }] }],
+                  contents: [{ role: 'user', parts }],
                   generationConfig: { temperature: 0.35, maxOutputTokens: 2048 }
                 }),
                 signal: abortCtrl.signal,
@@ -516,9 +537,9 @@ export async function POST(req: NextRequest) {
               if (gRes.ok) {
                 const gData = await gRes.json()
                 const rawText = gData.candidates?.[0]?.content?.parts?.[0]?.text
-                const cleanText = cleanAiResponse(rawText || '')
-                if (cleanText) {
-                  const clean = cleanText.replace(/\r/g, '').replace(/\n/g, '\\n')
+                const cleanTextResult = cleanAiResponse(rawText || '')
+                if (cleanTextResult) {
+                  const clean = cleanTextResult.replace(/\r/g, '').replace(/\n/g, '\\n')
                   controller.enqueue(encoder.encode(`data: ${clean}\n\n`))
                   streamedAny = true
                   break

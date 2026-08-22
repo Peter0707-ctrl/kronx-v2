@@ -325,13 +325,34 @@ async function callGemini(message: string, mode: string): Promise<string | null>
     for (const model of models) {
       try {
         const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), 12000)
+        const timeoutId = setTimeout(() => controller.abort(), 20000)
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`
+        
+        // Build multimodal contents with inline_data for attached images
+        const parts: any[] = []
+        const imageMatch = message.match(/\[IMAGE:(data:image\/([a-zA-Z0-9+]+);base64,([^\]]+))\]/i)
+        const cleanText = message.replace(/\[IMAGE:[^\]]+\]/gi, '').trim()
+
+        parts.push({
+          text: `${getModeSystemPrompt(mode)}\n\nUser Request: ${cleanText || 'Please analyze this attached image in detail.'}`
+        })
+
+        if (imageMatch) {
+          const rawSub = imageMatch[2].toLowerCase()
+          const mimeType = `image/${rawSub === 'jpg' ? 'jpeg' : rawSub}`
+          parts.push({
+            inline_data: {
+              mime_type: mimeType,
+              data: imageMatch[3]
+            }
+          })
+        }
+
         const res = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            contents: [{ role: 'user', parts: [{ text: `${getModeSystemPrompt(mode)}\n\n${message}` }] }],
+            contents: [{ role: 'user', parts }],
             generationConfig: { temperature: 0.35, maxOutputTokens: 2048 }
           }),
           signal: controller.signal,
