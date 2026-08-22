@@ -8,7 +8,8 @@ import {
   needsLiveWebSearch,
   preferFastGroqModels,
   cleanAiResponse,
-  solveDeterministically
+  solveDeterministically,
+  matchImageGenerationRequest
 } from '@/lib/fastChat'
 
 export const dynamic = 'force-dynamic'
@@ -498,6 +499,12 @@ export async function POST(req: NextRequest) {
   const detSolution = solveDeterministically(message, mode, 'en')
   if (detSolution.matched && detSolution.answer) {
     return NextResponse.json({ response: detSolution.answer })
+  }
+
+  // Image Generation Request in Chat: Instant Neural Canvas Renderer
+  const imgGen = matchImageGenerationRequest(message)
+  if (imgGen.isImageGen && imgGen.markdown) {
+    return NextResponse.json({ response: imgGen.markdown })
   }
 
   // 1. Try Direct Groq call (Fastest path)

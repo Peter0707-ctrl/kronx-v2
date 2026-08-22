@@ -7,7 +7,8 @@ import {
   needsLiveWebSearch,
   preferFastGroqModels,
   cleanAiResponse,
-  solveDeterministically
+  solveDeterministically,
+  matchImageGenerationRequest
 } from '@/lib/fastChat'
 
 export const dynamic = 'force-dynamic'
@@ -362,6 +363,16 @@ export async function POST(req: NextRequest) {
       const detSolution = solveDeterministically(message, mode, 'en')
       if (detSolution.matched && detSolution.answer) {
         const clean = detSolution.answer.replace(/\r/g, '').replace(/\n/g, '\\n')
+        controller.enqueue(encoder.encode(`data: ${clean}\n\n`))
+        controller.enqueue(encoder.encode('data: [DONE]\n\n'))
+        controller.close()
+        return
+      }
+
+      // Image Generation Request in Chat: Instant Neural Canvas Renderer
+      const imgGen = matchImageGenerationRequest(message)
+      if (imgGen.isImageGen && imgGen.markdown) {
+        const clean = imgGen.markdown.replace(/\r/g, '').replace(/\n/g, '\\n')
         controller.enqueue(encoder.encode(`data: ${clean}\n\n`))
         controller.enqueue(encoder.encode('data: [DONE]\n\n'))
         controller.close()
