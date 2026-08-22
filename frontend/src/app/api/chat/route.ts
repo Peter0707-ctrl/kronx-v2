@@ -380,6 +380,41 @@ async function callOpenAi(message: string, mode: string): Promise<string | null>
   return null
 }
 
+async function callOllama(message: string, mode: string): Promise<string | null> {
+  const hosts = [
+    process.env.OLLAMA_URL,
+    process.env.OLLAMA_HOST,
+    'http://ollama.railway.internal:11434',
+    'http://ollama:11434',
+    'http://127.0.0.1:11434'
+  ].filter(Boolean) as string[]
+
+  for (const host of hosts) {
+    try {
+      const abortCtrl = new AbortController()
+      const timeoutId = setTimeout(() => abortCtrl.abort(), 10000)
+      const res = await fetch(`${host}/api/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'llama3:latest',
+          prompt: `${getModeSystemPrompt(mode)}\n\nUser Question: ${message}\n\nAnswer:`,
+          stream: false
+        }),
+        signal: abortCtrl.signal,
+        cache: 'no-store'
+      })
+      clearTimeout(timeoutId)
+      if (res.ok) {
+        const data = await res.json()
+        const clean = cleanAiResponse(data.response || '')
+        if (clean) return clean
+      }
+    } catch { }
+  }
+  return null
+}
+
 async function fetchWebSearch(query: string): Promise<string | null> {
   try {
     const cleanQuery = query
@@ -460,7 +495,11 @@ export async function POST(req: NextRequest) {
   const openAiAnswer = await callOpenAi(message, mode)
   if (openAiAnswer) return NextResponse.json({ response: openAiAnswer })
 
-  // 4. Try Backend Master Agent
+  // 4. Try Ollama (Railway Internal & Local)
+  const ollamaAnswer = await callOllama(message, mode)
+  if (ollamaAnswer) return NextResponse.json({ response: ollamaAnswer })
+
+  // 5. Try Backend Master Agent
   try {
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000'
     const abortCtrl = new AbortController()

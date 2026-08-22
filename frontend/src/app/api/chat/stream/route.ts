@@ -565,7 +565,49 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // Provider 4: Backend Master Agent
+      // Provider 4: Ollama (Railway Private Network & Local)
+      if (!streamedAny) {
+        const ollamaHosts = [
+          process.env.OLLAMA_URL,
+          process.env.OLLAMA_HOST,
+          'http://ollama.railway.internal:11434',
+          'http://ollama:11434',
+          'http://127.0.0.1:11434'
+        ].filter(Boolean) as string[]
+
+        for (const host of ollamaHosts) {
+          if (streamedAny) break
+          try {
+            const abortCtrl = new AbortController()
+            const timeoutId = setTimeout(() => abortCtrl.abort(), 12000)
+            const oRes = await fetch(`${host}/api/generate`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                model: 'llama3:latest',
+                prompt: `${getModeSystemPrompt(mode)}\n\nUser Question: ${message}\n\nAnswer:`,
+                stream: false
+              }),
+              signal: abortCtrl.signal,
+              cache: 'no-store'
+            })
+            clearTimeout(timeoutId)
+            if (oRes.ok) {
+              const oData = await oRes.json()
+              const rawText = oData.response
+              const cleanText = cleanAiResponse(rawText || '')
+              if (cleanText) {
+                const clean = cleanText.replace(/\r/g, '').replace(/\n/g, '\\n')
+                controller.enqueue(encoder.encode(`data: ${clean}\n\n`))
+                streamedAny = true
+                break
+              }
+            }
+          } catch { }
+        }
+      }
+
+      // Provider 5: Backend Master Agent
       if (!streamedAny) {
         try {
           const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000'
