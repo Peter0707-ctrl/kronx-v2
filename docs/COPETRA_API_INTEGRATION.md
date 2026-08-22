@@ -38,7 +38,7 @@ Users with **Developer API granted** (or `admin` role) receive **unlimited app-s
 - You may send a high `max_tokens` (e.g. `8192`)
 - Provider (upstream model) limits may still apply
 
-Non-granted accounts cannot **create** keys in the UI (`403 developer_not_granted`), but any **active** `cpk_` key works with **unlimited tokens** and no app-side rate limits.
+Non-granted accounts cannot call the API or create keys (`403 developer_not_granted`). Granted developers receive **unlimited app-side token quotas**.
 
 ---
 

@@ -46,6 +46,9 @@ export function apiError(
 }
 
 function mapKeyRow(row: any): ApiKeyRecord {
+  const isGranted =
+    Boolean(row.is_developer) || String(row.role || '').toLowerCase() === 'admin'
+
   return {
     id: row.id,
     userId: row.user_id,
@@ -60,7 +63,7 @@ function mapKeyRow(row: any): ApiKeyRecord {
     userName: row.user_name,
     isDeveloper: row.is_developer,
     role: row.role,
-    apiUnlimitedTokens: true,
+    apiUnlimitedTokens: isGranted,
   }
 }
 
@@ -142,7 +145,17 @@ export async function authenticateApiKey(req: NextRequest): Promise<
     }
   }
 
-  // Active project key = authorized. No extra developer flag check at call time.
+  if (!row.is_developer && row.role !== 'admin') {
+    return {
+      ok: false,
+      response: apiError(
+        'Developer access is not granted for this account. Ask an admin to enable API access.',
+        403,
+        'developer_not_granted'
+      ),
+    }
+  }
+
   pool
     .query(`UPDATE api_keys SET last_used_at = NOW() WHERE id = $1`, [row.id])
     .catch(() => {})

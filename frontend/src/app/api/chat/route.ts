@@ -1,34 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+import { groqApiKeys, matchSimpleGreeting, needsLiveWebSearch, preferFastGroqModels } from '@/lib/fastChat'
+
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-// Greetings-only hardcoded table — fires ONLY when the message is a pure standalone greeting.
-// Any message with a question, topic, or extra content goes directly to the LLM.
-const GREETINGS: Record<string, string> = {
-  "hello":        `Hello! 👋 Welcome to **Copetra AI**! How can I help you today?`,
-  "hi":           `Hi there! 👋 How can I assist you today?`,
-  "hey":          `Hey! 👋 What can I do for you?`,
-  "habari":       `Habari njema! 👋 Karibu **Copetra AI**! Ninaweza kukusaidia nini leo?`,
-  "habari yako":  `Nzuri sana! 👋 Karibu! Una swali gani leo?`,
-  "habari za leo":`Salama! 👋 Karibu **Copetra AI**! Una swali gani leo?`,
-  "mambo":        `Poa sana! 🤙 Karibu **Copetra AI**! Unaweza kuniuliza chochote.`,
-  "mambo vipi":   `Poa kabisa! 🤙 Karibu! Nikusaidie nini?`,
-  "niaje":        `Poa! 🤙 Nikusaidie nini leo?`,
-  "shikamoo":     `Marahaba! 🙇 Karibu sana **Copetra AI**! Nikusaidie nini?`,
-  "jambo":        `Jambo! 👋 Karibu **Copetra AI**! Una swali gani?`,
-  "sasa":         `Sasa hivi! 👋 Nikusaidie nini leo?`,
-  "sasa hivi":    `Fiti! 👋 Karibu **Copetra AI**! Nikusaidie nini?`,
-  "za uzima":     `Salama kabisa! 👋 Nikusaidie nini leo?`,
-  "who are you":  `I am **Copetra AI** 🤖, your AI Assistant powered by **PJ COPETRANOVA**. How can I help you?`,
-  "wewe ni nani": `Mimi ni **Copetra AI** 🤖, msaidizi wako wa AI uliotengenezwa na **PJ COPETRANOVA**. Nikusaidie nini?`,
-}
-
-// Returns a greeting ONLY if the entire message is a pure greeting — no questions, no topics attached.
 function matchGreeting(query: string): string | null {
-  if (!query) return null
-  const q = query.toLowerCase().trim().replace(/[!?.،,]+$/, '').trim()
-  return GREETINGS[q] ?? null
+  return matchSimpleGreeting(query)
 }
 
 
@@ -264,11 +242,7 @@ function buildGroqMessages(
   return messages
 }
 
-const GROQ_API_KEYS = [
-  process.env.GROQ_API_KEY,
-  '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',
-  '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'
-].filter(Boolean) as string[]
+const GROQ_API_KEYS = groqApiKeys()
 
 async function callGroq(
   message: string,
@@ -284,27 +258,17 @@ async function callGroq(
   const hasVision = groqMessages.some(m => Array.isArray(m.content)) || message.includes('[IMAGE:')
   const isDocument = message.includes('DOCUMENT ATTACHED:') || message.includes('FILE ATTACHED:')
 
-  const models = hasVision
-    ? ['llama-3.2-11b-vision-preview', 'llama-3.2-90b-vision-preview']
-    : isDocument
-    ? [
-        'llama-3.3-70b-versatile',
-        'llama-3.1-8b-instant',
-        'gemma2-9b-it',
-        'mixtral-8x7b-32768'
-      ]
-    : [
-        'llama-3.3-70b-versatile',
-        'llama-3.1-8b-instant',
-        'gemma2-9b-it',
-        'mixtral-8x7b-32768'
-      ]
+  const models = preferFastGroqModels({
+    vision: hasVision,
+    document: isDocument,
+    long: isDocument || message.length > 800,
+  })
 
   for (const apiKey of keys) {
     for (const model of models) {
       try {
         const controller = new AbortController()
-        const timeoutMs = model.includes('70b') || model.includes('90b') ? 20000 : 8000
+        const timeoutMs = model.includes('120b') || model.includes('70b') || model.includes('90b') ? 20000 : 12000
         const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
 
         const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -317,9 +281,11 @@ async function callGroq(
             model,
             messages: groqMessages,
             max_tokens: 2048,
+            max_completion_tokens: 2048,
             temperature: 0.35,
             top_p: 0.9,
             stream: false,
+            ...(model.includes('gpt-oss') ? { reasoning_effort: 'low' } : {}),
           }),
           signal: controller.signal,
           cache: 'no-store',
