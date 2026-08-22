@@ -322,7 +322,14 @@ async function callGroq(
 async function callGemini(message: string, mode: string): Promise<string | null> {
   const keys = geminiApiKeys()
   for (const key of keys) {
-    const models = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.0-flash-lite']
+    const models = [
+      'gemini-3.6-flash',
+      'gemini-3.7-flash',
+      'gemini-flash-latest',
+      'gemini-3.5-flash',
+      'gemini-2.5-flash',
+      'gemini-2.0-flash'
+    ]
     for (const model of models) {
       try {
         const controller = new AbortController()

@@ -506,7 +506,14 @@ export async function POST(req: NextRequest) {
         const geminiKeys = geminiApiKeys()
         for (const gKey of geminiKeys) {
           if (streamedAny) break
-          const geminiModels = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.0-flash-lite']
+          const geminiModels = [
+            'gemini-3.6-flash',
+            'gemini-3.7-flash',
+            'gemini-flash-latest',
+            'gemini-3.5-flash',
+            'gemini-2.5-flash',
+            'gemini-2.0-flash'
+          ]
           for (const gModel of geminiModels) {
             if (streamedAny) break
             try {
