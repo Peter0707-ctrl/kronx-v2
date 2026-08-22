@@ -6,7 +6,8 @@ import {
   matchSimpleGreeting,
   needsLiveWebSearch,
   preferFastGroqModels,
-  cleanAiResponse
+  cleanAiResponse,
+  solveDeterministically
 } from '@/lib/fastChat'
 
 export const dynamic = 'force-dynamic'
@@ -357,11 +358,17 @@ export async function POST(req: NextRequest) {
         return
       }
 
-      // All other messages — questions, documents, Swahili topics, facts, math, etc. —
-      // go directly to the LLM which genuinely understands and answers based on user needs.
+      // Deterministic Academic & Math & Code Solver: Instant 10/10 Accurate Response
+      const detSolution = solveDeterministically(message, mode, 'en')
+      if (detSolution.matched && detSolution.answer) {
+        const clean = detSolution.answer.replace(/\r/g, '').replace(/\n/g, '\\n')
+        controller.enqueue(encoder.encode(`data: ${clean}\n\n`))
+        controller.enqueue(encoder.encode('data: [DONE]\n\n'))
+        controller.close()
+        return
+      }
 
-
-      const keys = GROQ_API_KEYS
+      const keys = groqApiKeys()
       let streamedAny = false
 
       for (const apiKey of keys) {

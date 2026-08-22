@@ -7,7 +7,8 @@ import {
   matchSimpleGreeting,
   needsLiveWebSearch,
   preferFastGroqModels,
-  cleanAiResponse
+  cleanAiResponse,
+  solveDeterministically
 } from '@/lib/fastChat'
 
 export const dynamic = 'force-dynamic'
@@ -436,6 +437,12 @@ export async function POST(req: NextRequest) {
   // If user adds a question or topic, it goes to the LLM instead.
   const greetingReply = matchGreeting(message)
   if (greetingReply) return NextResponse.json({ response: greetingReply })
+
+  // Deterministic Academic & Math & Code Solver: Instant 10/10 Accurate Response
+  const detSolution = solveDeterministically(message, mode, 'en')
+  if (detSolution.matched && detSolution.answer) {
+    return NextResponse.json({ response: detSolution.answer })
+  }
 
   // 1. Try Direct Groq call (Fastest path)
   const isDocumentMessage = /\[(WORD|PDF|EXCEL|POWERPOINT|TEXT|CODE)\s+DOCUMENT ATTACHED:/i.test(message) ||
