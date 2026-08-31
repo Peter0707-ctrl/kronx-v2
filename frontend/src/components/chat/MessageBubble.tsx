@@ -673,17 +673,35 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
       textToSpeak = "Uchambuzi umekamilika. Hakuna maelezo ya ziada ya kusoma."
     }
 
-    // 2. Sentence chunking to bypass Chrome/Edge/Safari 200-word limit on long file analyses
-    const sentences = textToSpeak.match(/[^.!?\n]+[.!?\n]+|[^.!?\n]+$/g) || [textToSpeak]
+    // 2. Granular sentence & clause chunking (max 120 chars) to prevent Chrome 14s watchdog lockup
+    const rawSentences = textToSpeak.match(/[^.,!?;:\n]+[.,!?;:\n]+|[^.,!?;:\n]+$/g) || [textToSpeak]
     const chunks: string[] = []
     let currentChunk = ''
 
-    for (const s of sentences) {
-      if ((currentChunk + s).length < 200) {
-        currentChunk += ' ' + s.trim()
+    for (const seg of rawSentences) {
+      const trimmed = seg.trim()
+      if (!trimmed) continue
+      if ((currentChunk + ' ' + trimmed).length < 120) {
+        currentChunk = (currentChunk + ' ' + trimmed).trim()
       } else {
-        if (currentChunk.trim()) chunks.push(currentChunk.trim())
-        currentChunk = s.trim()
+        if (currentChunk) chunks.push(currentChunk)
+        // If a single segment is itself > 120 chars, split by words
+        if (trimmed.length > 120) {
+          const words = trimmed.split(' ')
+          let subChunk = ''
+          for (const w of words) {
+            if ((subChunk + ' ' + w).length < 120) {
+              subChunk = (subChunk + ' ' + w).trim()
+            } else {
+              if (subChunk) chunks.push(subChunk)
+              subChunk = w
+            }
+          }
+          if (subChunk) chunks.push(subChunk)
+          currentChunk = ''
+        } else {
+          currentChunk = trimmed
+        }
       }
     }
     if (currentChunk.trim()) chunks.push(currentChunk.trim())
@@ -701,7 +719,10 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
     let chunkIndex = 0
     setIsSpeaking(true)
 
-    // Keep-alive timer for Chromium
+    // Store global references to prevent Chrome V8 Garbage Collection drops
+    ;(window as any).__activeTTSList = []
+
+    // High-frequency Keep-Alive timer (every 4 seconds) to prevent Chromium background stall
     const keepAlive = setInterval(() => {
       if (!window.speechSynthesis.speaking) {
         clearInterval(keepAlive)
@@ -709,7 +730,7 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
         window.speechSynthesis.pause()
         window.speechSynthesis.resume()
       }
-    }, 10000)
+    }, 4000)
 
     const speakNextChunk = () => {
       if (chunkIndex >= chunks.length) {
@@ -724,25 +745,45 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
       const utterance = new SpeechSynthesisUtterance(chunkText)
       if (selectedVoice) utterance.voice = selectedVoice
       utterance.lang = selectedVoice ? selectedVoice.lang : (isSwahili ? 'sw-TZ' : 'en-US')
-      utterance.rate = 1.0
+      utterance.rate = 1.05
       utterance.pitch = 1.0
 
+      ;(window as any).__activeTTSList.push(utterance)
+
+      let hasEnded = false
+
+      // Fallback timer: if Chrome drops the onend event, auto-advance so speech never freezes
+      const wordsCount = chunkText.split(/\s+/).length
+      const maxEstimatedTimeMs = Math.max(3000, (wordsCount / 2.0) * 1000 + 2000)
+      const safetyTimer = setTimeout(() => {
+        if (!hasEnded) {
+          hasEnded = true
+          speakNextChunk()
+        }
+      }, maxEstimatedTimeMs)
+
       utterance.onend = () => {
-        speakNextChunk()
+        if (!hasEnded) {
+          hasEnded = true
+          clearTimeout(safetyTimer)
+          speakNextChunk()
+        }
       }
 
       utterance.onerror = (e) => {
         console.warn('[SpeechSynthesis Error on chunk]', e)
-        if (chunkIndex < chunks.length) {
-          speakNextChunk()
-        } else {
-          setIsSpeaking(false)
-          clearInterval(keepAlive)
+        if (!hasEnded) {
+          hasEnded = true
+          clearTimeout(safetyTimer)
+          if (chunkIndex < chunks.length) {
+            speakNextChunk()
+          } else {
+            setIsSpeaking(false)
+            clearInterval(keepAlive)
+          }
         }
       }
 
-      // Store reference on window to prevent Chrome garbage-collection drop bug
-      ;(window as any).__currentUtterance = utterance
       window.speechSynthesis.speak(utterance)
     }
 
