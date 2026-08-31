@@ -654,17 +654,99 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
     }
 
     window.speechSynthesis.cancel()
-    const textToSpeak = message.content.replace(/[*_#`~>]/g, '')
-    const utterance = new SpeechSynthesisUtterance(textToSpeak)
+
+    // 1. Thoroughly sanitize markdown, file attachment headers, code blocks, images, and tables
+    let textToSpeak = message.content
+      .replace(/\[IMAGE:[\s\S]*?\]/gi, '')
+      .replace(/\[[A-Z\s]+DOCUMENT ATTACHED:[\s\S]*?\]/gi, '')
+      .replace(/Document Content:[\s\S]*?(?=\n\n|\n[A-Z]|$)/gi, '')
+      .replace(/```[\s\S]*?```/g, ' [Code Block] ')
+      .replace(/`([^`]+)`/g, '$1')
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      .replace(/[*_#~>]/g, '')
+      .replace(/\|[^\n]+\|/g, '') // remove table rows
+      .replace(/\${1,2}[^$]+\${1,2}/g, ' [Formula] ')
+      .replace(/\s+/g, ' ')
+      .trim()
+
+    if (!textToSpeak) {
+      textToSpeak = "Uchambuzi umekamilika. Hakuna maelezo ya ziada ya kusoma."
+    }
+
+    // 2. Sentence chunking to bypass Chrome/Edge/Safari 200-word limit on long file analyses
+    const sentences = textToSpeak.match(/[^.!?\n]+[.!?\n]+|[^.!?\n]+$/g) || [textToSpeak]
+    const chunks: string[] = []
+    let currentChunk = ''
+
+    for (const s of sentences) {
+      if ((currentChunk + s).length < 200) {
+        currentChunk += ' ' + s.trim()
+      } else {
+        if (currentChunk.trim()) chunks.push(currentChunk.trim())
+        currentChunk = s.trim()
+      }
+    }
+    if (currentChunk.trim()) chunks.push(currentChunk.trim())
+
+    // 3. Resolve best voice (Swahili if available, otherwise clear Natural English fallback)
+    const voices = window.speechSynthesis.getVoices()
     const currentState = useKronxStore.getState()
-    utterance.lang = currentState.language === 'sw' ? 'sw-TZ' : 'en-US'
-    utterance.rate = 1.0
+    const isSwahili = currentState.language === 'sw'
+    
+    let selectedVoice = voices.find(v => v.lang.startsWith('sw')) ||
+      voices.find(v => v.lang.includes('en-US') && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Online'))) ||
+      voices.find(v => v.lang.startsWith('en')) ||
+      voices[0]
 
-    utterance.onstart = () => setIsSpeaking(true)
-    utterance.onend = () => setIsSpeaking(false)
-    utterance.onerror = () => setIsSpeaking(false)
+    let chunkIndex = 0
+    setIsSpeaking(true)
 
-    window.speechSynthesis.speak(utterance)
+    // Keep-alive timer for Chromium
+    const keepAlive = setInterval(() => {
+      if (!window.speechSynthesis.speaking) {
+        clearInterval(keepAlive)
+      } else {
+        window.speechSynthesis.pause()
+        window.speechSynthesis.resume()
+      }
+    }, 10000)
+
+    const speakNextChunk = () => {
+      if (chunkIndex >= chunks.length) {
+        setIsSpeaking(false)
+        clearInterval(keepAlive)
+        return
+      }
+
+      const chunkText = chunks[chunkIndex]
+      chunkIndex++
+
+      const utterance = new SpeechSynthesisUtterance(chunkText)
+      if (selectedVoice) utterance.voice = selectedVoice
+      utterance.lang = selectedVoice ? selectedVoice.lang : (isSwahili ? 'sw-TZ' : 'en-US')
+      utterance.rate = 1.0
+      utterance.pitch = 1.0
+
+      utterance.onend = () => {
+        speakNextChunk()
+      }
+
+      utterance.onerror = (e) => {
+        console.warn('[SpeechSynthesis Error on chunk]', e)
+        if (chunkIndex < chunks.length) {
+          speakNextChunk()
+        } else {
+          setIsSpeaking(false)
+          clearInterval(keepAlive)
+        }
+      }
+
+      // Store reference on window to prevent Chrome garbage-collection drop bug
+      ;(window as any).__currentUtterance = utterance
+      window.speechSynthesis.speak(utterance)
+    }
+
+    speakNextChunk()
   }
 
   const handleSaveEdit = () => {
