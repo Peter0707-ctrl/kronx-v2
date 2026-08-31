@@ -111,10 +111,22 @@ export async function* streamMessage(
 
 export function buildHistory(
   messages: Message[],
-  limit = 12
+  limit = 10
 ): { role: 'user' | 'ai'; content: string }[] {
-  const docMessages = messages.filter(m => m.content.includes('DOCUMENT ATTACHED:') || m.content.includes('Document Content:'))
   const recentMessages = messages.slice(-limit)
-  const combined = Array.from(new Set([...docMessages, ...recentMessages]))
-  return combined.map(m => ({ role: m.role, content: m.content }))
+  return recentMessages.map(m => {
+    let content = m.content
+    // If a historical message contained an attached document, prune the old document body so it doesn't pollute subsequent requests
+    if (content.includes('DOCUMENT ATTACHED:') || content.includes('Document Content:')) {
+      const match = content.match(/\[([A-Z\s]+DOCUMENT ATTACHED:[^\]]+)\]/i)
+      const docHeader = match ? match[1] : 'Prior Document'
+      const userText = content.replace(/\[[A-Z\s]+DOCUMENT ATTACHED:[\s\S]*/gi, '').trim()
+      content = userText ? `${userText} (${docHeader})` : `[${docHeader}]`
+    }
+    // Prune historical base64 images from polluting context
+    if (content.includes('[IMAGE:')) {
+      content = content.replace(/\[IMAGE:\s*data:image\/[^\]]+\]/gi, '[Image previously attached and viewed]')
+    }
+    return { role: m.role, content }
+  })
 }

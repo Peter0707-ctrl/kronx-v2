@@ -240,19 +240,16 @@ function buildGroqMessages(
     const h = recentHistory[i]
     if (h.role === 'user') {
       let content = h.content
-      const isRecent = (len - i) <= 2
-      if (!isRecent) {
-        const docIdx = content.indexOf('\nDocument Content:\n')
-        if (docIdx !== -1) {
-          content = content.substring(0, docIdx).trim() + '\n\n[Attached Document: Content omitted from historical memory for topic clarity]'
-        }
-        const imgIdx = content.indexOf('\n\n[IMAGE:')
-        if (imgIdx !== -1) {
-          content = content.substring(0, imgIdx).trim() + '\n\n[Attached Image: Content omitted from historical memory for topic clarity]'
-        }
-        if (content.length > 500) {
-          content = content.substring(0, 300) + '... [Historical text shortened for context efficiency]'
-        }
+      // Always prune past document contents from historical turns so only the currently active document is analyzed
+      if (content.includes('DOCUMENT ATTACHED:') || content.includes('Document Content:')) {
+        const match = content.match(/\[([A-Z\s]+DOCUMENT ATTACHED:[^\]]+)\]/i)
+        const docHeader = match ? match[1] : 'Prior Document'
+        const userText = content.replace(/\[[A-Z\s]+DOCUMENT ATTACHED:[\s\S]*/gi, '').trim()
+        content = userText ? `${userText} (${docHeader})` : `[${docHeader}]`
+      }
+      content = content.replace(/\[IMAGE:\s*data:image\/[^\]]+\]/gi, '[Image previously attached and analyzed]')
+      if (content.length > 500) {
+        content = content.substring(0, 300) + '... [Historical text shortened for context efficiency]'
       }
       messages.push({ role: 'user', content: parseMessageContent(content) })
     } else if ((h.role === 'ai' || h.role === 'assistant') && h.content) {

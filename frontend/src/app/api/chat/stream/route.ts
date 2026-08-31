@@ -255,18 +255,21 @@ function buildGroqMessages(
     const h = history[i]
     if (h.role === 'user' && h.content) {
       let content = h.content
-      const isRecent = (len - i) <= 10
-      if (!isRecent) {
-        content = content.replace(/DOCUMENT ATTACHED:[\s\S]*?(?=\n\n|\n[A-Z]|$)/gi, '[Document attached - content pruned for conversation history efficiency]')
-        content = content.replace(/\[IMAGE:\s*data:image\/[^\]]+\]/gi, '[Image attached - base64 pixels pruned for conversation history efficiency]')
-        if (content.length > 1000) {
-          content = content.substring(0, 800) + '... [Historical text shortened]'
-        }
+      // Always prune past document contents from historical turns so only the currently active document is analyzed
+      if (content.includes('DOCUMENT ATTACHED:') || content.includes('Document Content:')) {
+        const match = content.match(/\[([A-Z\s]+DOCUMENT ATTACHED:[^\]]+)\]/i)
+        const docHeader = match ? match[1] : 'Prior Document'
+        const userText = content.replace(/\[[A-Z\s]+DOCUMENT ATTACHED:[\s\S]*/gi, '').trim()
+        content = userText ? `${userText} (${docHeader})` : `[${docHeader}]`
+      }
+      content = content.replace(/\[IMAGE:\s*data:image\/[^\]]+\]/gi, '[Image previously attached and analyzed]')
+      if (content.length > 1000) {
+        content = content.substring(0, 800) + '... [Historical text shortened]'
       }
       messages.push({ role: 'user', content: parseMessageContent(content, isVisionModel) })
     } else if ((h.role === 'ai' || h.role === 'assistant') && h.content) {
       let content = h.content
-      const isRecent = (len - i) <= 10
+      const isRecent = (len - i) <= 6
       if (!isRecent && content.length > 1200) {
         content = content.substring(0, 1000) + '... [Historical response shortened]'
       }
