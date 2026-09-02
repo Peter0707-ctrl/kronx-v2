@@ -160,7 +160,9 @@ export function cleanAiResponse(text: string): string {
   cleaned = cleaned.replace(/Key Constraints from System Prompt:[\s\S]*?(?=\n\n(?:[#A-Z0-9`]|```|\d+\.)|$)/gi, '')
 
   // 4. Strictly strip all Unicode emojis, emoticons, symbols, and pictographs
-  cleaned = cleaned.replace(/[\u{1F300}-\u{1FAFF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{2600}-\u{27BF}\u{1F1E0}-\u{1F1FF}\u{1F900}-\u{1F9FF}\u{1F000}-\u{1F02F}\u{1F0A0}-\u{1F0FF}\u{24C2}-\u{1F251}]/gu, '')
+  try {
+    cleaned = cleaned.replace(/([\uD800-\uDBFF][\uDC00-\uDFFF])|[\u2600-\u27BF]/g, '')
+  } catch { }
 
   return cleaned.trim()
 }
