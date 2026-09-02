@@ -67,7 +67,7 @@ function generateSuggestions(
   const combined = `${userMsg} ${aiResponse}`.toLowerCase()
   const suggestions: string[] = []
 
-  // ─── Swahili suggestions ───
+  //  Swahili suggestions 
   if (lang === 'sw') {
     // Business / money topics
     if (hasAny(combined, ['biashara', 'pesa', 'faida', 'mtaji', 'uwekezaji', 'mapato', 'bajeti', 'm-pesa', 'tzs', 'shilingi'])) {
@@ -108,7 +108,7 @@ function generateSuggestions(
       suggestions.push('Tengeneza mpango wa biashara')
     }
   }
-  // ─── English suggestions ───
+  //  English suggestions 
   else {
     // Business / finance
     if (hasAny(combined, ['business', 'money', 'profit', 'invest', 'budget', 'revenue', 'startup', 'market', 'sales'])) {

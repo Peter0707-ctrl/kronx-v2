@@ -347,7 +347,7 @@ echo $response;`,
               fontWeight: 700,
             }}
           >
-            {sw ? '✓ Ruhusa imepewa' : '✓ Access granted'}
+            {sw ? ' Ruhusa imepewa' : ' Access granted'}
           </span>
         </div>
         <p style={{ margin: '8px 0 0', color: '#0369a1', fontSize: 13, lineHeight: 1.55 }}>
@@ -445,7 +445,7 @@ echo $response;`,
                   cursor: 'pointer',
                 }}
               >
-                {copied ? '✓ Copied' : 'Copy'}
+                {copied ? ' Copied' : 'Copy'}
               </button>
             </div>
           </div>

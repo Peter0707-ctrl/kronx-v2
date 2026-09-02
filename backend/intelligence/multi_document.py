@@ -128,6 +128,6 @@ class MultiDocumentEngine:
         body_lines = ["| " + " | ".join(row) + " |" for row in matrix_rows]
 
         table_md = "\n".join([header_line, sep_line] + body_lines)
-        res = f"### 📊 Cross-Document Evidence Comparison Matrix\n\n{table_md}\n\n*Note: Each cell is verified directly against its respective source document.*"
+        res = f"###  Cross-Document Evidence Comparison Matrix\n\n{table_md}\n\n*Note: Each cell is verified directly against its respective source document.*"
 
         return res, claims

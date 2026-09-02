@@ -200,7 +200,7 @@ class ImageGroundingEngine:
             lines.append("- **[OBSERVED]:** Image binary is present, but no specific labeled visual elements or legible text were detected.")
 
         if ocr_result and ocr_result.warning:
-            lines.append(f"\n> ⚠️ *Note: {ocr_result.warning}*")
+            lines.append(f"\n>  *Note: {ocr_result.warning}*")
 
         return "\n".join(lines), evidences
 

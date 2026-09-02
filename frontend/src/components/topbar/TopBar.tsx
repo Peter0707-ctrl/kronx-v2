@@ -88,7 +88,7 @@ export default function TopBar() {
     <header className="topbar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', background: 'transparent', position: 'relative' }}>
       {topToast && (
         <div style={{ position: 'absolute', top: '50px', left: '50%', transform: 'translateX(-50%)', background: '#0f172a', color: '#38bdf8', padding: '10px 18px', borderRadius: '12px', zIndex: 9999, boxShadow: '0 8px 24px rgba(0,0,0,0.2)', fontWeight: '700', fontSize: '13px', border: '1px solid #38bdf8' }}>
-          ⚡ {topToast}
+           {topToast}
         </div>
       )}
 
@@ -98,21 +98,21 @@ export default function TopBar() {
           <div style={{ background: '#ffffff', borderRadius: '24px', width: '100%', maxWidth: '600px', maxHeight: '80vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.3)' }}>
             <div style={{ padding: '20px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span>📁</span>
+                <span></span>
                 <span>{sw ? 'Faili na Picha Katika Chat' : 'Files & Media in Current Chat'}</span>
               </div>
               <button
                 onClick={() => setViewFilesModalOpen(false)}
                 style={{ background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '28px', height: '28px', cursor: 'pointer', fontWeight: '700' }}
               >
-                ✕
+                
               </button>
             </div>
             
             <div style={{ padding: '20px 24px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {extractedFiles.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '40px 20px', color: '#94a3b8' }}>
-                  <div style={{ fontSize: '32px', marginBottom: '8px' }}>🖼️</div>
+                  <div style={{ fontSize: '32px', marginBottom: '8px' }}></div>
                   <div style={{ fontSize: '14px', fontWeight: '600' }}>
                     {sw ? 'Hakuna picha au faili zilizo zalishwa katika mazungumzo haya bado.' : 'No images or code files generated in this conversation yet.'}
                   </div>
@@ -180,7 +180,7 @@ export default function TopBar() {
               boxShadow: '0 4px 12px rgba(15, 23, 42, 0.2)'
             }}
           >
-            ⚙
+            
           </button>
         )}
       </div>
@@ -265,7 +265,7 @@ export default function TopBar() {
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
               <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#0284c7', color: '#fff', fontWeight: '900', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>
-                ⚡
+                
               </div>
               <div>
                 <div style={{ fontSize: '15px', fontWeight: '800', color: '#0f172a' }}>Copetra Developer API</div>
@@ -290,7 +290,7 @@ export default function TopBar() {
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Access:</span>
                 <span style={{ fontWeight: '700', color: user?.isDeveloper || user?.role === 'admin' ? '#10b981' : '#f59e0b' }}>
-                  {user?.isDeveloper || user?.role === 'admin' ? 'Granted ✓' : 'Ask admin to grant'}
+                  {user?.isDeveloper || user?.role === 'admin' ? 'Granted ' : 'Ask admin to grant'}
                 </span>
               </div>
             </div>
@@ -377,7 +377,7 @@ export default function TopBar() {
                 setMenuOpen(false)
                 if (activeConversationId) {
                   togglePinConversation(activeConversationId)
-                  showTopToast(!isPinned ? 'Chat Pinned to Top 📌' : 'Chat Unpinned')
+                  showTopToast(!isPinned ? 'Chat Pinned to Top ' : 'Chat Unpinned')
                 } else {
                   showTopToast('No active conversation to pin.')
                 }
@@ -389,7 +389,7 @@ export default function TopBar() {
               <svg width={16} height={16} viewBox="0 0 24 24" fill={isPinned ? '#0284c7' : 'none'} stroke="currentColor" strokeWidth={2}>
                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
               </svg>
-              <span>{isPinned ? (sw ? 'Yaliyobandikwa (Pinned ✓)' : 'Pinned ✓') : (sw ? 'Bandika chat (Pin chat)' : 'Pin chat')}</span>
+              <span>{isPinned ? (sw ? 'Yaliyobandikwa (Pinned )' : 'Pinned ') : (sw ? 'Bandika chat (Pin chat)' : 'Pin chat')}</span>
             </button>
 
             {/* 3. Archive chat */}
@@ -398,7 +398,7 @@ export default function TopBar() {
                 setMenuOpen(false)
                 if (activeConversationId) {
                   toggleArchiveConversation(activeConversationId)
-                  showTopToast(!isArchived ? 'Chat Archived 📦' : 'Chat Unarchived')
+                  showTopToast(!isArchived ? 'Chat Archived ' : 'Chat Unarchived')
                 } else {
                   showTopToast('No active conversation to archive.')
                 }

@@ -59,7 +59,7 @@ async def chat_stream(request: ChatRequest):
 
         async def generate():
             try:
-                # ── CRITICAL: Send initial flush ping immediately ──
+                #  CRITICAL: Send initial flush ping immediately 
                 # This prevents Railway/nginx from buffering the stream
                 # and forces the connection open before heavy processing starts
                 yield ": pjkronx-stream-open\n\n"

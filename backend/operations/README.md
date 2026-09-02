@@ -11,26 +11,26 @@ It enforces zero-trust authority invariants, deterministic state machines, bound
 
 ```
 backend/operations/
-├── __init__.py           # Unified exports
-├── schemas.py            # Strict Pydantic models & enums
-├── errors.py             # Standardized operational error codes
-├── lifecycle.py          # SystemLifecycleManager (state transitions & draining)
-├── health.py             # OperationsHealthEngine (subsystem & store health)
-├── readiness.py          # OperationsReadinessEngine (fail-closed scoring)
-├── metrics.py            # MetricsEngine (cardinally bounded aggregation)
-├── events.py             # OperationalEventManager (structured events)
-├── correlation.py       # Correlation ID & request propagation
-├── diagnostics.py        # DiagnosticEngine (safe non-destructive checks)
-├── integrity.py          # StoreIntegrityManager (SHA-256 hash & syntax)
-├── backup.py             # BackupEngine (atomic JSON store backups)
-├── recovery.py           # RecoveryEngine (hash-verified atomic restoration)
-├── jobs.py               # JobLifecycleManager (cooperative job control)
-├── incidents.py          # IncidentEngine (incident tracking & security triggers)
-├── retention.py          # RetentionEngine (bounded pruning & cleanup)
-├── configuration.py      # ConfigurationValidator (secret-safe validation)
-├── store.py              # OperationsStore (thread-safe JSON persistence)
-├── audit.py              # Structured [operations_audit] logging
-└── orchestrator.py       # Central operations coordinator
+ __init__.py           # Unified exports
+ schemas.py            # Strict Pydantic models & enums
+ errors.py             # Standardized operational error codes
+ lifecycle.py          # SystemLifecycleManager (state transitions & draining)
+ health.py             # OperationsHealthEngine (subsystem & store health)
+ readiness.py          # OperationsReadinessEngine (fail-closed scoring)
+ metrics.py            # MetricsEngine (cardinally bounded aggregation)
+ events.py             # OperationalEventManager (structured events)
+ correlation.py       # Correlation ID & request propagation
+ diagnostics.py        # DiagnosticEngine (safe non-destructive checks)
+ integrity.py          # StoreIntegrityManager (SHA-256 hash & syntax)
+ backup.py             # BackupEngine (atomic JSON store backups)
+ recovery.py           # RecoveryEngine (hash-verified atomic restoration)
+ jobs.py               # JobLifecycleManager (cooperative job control)
+ incidents.py          # IncidentEngine (incident tracking & security triggers)
+ retention.py          # RetentionEngine (bounded pruning & cleanup)
+ configuration.py      # ConfigurationValidator (secret-safe validation)
+ store.py              # OperationsStore (thread-safe JSON persistence)
+ audit.py              # Structured [operations_audit] logging
+ orchestrator.py       # Central operations coordinator
 ```
 
 ---

@@ -166,7 +166,7 @@ class CopetraMasterAgent:
         # If CodeEngine found an explicit AST diagnostic, prioritize it
         if code_result and code_result.get("is_code_grounded") and code_result.get("task") == "DEBUGGING":
             final_answer = (
-                f"### 🛠️ Code Diagnostic: `{code_result.get('error_type', 'Error Analysis')}`\n\n"
+                f"###  Code Diagnostic: `{code_result.get('error_type', 'Error Analysis')}`\n\n"
                 f"- **Root Cause:** {code_result.get('root_cause')}\n"
                 f"- **Fix Explanation:** {code_result.get('fix_explanation')}"
             )
@@ -182,7 +182,7 @@ class CopetraMasterAgent:
 
         # If a file was generated, append artifact download information to the final answer
         if generated_artifacts:
-            art_info_lines = ["\n\n### 📦 Generated File Artifacts"]
+            art_info_lines = ["\n\n###  Generated File Artifacts"]
             for art in generated_artifacts:
 
                 art_info_lines.append(

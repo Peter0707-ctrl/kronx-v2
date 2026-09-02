@@ -10,29 +10,29 @@ Every user request is processed sequentially through 7 authoritative stages befo
 
 ```
 [User Request] 
-      │
-      ▼
+      
+      
 1. Request Normalizer (Clean message, language detection [en, sw, mixed], detail level)
-      │
-      ▼
+      
+      
 2. Intent Classifier (27+ granular intents, modality routing, current-turn priority)
-      │
-      ▼
+      
+      
 3. Task Contract Generator (Immutable contract, allowed capabilities, strictly forbidden behaviors)
-      │
-      ▼
+      
+      
 4. Multimodal Evidence Extractor (SHA-256 integrity, page/section/table provenance, OCR confidence)
-      │
-      ▼
+      
+      
 5. Context & Memory Relevance Filter (Drops off-topic history e.g. Forex before inference)
-      │
-      ▼
+      
+      
 6. Capability Router & Grounded Reasoner (Gemini, Groq LLaMA, OpenAI, Internal Grounded Engine)
-      │
-      ▼
+      
+      
 7. Claim Verifier & Topic Drift Guard (Validates claims against evidence, blocks off-topic drift)
-      │
-      ▼
+      
+      
 [Verified, Evidence-Grounded Result]
 ```
 

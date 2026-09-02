@@ -88,7 +88,7 @@ export default function Sidebar() {
         {pinnedConvs.length > 0 && (
           <div style={{ marginBottom: '16px' }}>
             <div style={{ fontSize: '11px', fontWeight: '800', color: '#0284c7', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <span>📌</span> {sw ? 'Yaliyobandikwa (Pinned)' : 'Pinned Chats'}
+              <span></span> {sw ? 'Yaliyobandikwa (Pinned)' : 'Pinned Chats'}
             </div>
             {pinnedConvs.map(conv => (
               <div
@@ -100,7 +100,7 @@ export default function Sidebar() {
                 }}
               >
                 <span style={{ fontSize: '13px', fontWeight: '700', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>
-                  📌 {conv.title}
+                   {conv.title}
                 </span>
                 <button
                   onClick={e => {
@@ -110,7 +110,7 @@ export default function Sidebar() {
                   title="Unpin chat"
                   style={{ background: 'none', border: 'none', color: '#0284c7', fontSize: '12px', cursor: 'pointer', padding: '2px 4px' }}
                 >
-                  ✕
+                  
                 </button>
               </div>
             ))}
@@ -161,7 +161,7 @@ export default function Sidebar() {
                 title="Archive chat"
                 style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '11px', cursor: 'pointer', padding: '2px 4px' }}
               >
-                📦
+                
               </button>
               <button
                 onClick={e => {
@@ -171,7 +171,7 @@ export default function Sidebar() {
                 title="Delete chat"
                 style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '12px', cursor: 'pointer', padding: '2px 4px' }}
               >
-                ✕
+                
               </button>
             </div>
           </div>
@@ -184,8 +184,8 @@ export default function Sidebar() {
               onClick={() => setShowArchived(!showArchived)}
               style={{ width: '100%', background: 'none', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11px', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.8px', cursor: 'pointer', padding: '4px 0' }}
             >
-              <span>📦 {sw ? `Kumbukumbu zilizohifadhiwa (${archivedConvs.length})` : `Archived Chats (${archivedConvs.length})`}</span>
-              <span>{showArchived ? '▲' : '▼'}</span>
+              <span> {sw ? `Kumbukumbu zilizohifadhiwa (${archivedConvs.length})` : `Archived Chats (${archivedConvs.length})`}</span>
+              <span>{showArchived ? '' : ''}</span>
             </button>
 
             {showArchived && archivedConvs.map(conv => (
@@ -224,7 +224,7 @@ export default function Sidebar() {
             title="AI Admin Dashboard"
             style={{ width: '42px', height: '42px', borderRadius: '12px', background: '#0f172a', border: 'none', color: '#ffffff', fontWeight: '900', fontSize: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 14px rgba(15, 23, 42, 0.25)', margin: '0 auto' }}
           >
-            ⚙
+            
           </button>
         )}
 

@@ -128,7 +128,7 @@ export default function AdminDashboard() {
     <div className="admin-container" style={{ position: 'relative' }}>
       {toastMsg && (
         <div style={{ position: 'fixed', top: '20px', right: '20px', background: '#0f172a', color: '#38bdf8', padding: '12px 20px', borderRadius: '12px', zIndex: 9999, boxShadow: '0 8px 24px rgba(0,0,0,0.25)', fontWeight: '700', fontSize: '13.5px', border: '1px solid #38bdf8' }}>
-          ⚡ {toastMsg}
+           {toastMsg}
         </div>
       )}
       {/* Admin Header */}
@@ -163,7 +163,7 @@ export default function AdminDashboard() {
             {usersList.length}
           </div>
           <div style={{ fontSize: '11.5px', color: '#10b981', fontWeight: '700', marginTop: '4px' }}>
-            ✓ Live PostgreSQL Database
+             Live PostgreSQL Database
           </div>
         </div>
 
@@ -315,7 +315,7 @@ export default function AdminDashboard() {
                         color: u.plan === 'pro' ? '#ddd6fe' : u.plan === 'plus' ? '#6ee7b7' : '#64748b',
                         letterSpacing: '0.5px',
                       }}>
-                        {u.plan === 'pro' ? 'PRO' : u.plan === 'plus' ? 'PLUS ✓' : 'FREE'}
+                        {u.plan === 'pro' ? 'PRO' : u.plan === 'plus' ? 'PLUS ' : 'FREE'}
                       </span>
                     </td>
                     <td>
@@ -327,7 +327,7 @@ export default function AdminDashboard() {
                     <td>
                       {u.role === 'admin' ? (
                         <span style={{ fontSize: '12px', fontWeight: '800', color: '#0284c7', background: '#e0f2fe', padding: '5px 12px', borderRadius: '8px' }}>
-                          🔒 Master Admin — Unlimited
+                           Master Admin — Unlimited
                         </span>
                       ) : (
                         <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
@@ -344,7 +344,7 @@ export default function AdminDashboard() {
                               onClick={() => handleUpgradePlan(u.id, 'plus')}
                               style={{ background: '#10b981', color: '#fff', border: 'none', padding: '5px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: '800', cursor: 'pointer' }}
                             >
-                              ✓ {sw ? 'Ongeza Plus' : 'Grant Plus'}
+                               {sw ? 'Ongeza Plus' : 'Grant Plus'}
                             </button>
                           )}
                           {u.plan !== 'pro' && (
@@ -352,7 +352,7 @@ export default function AdminDashboard() {
                               onClick={() => handleUpgradePlan(u.id, 'pro')}
                               style={{ background: '#7c3aed', color: '#fff', border: 'none', padding: '5px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: '800', cursor: 'pointer' }}
                             >
-                              ✦ {sw ? 'Ongeza Pro' : 'Grant Pro'}
+                               {sw ? 'Ongeza Pro' : 'Grant Pro'}
                             </button>
                           )}
                           <button
@@ -526,7 +526,7 @@ export default function AdminDashboard() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
               <div>
                 <h3 style={{ fontSize: '18px', fontWeight: '800', margin: '0 0 4px 0', color: '#0f172a' }}>
-                  🛠️ System Error Diagnostics, Root Cause Analysis & Auto-Fix Engine
+                   System Error Diagnostics, Root Cause Analysis & Auto-Fix Engine
                 </h3>
                 <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>
                   Real-time error tracing, underlying root cause analysis, and automated system repair.
@@ -536,7 +536,7 @@ export default function AdminDashboard() {
                 onClick={() => showToast('Auto-Fix Engine Triggered: All system API routes and CORS policies verified and repaired!')}
                 style={{ padding: '10px 18px', borderRadius: '12px', background: '#10b981', color: '#ffffff', border: 'none', fontWeight: '800', fontSize: '13px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)' }}
               >
-                ⚡ Run Auto-Fix System Repair
+                 Run Auto-Fix System Repair
               </button>
             </div>
 
@@ -579,7 +579,7 @@ export default function AdminDashboard() {
 
             <div className="admin-card">
               <div className="card-label">Avg Response Time</div>
-              <div className="card-val" style={{ color: '#0284c7' }}>⚡ {telemetry?.avg_response_time_ms || 142} ms</div>
+              <div className="card-val" style={{ color: '#0284c7' }}> {telemetry?.avg_response_time_ms || 142} ms</div>
               <div className="card-sub">Cache Hit Rate: {telemetry?.cache_hit_rate || '84.5%'}</div>
             </div>
 

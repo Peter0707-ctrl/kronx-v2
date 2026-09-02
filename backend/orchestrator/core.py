@@ -66,7 +66,7 @@ async def _web_search(query: str) -> Optional[str]:
     result_parts = []
 
     try:
-        # ── Source 1: DuckDuckGo Instant Answer API (free, no key) ──
+        #  Source 1: DuckDuckGo Instant Answer API (free, no key) 
         ddg_url = f"https://api.duckduckgo.com/?q={httpx.URL(scheme='', host='', path='').copy_with()}"
         ddg_params = {
             "q": query_clean,
@@ -107,7 +107,7 @@ async def _web_search(query: str) -> Optional[str]:
     except Exception as e:
         logger.error(f"[DuckDuckGo Search Error] {e}", exc_info=True)
 
-    # ── Source 2: Wikipedia REST API (free, no key) ──
+    #  Source 2: Wikipedia REST API (free, no key) 
     if not result_parts:
         try:
             # Extract potential entity name from query
@@ -494,7 +494,7 @@ class KronxOrchestrator:
             )
             return
 
-        # ── Knowledge Base Instant Response ──
+        #  Knowledge Base Instant Response 
         kb_answer = _search_knowledge_base(message)
         if kb_answer:
             yield kb_answer
@@ -507,7 +507,7 @@ class KronxOrchestrator:
             )
             return
 
-        # ── Live Web Search for Current Events (president retired? new news?) ──
+        #  Live Web Search for Current Events (president retired? new news?) 
         if await _is_current_events_query(message):
             web_answer = await _web_search(message)
             if web_answer:
@@ -660,7 +660,7 @@ async def _generate_embedded_answer(message: str, language: str) -> str:
                 title = data.get("title", clean_q)
                 extract = data.get("extract", "").strip()
                 if extract:
-                    return f"### 📚 {title}\n\n{extract}"
+                    return f"###  {title}\n\n{extract}"
         except Exception as e:
             logger.error(f"[Embedded Fact Error] {e}", exc_info=True)
 

@@ -51,7 +51,7 @@ export default class ErrorBoundary extends Component<Props, State> {
               border: '1px solid #cbd5e1',
             }}
           >
-            <div style={{ fontSize: '42px', marginBottom: '12px' }}>⚡</div>
+            <div style={{ fontSize: '42px', marginBottom: '12px' }}></div>
             <h2 style={{ fontSize: '22px', fontWeight: '800', color: '#0f172a', margin: '0 0 8px 0' }}>
               Copetra AI Workspace Recovered
             </h2>
@@ -76,7 +76,7 @@ export default class ErrorBoundary extends Component<Props, State> {
                 boxShadow: '0 4px 14px rgba(2, 132, 199, 0.25)',
               }}
             >
-              🔄 Refresh Copetra AI Session
+               Refresh Copetra AI Session
             </button>
           </div>
         </div>

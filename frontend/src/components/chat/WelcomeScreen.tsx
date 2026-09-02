@@ -37,17 +37,17 @@ export default function WelcomeScreen({ onSend }: Props) {
   }, [language])
 
   const categories = [
-    { key: 'academic', label: language === 'sw' ? '🎓 Taaluma & Mitihani' : '🎓 Academic & Exams' },
-    { key: 'business', label: language === 'sw' ? '💼 Biashara & TRA' : '💼 Business & Finance' },
-    { key: 'tech', label: language === 'sw' ? '💻 Kodi & Uhandisi' : '💻 Tech & Coding' },
-    { key: 'creative', label: language === 'sw' ? '🎨 Ubunifu & Media' : '🎨 Creative & Media' },
-    { key: 'productivity', label: language === 'sw' ? '⚡ Kazi & Uzalishaji' : '⚡ Productivity & Life' }
+    { key: 'academic', label: language === 'sw' ? 'Taaluma & Mitihani' : 'Academic & Exams' },
+    { key: 'business', label: language === 'sw' ? 'Biashara & TRA' : 'Business & Finance' },
+    { key: 'tech', label: language === 'sw' ? 'Kodi & Uhandisi' : 'Tech & Coding' },
+    { key: 'creative', label: language === 'sw' ? 'Ubunifu & Media' : 'Creative & Media' },
+    { key: 'productivity', label: language === 'sw' ? 'Kazi & Uzalishaji' : 'Productivity & Life' }
   ]
 
   const toolsets: Record<CategoryKey, Array<{ icon: string; title: string; subtitle: string; prompt: string }>> = {
     academic: [
       {
-        icon: '📚',
+        icon: '',
         title: language === 'sw' ? 'NECTA & Mitihani ya Chuo' : 'NECTA & Exam Past Papers',
         subtitle: language === 'sw' ? 'Maswali & majibu hatua kwa hatua' : 'Step-by-step solutions with marking scheme',
         prompt: language === 'sw'
@@ -55,7 +55,7 @@ export default function WelcomeScreen({ onSend }: Props) {
           : 'Solve step-by-step with formulas and clear academic explanations: '
       },
       {
-        icon: '🔬',
+        icon: '',
         title: language === 'sw' ? 'Muundo wa Tasnifu (Thesis Outline)' : 'Research Thesis & Proposal',
         subtitle: language === 'sw' ? 'Sura 1-5, methodology & citations' : 'Problem statement, methodology & citations',
         prompt: language === 'sw'
@@ -63,7 +63,7 @@ export default function WelcomeScreen({ onSend }: Props) {
           : 'Create a comprehensive university research proposal outline with problem statement, methodology, and APA 7th citations.'
       },
       {
-        icon: '🩺',
+        icon: '',
         title: language === 'sw' ? 'Uchambuzi wa Magonjwa & Tiba' : 'Medical Case & Diagnosis Guide',
         subtitle: language === 'sw' ? 'Dalili, uchunguzi & differential diagnosis' : 'Symptoms, lab tests & management guide',
         prompt: language === 'sw'
@@ -71,7 +71,7 @@ export default function WelcomeScreen({ onSend }: Props) {
           : 'Analyze this clinical case study, provide differential diagnosis, investigation plan, and treatment protocol: '
       },
       {
-        icon: '🔍',
+        icon: '',
         title: language === 'sw' ? 'Kipimo cha Uasili & Plagiarism' : 'Plagiarism & Originality Checker',
         subtitle: language === 'sw' ? 'Kadiria alama na kuboresha mtiririko' : 'Estimate originality score & humanize text',
         prompt: language === 'sw'
@@ -81,7 +81,7 @@ export default function WelcomeScreen({ onSend }: Props) {
     ],
     business: [
       {
-        icon: '🏛️',
+        icon: '',
         title: language === 'sw' ? 'Mshauri wa Kodi za TRA & EFD' : 'TRA Tax & EFD Assistant',
         subtitle: language === 'sw' ? 'VAT 18%, PAYE, Withholding tax' : 'Tanzanian VAT, PAYE, and EFD receipt guide',
         prompt: language === 'sw'
@@ -89,7 +89,7 @@ export default function WelcomeScreen({ onSend }: Props) {
           : 'Calculate and explain Tanzanian TRA taxes (VAT 18%, PAYE salary deductions, and Withholding Tax) for this scenario: '
       },
       {
-        icon: '📱',
+        icon: '',
         title: language === 'sw' ? 'Chambua Taarifa ya M-Pesa' : 'Mobile Money Statement Analyzer',
         subtitle: language === 'sw' ? 'Uchambuzi wa mapato na matumizi' : 'Analyze expenses, cashflow & trends',
         prompt: language === 'sw'
@@ -97,7 +97,7 @@ export default function WelcomeScreen({ onSend }: Props) {
           : 'Analyze this mobile money / bank transaction summary, categorize monthly expenses, and highlight cash flow insights.'
       },
       {
-        icon: '💡',
+        icon: '',
         title: language === 'sw' ? 'Mpango Kazi wa Biashara' : 'Business Plan & Cash Flow',
         subtitle: language === 'sw' ? 'Mtaji, masoko na makadirio ya mapato' : 'Target market, budget & 12-month ROI',
         prompt: language === 'sw'
@@ -105,7 +105,7 @@ export default function WelcomeScreen({ onSend }: Props) {
           : 'Draft a full business plan with target market analysis, operating costs, and 12-month revenue forecast.'
       },
       {
-        icon: '🌍',
+        icon: '',
         title: language === 'sw' ? 'Maombi ya Ufadhili (NGO Grant)' : 'Grant & NGO Proposal Writer',
         subtitle: language === 'sw' ? 'Maombi kwa USAID, UN na wafadhili' : 'Fundraising proposal with logical framework',
         prompt: language === 'sw'
@@ -115,7 +115,7 @@ export default function WelcomeScreen({ onSend }: Props) {
     ],
     tech: [
       {
-        icon: '🗄️',
+        icon: '',
         title: language === 'sw' ? 'Mbunifu wa SQL & Database Schema' : 'SQL & Database Architect',
         subtitle: language === 'sw' ? 'Queries, indexing & mifumo ya data' : 'PostgreSQL, MySQL queries & indexing',
         prompt: language === 'sw'
@@ -123,7 +123,7 @@ export default function WelcomeScreen({ onSend }: Props) {
           : 'Design a normalized database schema with tables, relationships, indexes, and optimized SQL queries for: '
       },
       {
-        icon: '🛡️',
+        icon: '',
         title: language === 'sw' ? 'Mwindaji wa Hitilafu & Usalama' : 'Security Bug Hunter & Linter',
         subtitle: language === 'sw' ? 'Gundua mashimo ya usalama kwenye kodi' : 'Scan SQL injection, XSS & memory leaks',
         prompt: language === 'sw'
@@ -131,7 +131,7 @@ export default function WelcomeScreen({ onSend }: Props) {
           : 'Audit this source code for security vulnerabilities, logic bugs, and memory leaks with fixed production code: '
       },
       {
-        icon: '🌐',
+        icon: '',
         title: language === 'sw' ? 'Muongozo wa API & OpenAPI Spec' : 'API Docs & Postman Generator',
         subtitle: language === 'sw' ? 'Swagger, REST endpoints & formats' : 'REST endpoints, request/response models',
         prompt: language === 'sw'
@@ -139,7 +139,7 @@ export default function WelcomeScreen({ onSend }: Props) {
           : 'Generate a complete OpenAPI / Swagger 3.0 specification with routes, request bodies, and error response schemas for: '
       },
       {
-        icon: '⚙️',
+        icon: '',
         title: language === 'sw' ? 'Mjenzi wa Regex & Amri za Git' : 'Regex & Git Command Builder',
         subtitle: language === 'sw' ? 'Utatuzi wa amri ngumu za terminal' : 'Complex regex patterns & git branch repair',
         prompt: language === 'sw'
@@ -149,13 +149,13 @@ export default function WelcomeScreen({ onSend }: Props) {
     ],
     creative: [
       {
-        icon: '🎨',
+        icon: '',
         title: language === 'sw' ? 'Tengeneza Picha Mpya (FLUX 8K)' : 'AI Image Canvas (FLUX 8K)',
         subtitle: language === 'sw' ? 'Picha za uhalisia wa hali ya juu' : 'Ultra-HD photorealistic visuals',
         prompt: 'generate image of a modern futuristic eco-friendly city in Tanzania with monorails, solar towers and lush gardens'
       },
       {
-        icon: '🎬',
+        icon: '',
         title: language === 'sw' ? 'Mswada wa Video ya YouTube/TikTok' : 'YouTube & Podcast Scriptwriter',
         subtitle: language === 'sw' ? 'Hooks za kuvutia, body & timestamps' : 'Viral video hooks, pacing & outro',
         prompt: language === 'sw'
@@ -163,7 +163,7 @@ export default function WelcomeScreen({ onSend }: Props) {
           : 'Write an engaging YouTube video script complete with a viral 5-second hook, visual cues, timestamps, and call to action.'
       },
       {
-        icon: '🏷️',
+        icon: '',
         title: language === 'sw' ? 'Nembo & Utambulisho wa Chapa' : 'Brand Identity & Logo Prompts',
         subtitle: language === 'sw' ? 'Rangi (Hex codes), slogan & muundo' : 'Brand colors, typography & logo concept',
         prompt: language === 'sw'
@@ -171,7 +171,7 @@ export default function WelcomeScreen({ onSend }: Props) {
           : 'Develop a complete brand identity package including color palette (Hex codes), typography, slogan, and logo design prompt.'
       },
       {
-        icon: '📜',
+        icon: '',
         title: language === 'sw' ? 'Ushairi na Mashairi ya Kiswahili' : 'Swahili Poetry & Song Lyrics',
         subtitle: language === 'sw' ? 'Vina, mizani & urari wa mishororo' : 'Structured rhyming verses and choruses',
         prompt: language === 'sw'
@@ -181,7 +181,7 @@ export default function WelcomeScreen({ onSend }: Props) {
     ],
     productivity: [
       {
-        icon: '📊',
+        icon: '',
         title: language === 'sw' ? 'Fomula za Excel (XLOOKUP & Pivots)' : 'Excel Formula Master',
         subtitle: language === 'sw' ? 'Utatuzi wa majedwali magumu' : 'Complex XLOOKUP, INDEX/MATCH & macros',
         prompt: language === 'sw'
@@ -189,7 +189,7 @@ export default function WelcomeScreen({ onSend }: Props) {
           : 'Provide the exact Excel formula (e.g. XLOOKUP, INDEX/MATCH, or Dynamic Array) with step-by-step cell references to accomplish: '
       },
       {
-        icon: '✉️',
+        icon: '',
         title: language === 'sw' ? 'Barua Rasmi za Kiserikali/Kazi' : 'Official Government Letters',
         subtitle: language === 'sw' ? 'Maombi ya kazi, likizo & ofisi' : 'Formal institutional letters & memos',
         prompt: language === 'sw'
@@ -197,7 +197,7 @@ export default function WelcomeScreen({ onSend }: Props) {
           : 'Draft a formal official letter with standard professional formatting, executive tone, and clear resolution requests for: '
       },
       {
-        icon: '📝',
+        icon: '',
         title: language === 'sw' ? 'Boresha / Tengeneza CV Yangu' : 'Resume Polish & ATS Scorer',
         subtitle: language === 'sw' ? 'Tathmini ya kitaalamu & alama' : 'Action verbs & recruiter-ready polish',
         prompt: language === 'sw'
@@ -205,7 +205,7 @@ export default function WelcomeScreen({ onSend }: Props) {
           : 'Review and upgrade my CV/Resume with high-impact action verbs and ATS keywords for top employer visibility.'
       },
       {
-        icon: '🥗',
+        icon: '',
         title: language === 'sw' ? 'Ratiba ya Lishe & Mazoezi' : 'Tanzanian Diet & Meal Planner',
         subtitle: language === 'sw' ? 'Vyakula vya asili, protini & afya' : 'Local whole foods & workout schedule',
         prompt: language === 'sw'
@@ -296,7 +296,7 @@ export default function WelcomeScreen({ onSend }: Props) {
               e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)'
             }}
           >
-            <span style={{ fontSize: '22px', flexShrink: 0 }}>{s.icon}</span>
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#0284c7', marginTop: '6px', flexShrink: 0 }} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
               <span style={{ fontSize: '13.5px', fontWeight: '700', color: '#0f172a' }}>{s.title}</span>
               <span style={{ fontSize: '11.5px', color: '#64748b', lineHeight: '1.3' }}>{s.subtitle}</span>

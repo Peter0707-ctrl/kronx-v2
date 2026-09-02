@@ -1,7 +1,7 @@
 'use client'
 
 /**
- * 🚨 CRITICAL SAFEGUARD WARNING FOR DEVELOPERS
+ *  CRITICAL SAFEGUARD WARNING FOR DEVELOPERS
  * -------------------------------------------------------------
  * 1. TAG REGEXES: Do not modify tag matching patterns inside postProcessResponse().
  * 2. HISTORY SLICING: When passing messages to buildHistory(), ALWAYS use (.slice(0, -2))
@@ -253,7 +253,7 @@ export function useChat() {
         currentState.setStreaming(false)
         if (typeof window !== 'undefined' && document.visibilityState === 'hidden') {
           const isSw = currentState.language === 'sw'
-          const title = '📚 Copetra AI'
+          const title = ' Copetra AI'
           const body = isSw ? 'Majibu yako yako tayari! Fungua kuona.' : 'Your response is ready! Open to view.'
           const options = {
             body,
@@ -323,14 +323,14 @@ export function useChat() {
       postProcessResponse()
     } catch (err) {
       const fallbackMsg = currentState.language === 'sw'
-        ? '⚠️ Samahani, imeshindikana kupata majibu kwa sasa. Tafadhali jaribu tena.'
-        : '⚠️ Sorry, there was an error generating your response. Please try again.'
+        ? ' Samahani, imeshindikana kupata majibu kwa sasa. Tafadhali jaribu tena.'
+        : ' Sorry, there was an error generating your response. Please try again.'
       currentState.updateLastAiMessage(fallbackMsg)
     } finally {
       currentState.setStreaming(false)
       if (typeof window !== 'undefined' && document.visibilityState === 'hidden') {
         const isSw = currentState.language === 'sw'
-        const title = '📚 Copetra AI'
+        const title = ' Copetra AI'
         const body = isSw ? 'Majibu yako yako tayari! Fungua kuona.' : 'Your response is ready! Open to view.'
         const options = {
           body,
@@ -381,14 +381,14 @@ export function useChat() {
         postProcessResponse()
       } catch (err) {
         const fallbackMsg = currentState.language === 'sw'
-          ? '⚠️ Samahani, imeshindikana kupata majibu kwa sasa. Tafadhali jaribu tena.'
-          : '⚠️ Sorry, there was an error generating your response. Please try again.'
+          ? ' Samahani, imeshindikana kupata majibu kwa sasa. Tafadhali jaribu tena.'
+          : ' Sorry, there was an error generating your response. Please try again.'
         currentState.updateLastAiMessage(fallbackMsg)
       } finally {
         currentState.setStreaming(false)
         if (typeof window !== 'undefined' && document.visibilityState === 'hidden') {
           const isSw = currentState.language === 'sw'
-          const title = '📚 Copetra AI'
+          const title = ' Copetra AI'
           const body = isSw ? 'Majibu yako yako tayari! Fungua kuona.' : 'Your response is ready! Open to view.'
           const options = {
             body,

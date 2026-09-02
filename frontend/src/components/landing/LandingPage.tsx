@@ -147,25 +147,25 @@ export default function LandingPage({ onStart }: Props) {
 
         <div className="features-grid">
           <div className="feat-card">
-            <div className="feat-icon-box">⚡</div>
+            <div className="feat-icon-box"></div>
             <h3>Low-RAM Optimization</h3>
             <p>Runs seamlessly on 350MB-500MB RAM using single-model auto-detection for maximum speed.</p>
           </div>
 
           <div className="feat-card">
-            <div className="feat-icon-box">🎙️</div>
+            <div className="feat-icon-box"></div>
             <h3>Speech Recognition & Playback</h3>
             <p>Full Speech-to-Text listening & Text-to-Speech playback in Kiswahili and English.</p>
           </div>
 
           <div className="feat-card">
-            <div className="feat-icon-box">🧠</div>
+            <div className="feat-icon-box"></div>
             <h3>Personal Memory Vault</h3>
             <p>Intelligent vector memory vault stores personal facts and past business context.</p>
           </div>
 
           <div className="feat-card">
-            <div className="feat-icon-box">📊</div>
+            <div className="feat-icon-box"></div>
             <h3>Glassmorphic Analytics Dashboard</h3>
             <p>Sleek dark obsidian dashboard tracking system telemetry, goals, and facts.</p>
           </div>

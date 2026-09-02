@@ -395,14 +395,14 @@ class CopetraIntelligenceOrchestrator:
                 elif any(k in q_low for k in ["crude oil", "petroleum", "sulphur", "sulfur", "sulphure"]):
                     ans = (
 
-                        "### 🛢️ What is Crude Oil?\n\n"
+                        "###  What is Crude Oil?\n\n"
                         "**Crude oil** (petroleum) is a naturally occurring, unrefined liquid fossil fuel composed primarily of complex **hydrocarbons** (alkanes, cycloalkanes, and aromatic hydrocarbons) along with smaller quantities of organic compounds containing **sulfur, nitrogen, oxygen, and trace metals** (such as nickel and vanadium). It is formed over millions of years from the heat and pressure applied to ancient marine micro-organisms (plankton and algae) buried beneath sedimentary rock layers.\n\n"
                         "To be useful, crude oil undergoes **fractional distillation** in an atmospheric distillation column, separating it by boiling points into fractions such as:\n"
                         "- **Light Distillates:** Petroleum gases (methane, propane, butane), gasoline (petrol), naphtha\n"
                         "- **Middle Distillates:** Kerosene/jet fuel, diesel, and gas oil\n"
                         "- **Heavy Residuals:** Fuel oil, lubricating oils, bitumen, and asphalt\n\n"
                         "---\n\n"
-                        "### ⚗️ Extraction and Recovery of Sulfur from Crude Oil\n\n"
+                        "###  Extraction and Recovery of Sulfur from Crude Oil\n\n"
                         "Sulfur exists naturally in crude oil in concentrations ranging from 0.05% to over 5.0% by weight (categorized as *sweet crude* when low in sulfur, and *sour crude* when high). Removing sulfur is critical to prevent acid rain ($SO_2$ emissions), avoid catalyst poisoning in catalytic converters, and reduce equipment corrosion.\n\n"
                         "The industrial extraction and recovery of sulfur follows two primary engineering stages:\n\n"
                         "#### 1. Hydrodesulfurization (HDS)\n"
@@ -476,15 +476,15 @@ class CopetraIntelligenceOrchestrator:
                     )
                 elif "crude oil" in q_low or "petroleum" in q_low or "sulphur" in q_low or "sulfur" in q_low:
                     ans = (
-                        "### 🛢️ What is Crude Oil?\n\n"
+                        "###  What is Crude Oil?\n\n"
                         "**Crude oil** (petroleum) is a naturally occurring, unrefined liquid fossil fuel composed primarily of complex **hydrocarbons** along with organic sulfur, nitrogen, and oxygen.\n\n"
-                        "### 🧪 Extraction of Sulfur (The Claus Process):\n\n"
+                        "###  Extraction of Sulfur (The Claus Process):\n\n"
                         "During crude oil hydrotreating, sulfur is converted to hydrogen sulfide ($H_2S$). The **Claus process** then recovers elemental sulfur through thermal oxidation ($2H_2S + 3O_2 \\to 2SO_2 + 2H_2O$) followed by catalytic reduction ($2H_2S + SO_2 \\to 3S + 2H_2O$), preventing acid rain and meeting environmental regulations."
                     )
                 elif "regex" in q_low or "regular expression" in q_low or "email validation" in q_low:
 
                     ans = (
-                        "### 🔍 Email Validation Regular Expression\n\n"
+                        "###  Email Validation Regular Expression\n\n"
                         "```python\nimport re\n\n"
                         "EMAIL_REGEX = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$'\n\n"
                         "def validate_email(email: str) -> bool:\n"

@@ -33,7 +33,7 @@ export default function DashboardView({ onSend }: Props) {
           onClick={() => setActiveView('chat')}
           style={{ background: 'linear-gradient(135deg, #0284c7, #0369a1)', padding: '12px 24px', borderRadius: '12px', boxShadow: '0 6px 20px rgba(2, 132, 199, 0.25)' }}
         >
-          💬 {sw ? 'Rudi Kwenye Mazungumzo' : 'Return to Chat'}
+           {sw ? 'Rudi Kwenye Mazungumzo' : 'Return to Chat'}
         </button>
       </div>
 
@@ -44,7 +44,7 @@ export default function DashboardView({ onSend }: Props) {
             {sw ? 'Hali ya Injini' : 'AI Engine Status'}
           </div>
           <div style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a' }}>PJ COPETRANOVA</div>
-          <div style={{ fontSize: '12px', color: '#10b981', fontWeight: '600', marginTop: '4px' }}>⚡ 0% Local RAM (Ultra-Fast)</div>
+          <div style={{ fontSize: '12px', color: '#10b981', fontWeight: '600', marginTop: '4px' }}> 0% Local RAM (Ultra-Fast)</div>
         </div>
 
         <div style={{ background: 'rgba(255, 255, 255, 0.95)', border: '1px solid #bae6fd', borderRadius: '18px', padding: '20px', boxShadow: '0 4px 15px rgba(2, 132, 199, 0.05)' }}>
@@ -75,7 +75,7 @@ export default function DashboardView({ onSend }: Props) {
       {/* Active Goals Section */}
       <div style={{ background: 'rgba(255, 255, 255, 0.95)', border: '1px solid #bae6fd', borderRadius: '20px', padding: '28px', boxShadow: '0 6px 25px rgba(2, 132, 199, 0.06)' }}>
         <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a', marginBottom: '16px' }}>
-          🎯 {sw ? 'Malengo Yangu' : 'Active Personal & Business Goals'}
+           {sw ? 'Malengo Yangu' : 'Active Personal & Business Goals'}
         </h2>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {goals.map(g => (

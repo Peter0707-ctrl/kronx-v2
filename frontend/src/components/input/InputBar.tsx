@@ -444,13 +444,13 @@ export default function InputBar({ onSend }: Props) {
 
   const getCategoryIcon = (cat: string) => {
     switch (cat) {
-      case 'image': return '🖼️'
-      case 'word': return '📄'
-      case 'pdf': return '📕'
-      case 'excel': return '📊'
-      case 'powerpoint': return '📙'
-      case 'code': return '💻'
-      default: return '📝'
+      case 'image': return ''
+      case 'word': return ''
+      case 'pdf': return ''
+      case 'excel': return ''
+      case 'powerpoint': return ''
+      case 'code': return ''
+      default: return ''
     }
   }
 
@@ -505,7 +505,7 @@ export default function InputBar({ onSend }: Props) {
               {attachedFile.name}
             </span>
             <span style={{ fontSize: '11px', color: '#0284c7', fontWeight: '600' }}>
-              {attachedFile.category === 'image' ? '🖼️ Image attached for AI Vision analysis' : `📄 ${attachedFile.category.toUpperCase()} Document ready`}
+              {attachedFile.category === 'image' ? ' Image attached for AI Vision analysis' : ` ${attachedFile.category.toUpperCase()} Document ready`}
             </span>
           </div>
           <button
@@ -531,7 +531,7 @@ export default function InputBar({ onSend }: Props) {
             onMouseOut={e => (e.currentTarget.style.background = 'rgba(15, 23, 42, 0.06)', e.currentTarget.style.color = '#475569')}
             title="Remove attachment"
           >
-            ✕
+            
           </button>
         </div>
       )}

@@ -10,7 +10,7 @@ export async function GET() {
   const result: Record<string, unknown> = {
     timestamp: new Date().toISOString(),
     env: {
-      GROQ_API_KEY: groqKey ? `SET ✅ (starts with: ${groqKey.slice(0, 8)}...)` : 'NOT SET ❌',
+      GROQ_API_KEY: groqKey ? `SET  (starts with: ${groqKey.slice(0, 8)}...)` : 'NOT SET ',
       OLLAMA_URL: ollamaUrl || 'NOT SET',
       NEXT_PUBLIC_API_URL: nextPublicApiUrl || 'NOT SET',
     },
@@ -18,7 +18,7 @@ export async function GET() {
   }
 
   if (!groqKey) {
-    result.groq_test = 'SKIPPED — GROQ_API_KEY not set ❌'
+    result.groq_test = 'SKIPPED — GROQ_API_KEY not set '
     return NextResponse.json(result)
   }
 
@@ -47,17 +47,17 @@ export async function GET() {
       const data = await res.json()
       const answer = data.choices?.[0]?.message?.content?.trim()
       result.groq_test = {
-        status: 'SUCCESS ✅',
+        status: 'SUCCESS ',
         model: 'openai/gpt-oss-20b',
         answer: answer || 'No text returned',
       }
     } else {
       const errText = await res.text()
-      result.groq_test = { status: `HTTP ${res.status} ❌`, error: errText.slice(0, 200) }
+      result.groq_test = { status: `HTTP ${res.status} `, error: errText.slice(0, 200) }
     }
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e)
-    result.groq_test = { status: 'FAILED ❌', error: msg }
+    result.groq_test = { status: 'FAILED ', error: msg }
   }
 
   return NextResponse.json(result)

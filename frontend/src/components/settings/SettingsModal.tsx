@@ -212,7 +212,7 @@ export default function SettingsModal() {
               fontSize: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center',
               position: 'relative', zIndex: 1
             }}
-          >✕</button>
+          ></button>
         </div>
 
         <div className="settings-content">
@@ -237,7 +237,7 @@ export default function SettingsModal() {
                     {sw ? 'Tazama na ununue vifurushi vya Copetra' : 'View and purchase Copetra plans'}
                   </div>
                 </div>
-                <div style={{ color: '#0ea5e9' }}>➔</div>
+                <div style={{ color: '#0ea5e9' }}></div>
               </button>
 
               <button
@@ -259,7 +259,7 @@ export default function SettingsModal() {
                     {sw ? 'Badili picha ya wasifu, toka kwenye akaunti' : 'Change profile picture, sign out'}
                   </div>
                 </div>
-                <div style={{ color: '#0ea5e9' }}>➔</div>
+                <div style={{ color: '#0ea5e9' }}></div>
               </button>
 
               <button
@@ -281,7 +281,7 @@ export default function SettingsModal() {
                     {sw ? 'Tuambie nini kiboreshwe na mapendekezo yako' : 'Tell us what should be updated or improved'}
                   </div>
                 </div>
-                <div style={{ color: '#0ea5e9' }}>➔</div>
+                <div style={{ color: '#0ea5e9' }}></div>
               </button>
 
               <button
@@ -304,14 +304,14 @@ export default function SettingsModal() {
                     {sw ? 'Dhibiti API key, Webhooks na majaribio ya Moja kwa Moja' : 'Manage API keys, Webhooks, and Live In-App Gateway Testing'}
                   </div>
                 </div>
-                <div style={{ color: '#0ea5e9' }}>➔</div>
+                <div style={{ color: '#0ea5e9' }}></div>
               </button>
             </div>
           )}
 
-          {/* ═══════════════════════════════════════════
+          {/* 
               TAB 1: PLANS & PRICING
-          ═══════════════════════════════════════════ */}
+           */}
           {activeTab === 'upgrade' && (
             <div>
               {/* Already Premium Banner */}
@@ -322,7 +322,7 @@ export default function SettingsModal() {
                   display: 'flex', alignItems: 'center', gap: '12px',
                   marginBottom: '24px',
                 }}>
-                  <div style={{ fontSize: '24px' }}>✓</div>
+                  <div style={{ fontSize: '24px' }}></div>
                   <div>
                     <div style={{ color: '#6ee7b7', fontWeight: '800', fontSize: '15px' }}>
                       {sw ? 'Umeshainuliwa!' : 'You are already subscribed!'}
@@ -585,7 +585,7 @@ export default function SettingsModal() {
                       color: '#fff', textAlign: 'center',
                       fontWeight: '800', fontSize: '14px',
                     }}>
-                      {sw ? '✓ Ujumbe Umetumwa! Admin atajibu hivi karibuni.' : '✓ Message Sent! Admin will respond shortly.'}
+                      {sw ? ' Ujumbe Umetumwa! Admin atajibu hivi karibuni.' : ' Message Sent! Admin will respond shortly.'}
                     </div>
                   ) : (
                     <button
@@ -621,9 +621,9 @@ export default function SettingsModal() {
             </div>
           )}
 
-          {/* ═══════════════════════════════════════════
+          {/* 
               TAB 2: ACCOUNT & SECURITY
-          ═══════════════════════════════════════════ */}
+           */}
           {activeTab === 'account' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
@@ -705,7 +705,7 @@ export default function SettingsModal() {
                 {[
                   {
                     label: sw ? 'Mpango wa Sasa' : 'Current Plan',
-                    value: user?.role === 'admin' ? 'Master Admin Unlimited' : (isPremium ? 'Copetra Plus ✓' : 'Free Tier'),
+                    value: user?.role === 'admin' ? 'Master Admin Unlimited' : (isPremium ? 'Copetra Plus ' : 'Free Tier'),
                     valueColor: user?.role === 'admin' ? '#0284c7' : (isPremium ? '#10b981' : '#64748b'),
                   },
                   {
@@ -771,9 +771,9 @@ export default function SettingsModal() {
             </div>
           )}
 
-          {/* ═══════════════════════════════════════════
+          {/* 
               TAB 3: SUPPORT & FEEDBACK
-          ═══════════════════════════════════════════ */}
+           */}
           {activeTab === 'support' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <div style={{

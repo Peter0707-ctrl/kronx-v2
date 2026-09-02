@@ -1,22 +1,22 @@
 /** Shared fast-path helpers for Copetra chat APIs. */
 
 export const SIMPLE_GREETINGS: Record<string, string> = {
-  hello: `Hello! 👋 Welcome to **Copetra AI**! How can I help you today?`,
-  hi: `Hi there! 👋 How can I assist you today?`,
-  hey: `Hey! 👋 What can I do for you?`,
-  habari: `Habari njema! 👋 Karibu **Copetra AI**! Ninaweza kukusaidia nini leo?`,
-  'habari yako': `Nzuri sana! 👋 Karibu! Una swali gani leo?`,
-  'habari za leo': `Salama! 👋 Karibu **Copetra AI**! Una swali gani leo?`,
-  mambo: `Poa sana! 🤙 Karibu **Copetra AI**! Unaweza kuniuliza chochote.`,
-  'mambo vipi': `Poa kabisa! 🤙 Karibu! Nikusaidie nini?`,
-  niaje: `Poa! 🤙 Nikusaidie nini leo?`,
-  shikamoo: `Marahaba! 🙇 Karibu sana **Copetra AI**! Nikusaidie nini?`,
-  jambo: `Jambo! 👋 Karibu **Copetra AI**! Una swali gani?`,
-  sasa: `Sasa hivi! 👋 Nikusaidie nini leo?`,
-  'sasa hivi': `Fiti! 👋 Karibu **Copetra AI**! Nikusaidie nini?`,
-  'za uzima': `Salama kabisa! 👋 Nikusaidie nini leo?`,
-  'who are you': `I am **Copetra AI** 🤖, your AI Assistant powered by **PJ COPETRANOVA**. How can I help you?`,
-  'wewe ni nani': `Mimi ni **Copetra AI** 🤖, msaidizi wako wa AI uliotengenezwa na **PJ COPETRANOVA**. Nikusaidie nini?`,
+  hello: `Hello!  Welcome to **Copetra AI**! How can I help you today?`,
+  hi: `Hi there!  How can I assist you today?`,
+  hey: `Hey!  What can I do for you?`,
+  habari: `Habari njema!  Karibu **Copetra AI**! Ninaweza kukusaidia nini leo?`,
+  'habari yako': `Nzuri sana!  Karibu! Una swali gani leo?`,
+  'habari za leo': `Salama!  Karibu **Copetra AI**! Una swali gani leo?`,
+  mambo: `Poa sana!  Karibu **Copetra AI**! Unaweza kuniuliza chochote.`,
+  'mambo vipi': `Poa kabisa!  Karibu! Nikusaidie nini?`,
+  niaje: `Poa!  Nikusaidie nini leo?`,
+  shikamoo: `Marahaba!  Karibu sana **Copetra AI**! Nikusaidie nini?`,
+  jambo: `Jambo!  Karibu **Copetra AI**! Una swali gani?`,
+  sasa: `Sasa hivi!  Nikusaidie nini leo?`,
+  'sasa hivi': `Fiti!  Karibu **Copetra AI**! Nikusaidie nini?`,
+  'za uzima': `Salama kabisa!  Nikusaidie nini leo?`,
+  'who are you': `I am **Copetra AI** , your AI Assistant powered by **PJ COPETRANOVA**. How can I help you?`,
+  'wewe ni nani': `Mimi ni **Copetra AI** , msaidizi wako wa AI uliotengenezwa na **PJ COPETRANOVA**. Nikusaidie nini?`,
 }
 
 export function matchSimpleGreeting(query: string): string | null {
@@ -159,6 +159,9 @@ export function cleanAiResponse(text: string): string {
   cleaned = cleaned.replace(/\[REAL-TIME VERIFIED WEB SEARCH DATA\][\s\S]*?(?=\n\n|$)/gi, '')
   cleaned = cleaned.replace(/Key Constraints from System Prompt:[\s\S]*?(?=\n\n(?:[#A-Z0-9`]|```|\d+\.)|$)/gi, '')
 
+  // 4. Strictly strip all Unicode emojis, emoticons, symbols, and pictographs
+  cleaned = cleaned.replace(/[\u{1F300}-\u{1FAFF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{2600}-\u{27BF}\u{1F1E0}-\u{1F1FF}\u{1F900}-\u{1F9FF}\u{1F000}-\u{1F02F}\u{1F0A0}-\u{1F0FF}\u{24C2}-\u{1F251}]/gu, '')
+
   return cleaned.trim()
 }
 
@@ -189,14 +192,14 @@ export function solveDeterministically(query: string, mode: string = 'Academic',
     if (language === 'sw' || lower.includes('kwa kiswahili') || lower.includes('eleza')) {
       return {
         matched: true,
-        answer: `### ⚛️ Sheria ya Pili ya Mwendo ya Newton (Newton's Second Law of Motion)
+        answer: `###  Sheria ya Pili ya Mwendo ya Newton (Newton's Second Law of Motion)
 
 **Kauli ya Sheria:**
 > *Kiwango cha mabadiliko ya kani-mwendo (momentum) ya kitu kinalingana moja kwa moja na kani (force) inayotumika, na mabadiliko hayo hutokea katika mwelekeo wa kani hiyo.*
 
 ---
 
-### 📐 Utoaji wa Fomula Hatua kwa Hatua (Derivation of $F = ma$):
+###  Utoaji wa Fomula Hatua kwa Hatua (Derivation of $F = ma$):
 
 1. **Ufafanuzi wa Kani-mwendo ($p$):**
    Kani-mwendo ni zao la masi ($m$) na kasi ($v$):
@@ -218,7 +221,7 @@ export function solveDeterministically(query: string, mode: string = 'Academic',
 
 ---
 
-### 📊 Vipimo vya Kimataifa (SI Units):
+###  Vipimo vya Kimataifa (SI Units):
 * **$F$ (Force / Kani):** Newton ($\\text{N}$) ambapo $1\\text{ N} = 1\\text{ kg}\\cdot\\text{m/s}^2$
 * **$m$ (Mass / Masi):** Kilogramu ($\\text{kg}$)
 * **$a$ (Acceleration / Mchapuko):** Meta kwa sekunde mraba ($\\text{m/s}^2$)`
@@ -227,14 +230,14 @@ export function solveDeterministically(query: string, mode: string = 'Academic',
 
     return {
       matched: true,
-      answer: `### ⚛️ Newton's Second Law of Motion & Mathematical Derivation
+      answer: `###  Newton's Second Law of Motion & Mathematical Derivation
 
 **Statement of the Law:**
 > *The rate of change of momentum of an object is directly proportional to the applied force and takes place in the direction of the force.*
 
 ---
 
-### 📐 Step-by-Step Mathematical Derivation ($F = ma$):
+###  Step-by-Step Mathematical Derivation ($F = ma$):
 
 1. **Definition of Linear Momentum ($p$):**
    Linear momentum is the product of mass ($m$) and velocity ($v$):
@@ -257,7 +260,7 @@ export function solveDeterministically(query: string, mode: string = 'Academic',
 
 ---
 
-### 📌 Summary of Parameters & SI Units:
+###  Summary of Parameters & SI Units:
 * **Force ($F$):** Newtons ($\\text{N}$) where $1\\text{ N} = 1\\text{ kg}\\cdot\\text{m/s}^2$
 * **Mass ($m$):** Kilograms ($\\text{kg}$)
 * **Acceleration ($a$):** Meters per second squared ($\\text{m/s}^2$)`
@@ -272,7 +275,7 @@ export function solveDeterministically(query: string, mode: string = 'Academic',
   ) {
     return {
       matched: true,
-      answer: `### 📐 Derivation of the Quadratic Formula (Completing the Square)
+      answer: `###  Derivation of the Quadratic Formula (Completing the Square)
 
 To solve the standard quadratic equation:
 $$ax^2 + bx + c = 0 \\quad (a \\neq 0)$$
@@ -310,7 +313,7 @@ $$ax^2 + bx + c = 0 \\quad (a \\neq 0)$$
   ) {
     return {
       matched: true,
-      answer: `### 🐍 High-Performance Python Data Processing Script with Robust Error Handling
+      answer: `###  High-Performance Python Data Processing Script with Robust Error Handling
 
 \`\`\`python
 import sys
@@ -374,7 +377,7 @@ if __name__ == "__main__":
 
 ---
 
-### ⚡ Architectural Highlights:
+###  Architectural Highlights:
 1. **Lazy Stream Generators (\`yield\`):** Scales to multi-gigabyte files with low RAM usage.
 2. **\`ThreadPoolExecutor\` Concurrency:** Multi-threaded throughput.
 3. **Defensive Error Isolation:** Malformed rows are caught without crashing the process.`
@@ -390,16 +393,16 @@ if __name__ == "__main__":
     if (language === 'sw' || lower.includes('kwa kiswahili') || lower.includes('eleza') || lower.includes('rahisi')) {
       return {
         matched: true,
-        answer: `### 🌿 Mchakato wa Usanisinuru (Photosynthesis)
+        answer: `###  Mchakato wa Usanisinuru (Photosynthesis)
 
 **Usanisinuru** ni mchakato wa kibiolojia ambapo mimea ya kijani, mwani, na baadhi ya bakteria hutumia nishati ya mwanga wa jua, maji, na gesi ya kabonidioksidi kutengeneza chakula chao (glukosi) na kutoa gesi ya oksijeni kwa ajili ya viumbe hai kupumua.
 
 ---
 
-### 🔬 Mlinganyo wa Kikemia wa Usanisinuru:
+###  Mlinganyo wa Kikemia wa Usanisinuru:
 $$6\\text{CO}_2 + 6\\text{H}_2\\text{O} \\xrightarrow{\\text{Mwanga wa Jua + Klorofili}} \\text{C}_6\\text{H}_{12}\\text{O}_6 + 6\\text{O}_2$$
 
-### 📌 Mahitaji Makuu 4 ya Usanisinuru:
+###  Mahitaji Makuu 4 ya Usanisinuru:
 1. **Mwanga wa Jua:** Hutoa nishati ya mionzi inayoendesha mchakato.
 2. **Klorofili (Chlorophyll):** Rangi ya kijani ndani ya seli za majani inayofyonza mwanga.
 3. **Maji ($H_2O$):** Hufyonzwa kutoka ardhini kupitia mizizi.
@@ -407,7 +410,7 @@ $$6\\text{CO}_2 + 6\\text{H}_2\\text{O} \\xrightarrow{\\text{Mwanga wa Jua + Klo
 
 ---
 
-### 📋 Hatua Kuu Mbili:
+###  Hatua Kuu Mbili:
 1. **Hatua ya Mwanga (Light Stage):** Hutokea kwenye *thylakoid*; maji hugawanyika na kutoa gesi ya oksijeni na nishati (ATP).
 2. **Hatua ya Giza / Mzunguko wa Calvin (Dark Stage):** Hutokea kwenye *stroma*; kabonidioksidi hubadilishwa kuwa glukosi.`
       }
@@ -415,16 +418,16 @@ $$6\\text{CO}_2 + 6\\text{H}_2\\text{O} \\xrightarrow{\\text{Mwanga wa Jua + Klo
 
     return {
       matched: true,
-      answer: `### 🌿 The Process of Photosynthesis
+      answer: `###  The Process of Photosynthesis
 
 **Photosynthesis** is the fundamental biochemical process by which green plants, algae, and certain bacteria synthesize carbohydrates (glucose) from carbon dioxide and water using sunlight absorbed by chlorophyll, releasing oxygen as a vital byproduct.
 
 ---
 
-### 🔬 Balanced Chemical Equation:
+###  Balanced Chemical Equation:
 $$6\\text{CO}_2 + 6\\text{H}_2\\text{O} \\xrightarrow{\\text{Sunlight + Chlorophyll}} \\text{C}_6\\text{H}_{12}\\text{O}_6 + 6\\text{O}_2$$
 
-### 📌 The 4 Essential Requirements:
+###  The 4 Essential Requirements:
 1. **Sunlight:** Provides radiant electromagnetic energy.
 2. **Chlorophyll:** Green photoreceptor pigment inside chloroplasts.
 3. **Water ($H_2O$):** Drawn from the soil via xylem vessels.
@@ -432,7 +435,7 @@ $$6\\text{CO}_2 + 6\\text{H}_2\\text{O} \\xrightarrow{\\text{Sunlight + Chloroph
 
 ---
 
-### 📋 Two Main Biochemical Stages:
+###  Two Main Biochemical Stages:
 1. **Light-Dependent Reactions (in Thylakoid Membranes):** Photolysis of water releases $O_2$ and generates ATP and NADPH.
 2. **Light-Independent Reactions / Calvin Cycle (in Stroma):** Enzyme RuBisCO fixes $CO_2$ into glucose using ATP and NADPH.`
     }
@@ -484,7 +487,7 @@ export function matchImageGenerationRequest(query: string): { isImageGen: boolea
   const seed = Math.floor(Math.random() * 100000)
   const imageUrl = `https://image.pollinations.ai/prompt/${encoded}?width=1024&height=1024&model=flux&seed=${seed}&nologo=true&enhance=true`
 
-  const markdown = `### 🎨 Image Generated: **${extractedPrompt}**\n\n![${extractedPrompt}](${imageUrl})\n\n*Generated by Copetra Neural Canvas (Flux Ultra-HD Engine)*`
+  const markdown = `###  Image Generated: **${extractedPrompt}**\n\n![${extractedPrompt}](${imageUrl})\n\n*Generated by Copetra Neural Canvas (Flux Ultra-HD Engine)*`
 
   return { isImageGen: true, prompt: extractedPrompt, markdown }
 }

@@ -1,7 +1,7 @@
 'use client'
 
 /**
- * 🚨 CRITICAL SAFEGUARD WARNING FOR DEVELOPERS
+ *  CRITICAL SAFEGUARD WARNING FOR DEVELOPERS
  * -------------------------------------------------------------
  * 1. vCARD PARSING: Do not modify the pattern matching for [VCARD: ...] blocks.
  * 2. EXPORT FUNCTIONS: Keep handleExportDocx, handleExportPdf, and handleExportExcel intact.
@@ -214,7 +214,7 @@ function CodeBlockRunner({ language, code, children, props }: any) {
                   transition: 'all 0.15s'
                 }}
               >
-                👁️ Live Preview
+                 Live Preview
               </button>
             </div>
           )}
@@ -229,14 +229,14 @@ function CodeBlockRunner({ language, code, children, props }: any) {
                 title="Reload Preview"
                 style={{ background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)', color: '#ffffff', fontSize: '11px', fontWeight: '600', padding: '4px 8px', borderRadius: '6px', cursor: 'pointer' }}
               >
-                🔄 Refresh
+                 Refresh
               </button>
               <button
                 onClick={handlePopout}
                 title="Open Preview in Fullscreen Tab"
                 style={{ background: 'rgba(56, 189, 248, 0.2)', border: '1px solid rgba(56, 189, 248, 0.4)', color: '#38bdf8', fontSize: '11px', fontWeight: '700', padding: '4px 9px', borderRadius: '6px', cursor: 'pointer' }}
               >
-                ⤢ Popout
+                 Popout
               </button>
             </>
           )}
@@ -247,7 +247,7 @@ function CodeBlockRunner({ language, code, children, props }: any) {
               disabled={isRunning}
               style={{ background: '#7c6ef7', border: 'none', color: '#ffffff', fontSize: '11px', fontWeight: '700', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer' }}
             >
-              {isRunning ? 'Running...' : '▶ Run'}
+              {isRunning ? 'Running...' : ' Run'}
             </button>
           )}
 
@@ -256,7 +256,7 @@ function CodeBlockRunner({ language, code, children, props }: any) {
             title="Download Code File"
             style={{ background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)', color: '#ffffff', fontSize: '11px', fontWeight: '600', padding: '4px 9px', borderRadius: '6px', cursor: 'pointer' }}
           >
-            📥 Download
+             Download
           </button>
 
           <button
@@ -264,14 +264,14 @@ function CodeBlockRunner({ language, code, children, props }: any) {
             title="Download as ZIP Archive"
             style={{ background: 'rgba(16, 185, 129, 0.2)', border: '1px solid rgba(16, 185, 129, 0.4)', color: '#34d399', fontSize: '11px', fontWeight: '700', padding: '4px 9px', borderRadius: '6px', cursor: 'pointer' }}
           >
-            📦 ZIP
+             ZIP
           </button>
 
           <button
             onClick={handleCopy}
             style={{ background: copied ? '#10b981' : 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)', color: '#ffffff', fontSize: '11px', fontWeight: '600', padding: '4px 9px', borderRadius: '6px', cursor: 'pointer' }}
           >
-            {copied ? '✓ Copied' : 'Copy'}
+            {copied ? ' Copied' : 'Copy'}
           </button>
         </div>
       </div>
@@ -343,7 +343,7 @@ const ResilientMarkdownImage = ({ src, alt, onPreview }: { src?: string; alt?: s
         }}>
           <div style={{ width: '28px', height: '28px', borderRadius: '50%', border: '3px solid #0284c7', borderTopColor: 'transparent', animation: 'imageLoadingSpin 1s linear infinite' }} />
           <span style={{ fontSize: '11px', fontWeight: '800', color: '#64748b', textAlign: 'center' }}>
-            🎨 Generating visual concept... Please wait
+             Generating visual concept... Please wait
           </span>
           <style>{`@keyframes imageLoadingSpin { to { transform: rotate(360deg); } }`}</style>
         </div>
@@ -984,7 +984,7 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
                       fontSize: '11px',
                       fontWeight: '600'
                     }}>
-                      <span>🔍 Click to Zoom</span>
+                      <span> Click to Zoom</span>
                       <span>Image #{idx + 1}</span>
                     </div>
                   </div>
@@ -1011,7 +1011,7 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
                       color: '#0369a1'
                     }}
                   >
-                    <span>📄</span>
+                    <span></span>
                     <span>{docTitle}</span>
                   </div>
                 ))}
@@ -1104,13 +1104,13 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', fontSize: '11.5px', color: '#334155', borderTop: '1px solid #f1f5f9', paddingTop: '8px', zIndex: 1 }}>
                       {card.phone && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span>📞</span>
+                          <span></span>
                           <a href={`tel:${card.phone}`} style={{ color: '#0284c7', textDecoration: 'none', fontWeight: '700' }}>{card.phone}</a>
                         </div>
                       )}
                       {card.email && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span>✉️</span>
+                          <span></span>
                           <a href={`mailto:${card.email}`} style={{ color: '#0284c7', textDecoration: 'none', fontWeight: '700' }}>{card.email}</a>
                         </div>
                       )}
@@ -1157,7 +1157,7 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
                         zIndex: 1
                       }}
                     >
-                      <span>📥</span>
+                      <span></span>
                       <span>Save to Contacts (.vcf)</span>
                     </button>
                   </div>
@@ -1174,7 +1174,7 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
                 {attachedImages.length > 0 || attachedDocs.length > 0 ? '' : 'Response pending. Please resend your question.'}
               </div>
             )}{isStreaming && isAi && message.content && (
-              <span className="cursor-blink" aria-hidden="true">▌</span>
+              <span className="cursor-blink" aria-hidden="true"></span>
             )}
           </>
         )}
@@ -1183,7 +1183,7 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
         {hasCodeBlocks && !isStreaming && (
           <div style={{ marginTop: '14px', paddingTop: '10px', borderTop: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
             <div style={{ fontSize: '12px', color: '#64748b', fontWeight: '600' }}>
-              📁 Generated Project Code Bundle:
+               Generated Project Code Bundle:
             </div>
             <button
               onClick={() => downloadAllCodeAsProjectZip(message.content)}
@@ -1202,7 +1202,7 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
                 boxShadow: '0 2px 8px rgba(2, 132, 199, 0.25)'
               }}
             >
-              <span>📦</span>
+              <span></span>
               <span>Download Project as ZIP (.zip)</span>
             </button>
           </div>
@@ -1228,7 +1228,7 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
               )}
             </button>
 
-            {/* 🔊 Text-to-Speech Direct Button */}
+            {/*  Text-to-Speech Direct Button */}
             <button
               onClick={handleSpeak}
               title={isSpeaking ? "Stop reading / Simamisha sauti" : "Read aloud / Sikiliza jibu kwa sauti"}
@@ -1252,7 +1252,7 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
               </svg>
             </button>
 
-            {/* 🟢 Share to WhatsApp */}
+            {/*  Share to WhatsApp */}
             <button
               onClick={handleShareWhatsApp}
               title="Share to WhatsApp / Shiriki kwenye WhatsApp"
@@ -1263,7 +1263,7 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
               </svg>
             </button>
 
-            {/* 📕 Export PDF Direct */}
+            {/*  Export PDF Direct */}
             <button
               onClick={handleExportPdf}
               title="Export as PDF / Pakua kama PDF"
@@ -1364,7 +1364,7 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
                   onMouseOver={e => (e.currentTarget.style.background = '#f1f5f9')}
                   onMouseOut={e => (e.currentTarget.style.background = 'transparent')}
                 >
-                  <span style={{ fontSize: '14px' }}>📄</span>
+                  <span style={{ fontSize: '14px' }}></span>
                   <span>Export to Word (.doc)</span>
                 </button>
 
@@ -1377,7 +1377,7 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
                   onMouseOver={e => (e.currentTarget.style.background = '#f1f5f9')}
                   onMouseOut={e => (e.currentTarget.style.background = 'transparent')}
                 >
-                  <span style={{ fontSize: '14px' }}>📕</span>
+                  <span style={{ fontSize: '14px' }}></span>
                   <span>Export to PDF (.pdf)</span>
                 </button>
 
@@ -1391,7 +1391,7 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
                     onMouseOver={e => (e.currentTarget.style.background = '#f1f5f9')}
                     onMouseOut={e => (e.currentTarget.style.background = 'transparent')}
                   >
-                    <span style={{ fontSize: '14px' }}>📊</span>
+                    <span style={{ fontSize: '14px' }}></span>
                     <span>Export Table to Excel</span>
                   </button>
                 )}
@@ -1464,7 +1464,7 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
             {isEditingImage ? (
               <div style={{ width: '300px', display: 'flex', flexDirection: 'column', gap: '14px', background: '#1e293b', padding: '20px', borderRadius: '16px', border: '1px solid #334155', color: '#f8fafc' }}>
                 <h3 style={{ margin: '0 0 6px 0', fontSize: '15px', fontWeight: '800', color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span>🎨</span> Image Filter Editor
+                  <span></span> Image Filter Editor
                 </h3>
 
                 {/* Brightness */}
@@ -1527,7 +1527,7 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
                     onClick={() => setRotation(r => (r + 90) % 360)}
                     style={{ flex: 1, padding: '8px', background: '#334155', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '11px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                   >
-                    🔄 Rotate 90°
+                     Rotate 90°
                   </button>
                   <button
                     onClick={handleResetImageEdit}
@@ -1543,7 +1543,7 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
                     onClick={handleSaveImageEdit}
                     style={{ flex: 1, padding: '10px', background: '#10b981', border: 'none', borderRadius: '10px', color: '#fff', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
                   >
-                    💾 Save Changes
+                     Save Changes
                   </button>
                   <button
                     onClick={() => {
@@ -1576,7 +1576,7 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
                     boxShadow: '0 4px 12px rgba(5, 150, 105, 0.25)'
                   }}
                 >
-                  ✏️ Edit Image Filters
+                   Edit Image Filters
                 </button>
                 <a
                   href={previewModalImg}
@@ -1595,7 +1595,7 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
                     boxShadow: '0 4px 12px rgba(2, 132, 199, 0.25)'
                   }}
                 >
-                  📥 Download Full Image
+                   Download Full Image
                 </a>
                 <button
                   onClick={() => setPreviewModalImg(null)}
@@ -1610,7 +1610,7 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
                     cursor: 'pointer'
                   }}
                 >
-                  ✕ Close
+                   Close
                 </button>
               </div>
             )}

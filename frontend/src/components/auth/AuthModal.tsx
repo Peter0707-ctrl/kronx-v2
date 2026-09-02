@@ -159,7 +159,7 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
             title="Close"
             style={{ position: 'absolute', top: '16px', right: '16px', background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', fontWeight: '700', color: '#0f172a' }}
           >
-            ✕
+            
           </button>
         )}
 
@@ -254,7 +254,7 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
                 style={{ position: 'absolute', right: '12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', color: '#64748b' }}
                 title={showPassword ? 'Hide Password' : 'Show Password'}
               >
-                {showPassword ? '👁️' : '🙈'}
+                {showPassword ? '' : ''}
               </button>
             </div>
           </div>

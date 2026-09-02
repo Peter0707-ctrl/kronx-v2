@@ -149,7 +149,7 @@ export default function PwaInstallPrompt() {
                   boxShadow: '0 2px 8px rgba(2, 132, 199, 0.4)',
                 }}
               >
-                <span style={{ fontSize: '18px' }}>📥</span>
+                <span style={{ fontSize: '18px' }}></span>
               </div>
               <div>
                 <div style={{ fontSize: '14px', fontWeight: '800', color: '#ffffff', letterSpacing: '-0.2px' }}>
@@ -181,7 +181,7 @@ export default function PwaInstallPrompt() {
               }}
               title="Close"
             >
-              ✕
+              
             </button>
           </div>
 
@@ -205,7 +205,7 @@ export default function PwaInstallPrompt() {
                 boxShadow: '0 4px 12px rgba(2, 132, 199, 0.35)',
               }}
             >
-              <span>📥</span>
+              <span></span>
               <span>{sw ? 'PAKUA APP SASA' : 'DOWNLOAD APP NOW'}</span>
             </button>
             <button
@@ -256,7 +256,7 @@ export default function PwaInstallPrompt() {
               textAlign: 'center',
             }}
           >
-            <div style={{ fontSize: '36px', marginBottom: '8px' }}>📱</div>
+            <div style={{ fontSize: '36px', marginBottom: '8px' }}></div>
             <h3 style={{ fontSize: '18px', fontWeight: 800, margin: '0 0 6px 0', color: '#0f172a' }}>
               {sw ? 'Sakinisha Copetra AI kwenye iPhone' : 'Install Copetra AI on iPhone'}
             </h3>
@@ -307,11 +307,11 @@ export default function PwaInstallPrompt() {
                 <div style={{ fontSize: '13px', color: '#1e293b', lineHeight: 1.4 }}>
                   {sw ? (
                     <>
-                      Gusa kitufe cha <strong>Shiriki (Share 📤)</strong> chini au juu ya Safari.
+                      Gusa kitufe cha <strong>Shiriki (Share )</strong> chini au juu ya Safari.
                     </>
                   ) : (
                     <>
-                      Tap the <strong>Share button (📤 / ⎋)</strong> at the bottom of Safari.
+                      Tap the <strong>Share button ( / ⎋)</strong> at the bottom of Safari.
                     </>
                   )}
                 </div>
@@ -349,11 +349,11 @@ export default function PwaInstallPrompt() {
                 <div style={{ fontSize: '13px', color: '#1e293b', lineHeight: 1.4 }}>
                   {sw ? (
                     <>
-                      Tembea chini kisha uchague <strong>&quot;Ongeza kwenye Skrini ya Nyumbani&quot; (➕ Add to Home Screen)</strong>.
+                      Tembea chini kisha uchague <strong>&quot;Ongeza kwenye Skrini ya Nyumbani&quot; ( Add to Home Screen)</strong>.
                     </>
                   ) : (
                     <>
-                      Scroll down and tap <strong>&quot;Add to Home Screen&quot; (➕)</strong>.
+                      Scroll down and tap <strong>&quot;Add to Home Screen&quot; ()</strong>.
                     </>
                   )}
                 </div>

@@ -67,7 +67,7 @@ class QualityGate:
         r"i have received your request",
         r"i have analyzed your document",
         r"your inquiry regarding",
-        r"^### 💡 copetra ai — response\s*i have analyzed your request",
+        r"^###  copetra ai — response\s*i have analyzed your request",
     ]
 
     _LEAKED_INTERNAL_TAGS = [

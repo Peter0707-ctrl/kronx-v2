@@ -21,7 +21,7 @@ export default function FloatingTools() {
               setExpanded(false)
             }}
           >
-            <span className="btn-icon">💬</span>
+            <span className="btn-icon"></span>
             <span>{sw ? 'Mazungumzo (Chat)' : 'Chat View'}</span>
           </button>
 
@@ -32,7 +32,7 @@ export default function FloatingTools() {
               setExpanded(false)
             }}
           >
-            <span className="btn-icon">📊</span>
+            <span className="btn-icon"></span>
             <span>{sw ? 'Mfumo & Takwimu' : 'Dashboard'}</span>
           </button>
         </div>

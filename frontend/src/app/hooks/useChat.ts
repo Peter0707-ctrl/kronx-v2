@@ -36,8 +36,8 @@ export function useChat() {
       } catch (err) {
         const msg =
           store.language === 'sw'
-            ? '⚠️ Hitilafu — tafadhali jaribu tena. (Connection error)'
-            : '⚠️ Something went wrong — please try again.'
+            ? ' Hitilafu — tafadhali jaribu tena. (Connection error)'
+            : ' Something went wrong — please try again.'
         store.updateLastAiMessage(msg)
         console.error('[Kronx chat error]', err)
       } finally {

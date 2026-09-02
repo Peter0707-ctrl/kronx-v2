@@ -26,13 +26,13 @@ export async function GET() {
       if (res.ok) {
         const data = await res.json()
         const models = data.models?.map((m: { name: string }) => m.name) || []
-        ;(results.ollama_tests as unknown[]).push({ host, status: 'REACHABLE ✅', models })
+        ;(results.ollama_tests as unknown[]).push({ host, status: 'REACHABLE ', models })
       } else {
-        ;(results.ollama_tests as unknown[]).push({ host, status: `HTTP ${res.status} ❌` })
+        ;(results.ollama_tests as unknown[]).push({ host, status: `HTTP ${res.status} ` })
       }
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e)
-      ;(results.ollama_tests as unknown[]).push({ host, status: `FAILED ❌`, error: msg })
+      ;(results.ollama_tests as unknown[]).push({ host, status: `FAILED `, error: msg })
     }
   }
 
