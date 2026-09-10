@@ -192,15 +192,18 @@ export default function TopBar() {
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '6px',
+            gap: '8px',
             cursor: 'pointer',
-            padding: '2px 10px',
+            padding: '4px 10px',
             borderRadius: '12px',
             background: brandMenuOpen ? 'rgba(0,0,0,0.06)' : 'transparent',
             transition: 'background-color 0.2s ease',
             userSelect: 'none'
           }}
         >
+          <div style={{ width: '26px', height: '26px', borderRadius: '8px', overflow: 'hidden', border: '1px solid rgba(0,0,0,0.1)', boxShadow: '0 2px 6px rgba(0,0,0,0.08)', flexShrink: 0 }}>
+            <img src="/copetra_logo.jpg" alt="Copetra AI" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          </div>
           <span
             className="copetra-brand-instagram instagram-font copetra-script-font"
             style={{

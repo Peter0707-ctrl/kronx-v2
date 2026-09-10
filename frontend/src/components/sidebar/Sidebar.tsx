@@ -43,8 +43,18 @@ export default function Sidebar() {
     <>
       <div className="sidebar-overlay" onClick={toggleSidebar}></div>
       <aside className="sidebar" style={{ width: '280px', background: '#f8fafc', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', flexShrink: 0, zIndex: 1000, fontFamily: "Calibri, 'Calibri Light', sans-serif" }}>
+      {/* Brand Header */}
+      <div style={{ padding: '16px 16px 6px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ width: '32px', height: '32px', borderRadius: '10px', overflow: 'hidden', border: '1px solid #e2e8f0', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', flexShrink: 0 }}>
+          <img src="/copetra_logo.jpg" alt="Copetra AI" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        </div>
+        <span className="copetra-script-font instagram-font" style={{ fontSize: '26px', fontFamily: "'Grand Hotel', 'Pacifico', cursive", color: '#0f172a', letterSpacing: '0.3px', fontWeight: 'bold' }}>
+          Copetra AI
+        </span>
+      </div>
+
       {/* Top New Chat Action & Mobile Close */}
-      <div style={{ padding: '16px 16px 8px 16px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+      <div style={{ padding: '8px 16px 8px 16px', display: 'flex', gap: '8px', alignItems: 'center' }}>
         <button
           onClick={() => {
             newConversation()
