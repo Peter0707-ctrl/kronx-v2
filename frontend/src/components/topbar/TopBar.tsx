@@ -202,7 +202,7 @@ export default function TopBar() {
           }}
         >
           <div style={{ width: '26px', height: '26px', borderRadius: '8px', overflow: 'hidden', border: '1px solid rgba(0,0,0,0.1)', boxShadow: '0 2px 6px rgba(0,0,0,0.08)', flexShrink: 0 }}>
-            <img src="/copetra_logo.jpg" alt="Copetra AI" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img src="/kronx_logo.jpg" alt="Copetra AI" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
           <span
             className="copetra-brand-instagram instagram-font copetra-script-font"

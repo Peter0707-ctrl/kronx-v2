@@ -114,7 +114,7 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
         <div className="auth-brand-content">
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
             <div style={{ width: '46px', height: '46px', borderRadius: '13px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.25)', boxShadow: '0 4px 14px rgba(2, 132, 199, 0.4)' }}>
-              <img src="/copetra_logo.jpg" alt="Copetra AI Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src="/kronx_logo.jpg" alt="Copetra AI Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
             <span className="copetra-script-font instagram-font" style={{ fontSize: '36px', fontFamily: "'Grand Hotel', 'Pacifico', cursive", color: '#ffffff', letterSpacing: '0.5px' }}>Copetra AI</span>
           </div>

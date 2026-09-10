@@ -15,7 +15,7 @@ export default function LandingPage({ onStart }: Props) {
       <header className="landing-nav">
         <div className="landing-logo" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{ width: '40px', height: '40px', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.25)', boxShadow: '0 4px 14px rgba(2, 132, 199, 0.4)', flexShrink: 0 }}>
-            <img src="/copetra_logo.jpg" alt="Copetra AI" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img src="/kronx_logo.jpg" alt="Copetra AI" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
           <span
             className="landing-logo-title instagram-font copetra-script-font copetra-brand-title"
