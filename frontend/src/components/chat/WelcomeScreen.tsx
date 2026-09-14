@@ -87,26 +87,26 @@ export default function WelcomeScreen({ onSend }: Props) {
       }}
     >
       <style>{`
-        @keyframes circularRipple {
+        @keyframes waterWavePulse {
           0% {
             transform: translate(-50%, -50%) scale(0.15);
             opacity: 0.85;
           }
-          40% {
-            opacity: 0.55;
+          45% {
+            opacity: 0.5;
           }
-          75% {
-            opacity: 0.25;
+          85% {
+            opacity: 0.12;
           }
           100% {
-            transform: translate(-50%, -50%) scale(3.2);
+            transform: translate(-50%, -50%) scale(1.6);
             opacity: 0;
           }
         }
 
-        @keyframes centerGlowBreath {
+        @keyframes corePulse {
           0%, 100% {
-            transform: translate(-50%, -50%) scale(0.9);
+            transform: translate(-50%, -50%) scale(0.85);
             opacity: 0.5;
           }
           50% {
@@ -120,49 +120,59 @@ export default function WelcomeScreen({ onSend }: Props) {
           50% { opacity: 0; }
         }
 
-        .ripple-center-glow {
+        .water-ripple-container {
           position: absolute;
-          left: 50%;
           top: 50%;
-          width: 220px;
-          height: 220px;
-          border-radius: 50%;
-          background: radial-gradient(circle, rgba(14, 165, 233, 0.4) 0%, rgba(56, 189, 248, 0.2) 50%, transparent 75%);
-          filter: blur(28px);
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: min(75vw, 560px);
+          height: min(75vw, 560px);
           pointer-events: none;
           z-index: 0;
-          animation: centerGlowBreath 4s ease-in-out infinite;
+          -webkit-mask-image: radial-gradient(circle, rgba(0,0,0,1) 25%, rgba(0,0,0,0) 70%);
+          mask-image: radial-gradient(circle, rgba(0,0,0,1) 25%, rgba(0,0,0,0) 70%);
         }
 
-        .ripple-ring {
+        .center-core-glow {
           position: absolute;
-          left: 50%;
           top: 50%;
-          width: 380px;
-          height: 380px;
+          left: 50%;
+          width: 180px;
+          height: 180px;
           border-radius: 50%;
-          background: radial-gradient(circle, rgba(14, 165, 233, 0.35) 0%, rgba(56, 189, 248, 0.2) 35%, rgba(2, 132, 199, 0.06) 65%, transparent 80%);
-          filter: blur(24px);
+          background: radial-gradient(circle, rgba(14, 165, 233, 0.45) 0%, rgba(56, 189, 248, 0.22) 45%, transparent 70%);
+          filter: blur(20px);
+          animation: corePulse 4s ease-in-out infinite;
+        }
+
+        .ripple-wave {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 320px;
+          height: 320px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(14, 165, 233, 0.4) 0%, rgba(56, 189, 248, 0.25) 30%, rgba(2, 132, 199, 0.08) 55%, transparent 70%);
+          filter: blur(18px);
           pointer-events: none;
-          z-index: 0;
         }
 
-        .ring-1 {
-          animation: circularRipple 6s cubic-bezier(0.15, 0.85, 0.35, 1) infinite;
+        .wave-1 {
+          animation: waterWavePulse 6s cubic-bezier(0.15, 0.85, 0.35, 1) infinite;
         }
 
-        .ring-2 {
-          animation: circularRipple 6s cubic-bezier(0.15, 0.85, 0.35, 1) infinite;
+        .wave-2 {
+          animation: waterWavePulse 6s cubic-bezier(0.15, 0.85, 0.35, 1) infinite;
           animation-delay: 1.5s;
         }
 
-        .ring-3 {
-          animation: circularRipple 6s cubic-bezier(0.15, 0.85, 0.35, 1) infinite;
+        .wave-3 {
+          animation: waterWavePulse 6s cubic-bezier(0.15, 0.85, 0.35, 1) infinite;
           animation-delay: 3s;
         }
 
-        .ring-4 {
-          animation: circularRipple 6s cubic-bezier(0.15, 0.85, 0.35, 1) infinite;
+        .wave-4 {
+          animation: waterWavePulse 6s cubic-bezier(0.15, 0.85, 0.35, 1) infinite;
           animation-delay: 4.5s;
         }
 
@@ -179,12 +189,14 @@ export default function WelcomeScreen({ onSend }: Props) {
         }
       `}</style>
 
-      {/* Seamless Organic Circular Water Ripples (Originating from exact center, spreading 360 degrees without square edges) */}
-      <div className="ripple-center-glow" />
-      <div className="ripple-ring ring-1" />
-      <div className="ripple-ring ring-2" />
-      <div className="ripple-ring ring-3" />
-      <div className="ripple-ring ring-4" />
+      {/* Seamless Masked 360-Degree Water Ripple Waves (Guaranteed 0 Frame Edges & 0 Box Clipping) */}
+      <div className="water-ripple-container">
+        <div className="center-core-glow" />
+        <div className="ripple-wave wave-1" />
+        <div className="ripple-wave wave-2" />
+        <div className="ripple-wave wave-3" />
+        <div className="ripple-wave wave-4" />
+      </div>
 
       {/* Content Layer */}
       <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '780px', padding: '0 20px' }}>
