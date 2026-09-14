@@ -132,16 +132,16 @@ export default function AdminDashboard() {
         </div>
       )}
       {/* Admin Header */}
-      <div className="admin-header" style={{ marginBottom: '20px' }}>
-        <div>
+      <div className="admin-header">
+        <div className="admin-header-info">
           <div className="admin-badge">
             <span className="admin-pip" />
             <span>AI ADMIN DASHBOARD</span>
           </div>
-          <h1 className="admin-title" style={{ fontSize: '24px', fontWeight: '800', margin: '4px 0' }}>
+          <h1 className="admin-title">
             {sw ? 'Mfumo wa Usimamizi wa AI' : 'AI Master Admin Console'}
           </h1>
-          <p className="admin-sub" style={{ fontSize: '13.5px', color: '#64748b', margin: 0 }}>
+          <p className="admin-sub">
             {sw
               ? 'Dhibiti watumiaji, mapato ya kila mwezi, injini za AI, na urekebishaji wa mfumo.'
               : 'Manage registered users, monthly subscription revenues, live AI engines, and system tuning.'}
@@ -149,84 +149,84 @@ export default function AdminDashboard() {
         </div>
 
         <button className="admin-back-btn" onClick={() => setActiveView('chat')}>
-          ← {sw ? 'Rudi Kwenye Chat' : 'Return to Chat'}
+          &larr; {sw ? 'Rudi Kwenye Chat' : 'Return to Chat'}
         </button>
       </div>
 
       {/* Metric Cards Banner - Real-Time User Counter */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-        <div style={{ background: '#ffffff', borderRadius: '16px', padding: '18px 20px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
-          <div style={{ fontSize: '12px', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+      <div className="admin-metrics-grid">
+        <div className="admin-metric-card">
+          <div className="admin-metric-label">
             {sw ? 'Jumla ya Watumiaji' : 'Total Registered Users'}
           </div>
-          <div style={{ fontSize: '28px', fontWeight: '900', color: '#0f172a', marginTop: '6px' }}>
+          <div className="admin-metric-value">
             {usersList.length}
           </div>
-          <div style={{ fontSize: '11.5px', color: '#10b981', fontWeight: '700', marginTop: '4px' }}>
-             Live PostgreSQL Database
+          <div className="admin-metric-status" style={{ color: '#10b981' }}>
+            Live PostgreSQL Database
           </div>
         </div>
 
-        <div style={{ background: '#ffffff', borderRadius: '16px', padding: '18px 20px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
-          <div style={{ fontSize: '12px', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+        <div className="admin-metric-card">
+          <div className="admin-metric-label">
             {sw ? 'Watumiaji wa Boresho' : 'Paid Subscribers (PLUS/PRO)'}
           </div>
-          <div style={{ fontSize: '28px', fontWeight: '900', color: '#0284c7', marginTop: '6px' }}>
+          <div className="admin-metric-value" style={{ color: '#0284c7' }}>
             {usersList.filter(u => u.plan === 'plus' || u.plan === 'pro' || u.plan === 'premium').length}
           </div>
-          <div style={{ fontSize: '11.5px', color: '#64748b', fontWeight: '600', marginTop: '4px' }}>
+          <div className="admin-metric-status" style={{ color: '#64748b' }}>
             Active Subscriptions
           </div>
         </div>
 
-        <div style={{ background: '#ffffff', borderRadius: '16px', padding: '18px 20px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
-          <div style={{ fontSize: '12px', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+        <div className="admin-metric-card">
+          <div className="admin-metric-label">
             {sw ? 'Maafisa Admin' : 'Admin Accounts'}
           </div>
-          <div style={{ fontSize: '28px', fontWeight: '900', color: '#8b5cf6', marginTop: '6px' }}>
+          <div className="admin-metric-value" style={{ color: '#8b5cf6' }}>
             {usersList.filter(u => u.role === 'admin').length}
           </div>
-          <div style={{ fontSize: '11.5px', color: '#64748b', fontWeight: '600', marginTop: '4px' }}>
+          <div className="admin-metric-status" style={{ color: '#64748b' }}>
             System Administrators
           </div>
         </div>
 
-        <div style={{ background: '#ffffff', borderRadius: '16px', padding: '18px 20px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.03)' }}>
-          <div style={{ fontSize: '12px', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+        <div className="admin-metric-card">
+          <div className="admin-metric-label">
             {sw ? 'Developer API Access' : 'Developer Key Holders'}
           </div>
-          <div style={{ fontSize: '28px', fontWeight: '900', color: '#f59e0b', marginTop: '6px' }}>
+          <div className="admin-metric-value" style={{ color: '#f59e0b' }}>
             {usersList.filter(u => u.isDeveloper).length}
           </div>
-          <div style={{ fontSize: '11.5px', color: '#64748b', fontWeight: '600', marginTop: '4px' }}>
+          <div className="admin-metric-status" style={{ color: '#64748b' }}>
             API Gateway Authorized
           </div>
         </div>
       </div>
 
       {/* Admin Tab Navigation Buttons */}
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '24px', flexWrap: 'wrap' }}>
+      <div className="admin-tabs-nav">
         <button
           onClick={() => setActiveTab('users')}
-          style={{ padding: '10px 18px', borderRadius: '12px', background: activeTab === 'users' ? '#0f172a' : '#ffffff', color: activeTab === 'users' ? '#ffffff' : '#0f172a', border: '1px solid #cbd5e1', fontWeight: '800', fontSize: '13.5px', cursor: 'pointer' }}
+          className={`admin-tab-btn ${activeTab === 'users' ? 'active' : ''}`}
         >
           User Accounts ({usersList.length})
         </button>
         <button
           onClick={() => setActiveTab('revenue')}
-          style={{ padding: '10px 18px', borderRadius: '12px', background: activeTab === 'revenue' ? '#0f172a' : '#ffffff', color: activeTab === 'revenue' ? '#ffffff' : '#0f172a', border: '1px solid #cbd5e1', fontWeight: '800', fontSize: '13.5px', cursor: 'pointer' }}
+          className={`admin-tab-btn ${activeTab === 'revenue' ? 'active' : ''}`}
         >
           Monthly Revenue Report
         </button>
         <button
           onClick={() => setActiveTab('telemetry')}
-          style={{ padding: '10px 18px', borderRadius: '12px', background: activeTab === 'telemetry' ? '#0f172a' : '#ffffff', color: activeTab === 'telemetry' ? '#ffffff' : '#0f172a', border: '1px solid #cbd5e1', fontWeight: '800', fontSize: '13.5px', cursor: 'pointer' }}
+          className={`admin-tab-btn ${activeTab === 'telemetry' ? 'active' : ''}`}
         >
           System Telemetry & RAM
         </button>
         <button
           onClick={() => setActiveTab('tuning')}
-          style={{ padding: '10px 18px', borderRadius: '12px', background: activeTab === 'tuning' ? '#0f172a' : '#ffffff', color: activeTab === 'tuning' ? '#ffffff' : '#0f172a', border: '1px solid #cbd5e1', fontWeight: '800', fontSize: '13.5px', cursor: 'pointer' }}
+          className={`admin-tab-btn ${activeTab === 'tuning' ? 'active' : ''}`}
         >
           LLM Engine Tuning
         </button>
