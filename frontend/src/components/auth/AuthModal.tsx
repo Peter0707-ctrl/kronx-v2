@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useKronxStore } from '@/store/useKronxStore'
 import { UserProfile } from '@/types'
+import { COPETRA_LOGO_BASE64 } from '@/lib/brandLogo'
 
 interface AuthModalProps {
   isPage?: boolean
@@ -58,7 +59,6 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
     }
 
     if (tab === 'register') {
-      // Create user but don't log them in yet
       fetch('/api/users', {
         method: 'POST',
         headers: {
@@ -87,7 +87,6 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
           }
           
           if (existingUser) {
-            // Preserve their existing DB role and plan to prevent demotion!
             user.role = existingUser.role || existingUser.isDeveloper ? 'admin' : user.role
             if (existingUser.role) user.role = existingUser.role
             if (existingUser.plan) user.plan = existingUser.plan
@@ -113,14 +112,14 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
       <div className="auth-brand-panel">
         <div className="auth-brand-content">
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-            <div style={{ width: '46px', height: '46px', borderRadius: '13px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.25)', boxShadow: '0 4px 14px rgba(2, 132, 199, 0.4)' }}>
-              <img src="/kronx_logo.jpg" alt="Copetra AI Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <div style={{ width: '46px', height: '46px', borderRadius: '13px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.25)', boxShadow: '0 4px 14px rgba(2, 132, 199, 0.4)', background: '#000000' }}>
+              <img src={COPETRA_LOGO_BASE64} alt="Copetra AI Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
-            <span className="copetra-script-font instagram-font" style={{ fontSize: '36px', fontFamily: "'Grand Hotel', 'Pacifico', cursive", color: '#ffffff', letterSpacing: '0.5px' }}>Copetra AI</span>
+            <span style={{ fontSize: '26px', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", fontWeight: '800', color: '#ffffff', letterSpacing: '-0.5px' }}>Copetra AI</span>
           </div>
 
-          <h3 style={{ fontSize: '26px', fontWeight: '800', margin: '0 0 12px 0', letterSpacing: '-0.5px', color: '#ffffff' }}>
-            <span className="copetra-script-font" style={{ fontFamily: "'Grand Hotel', cursive", fontSize: '36px', marginRight: '6px' }}>Copetra AI</span> Companion
+          <h3 style={{ fontSize: '24px', fontWeight: '800', margin: '0 0 12px 0', letterSpacing: '-0.5px', color: '#ffffff' }}>
+            Copetra AI Companion
           </h3>
           <p className="auth-brand-desc">
             Copetra AI is an advanced AI study companion created by PJ Copetranova to empower students with step-by-step academic explanations, homework guidance, research thesis writing, and programming.
@@ -129,7 +128,7 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
           <div className="auth-brand-features" style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span style={{ background: 'rgba(255,255,255,0.1)', padding: '4px 8px', borderRadius: '8px', fontWeight: '800', color: '#38bdf8' }}>•</span>
-              <span>Step-by-step academic explanation & homework help</span>
+              <span>Step-by-step academic explanation and homework help</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span style={{ background: 'rgba(255,255,255,0.1)', padding: '4px 8px', borderRadius: '8px', fontWeight: '800', color: '#38bdf8' }}>•</span>
@@ -137,17 +136,17 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span style={{ background: 'rgba(255,255,255,0.1)', padding: '4px 8px', borderRadius: '8px', fontWeight: '800', color: '#38bdf8' }}>•</span>
-              <span>FLUX 8K Image Renders & Video Generators</span>
+              <span>FLUX 8K Image Renders and Video Generators</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span style={{ background: 'rgba(255,255,255,0.1)', padding: '4px 8px', borderRadius: '8px', fontWeight: '800', color: '#38bdf8' }}>•</span>
               <span>Developer API Keys for Premium Subscribers</span>
+            </div>
           </div>
           <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '16px', marginTop: '28px', fontSize: '12px', color: '#64748b', letterSpacing: '0.5px' }}>
             POWERED BY PJ COPETRANOVA
           </div>
         </div>
-      </div>
       </div>
 
       {/* RIGHT SIDE: AUTHENTICATION FORM */}
@@ -157,9 +156,12 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
             className="auth-close-btn"
             onClick={() => setAuthModalOpen(false)}
             title="Close"
-            style={{ position: 'absolute', top: '16px', right: '16px', background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', fontWeight: '700', color: '#0f172a' }}
+            style={{ position: 'absolute', top: '16px', right: '16px', background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', color: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
-            
+            <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
           </button>
         )}
 
@@ -191,8 +193,6 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
             Register
           </button>
         </div>
-
-        {/* Removed Fake Google & Guest Buttons to force real registration */}
 
         {/* Email Auth Form */}
         <form onSubmit={handleSubmit} className="auth-form">
@@ -251,10 +251,10 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                style={{ position: 'absolute', right: '12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', color: '#64748b' }}
+                style={{ position: 'absolute', right: '12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: '#64748b', fontWeight: '700' }}
                 title={showPassword ? 'Hide Password' : 'Show Password'}
               >
-                {showPassword ? '' : ''}
+                {showPassword ? 'Hide' : 'Show'}
               </button>
             </div>
           </div>
@@ -315,4 +315,3 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
     </div>
   )
 }
-

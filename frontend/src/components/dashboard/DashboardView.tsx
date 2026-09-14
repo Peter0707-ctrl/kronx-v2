@@ -19,8 +19,8 @@ export default function DashboardView({ onSend }: Props) {
             <span style={{ width: '8px', height: '8px', background: '#0284c7', borderRadius: '50%', boxShadow: '0 0 8px #0284c7' }} />
             {sw ? 'Mfumo wa Antigravity Ice' : 'Antigravity Ice Telemetry'}
           </div>
-          <h1 style={{ fontSize: '24px', fontWeight: '800', margin: '4px 0', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span className="copetra-script-font" style={{ fontFamily: "'Grand Hotel', 'Pacifico', cursive", fontSize: '34px', color: '#0f172a' }}>Copetra AI</span>
+          <h1 style={{ fontSize: '24px', fontWeight: '800', margin: '4px 0', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", fontSize: '24px', fontWeight: '800', color: '#0f172a' }}>Copetra AI</span>
             <span>{sw ? 'Dashboard' : 'Telemetry & Analytics'}</span>
           </h1>
           <p style={{ fontSize: '14px', color: '#64748b', marginTop: '4px' }}>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { useKronxStore } from '@/store/useKronxStore'
+import { COPETRA_LOGO_BASE64 } from '@/lib/brandLogo'
 
 export default function TopBar() {
   const {
@@ -85,10 +86,10 @@ export default function TopBar() {
   }, [viewFilesModalOpen, activeMessages])
 
   return (
-    <header className="topbar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', background: 'transparent', position: 'relative' }}>
+    <header className="topbar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 24px', background: '#ffffff', borderBottom: '1px solid #e2e8f0', position: 'relative' }}>
       {topToast && (
         <div style={{ position: 'absolute', top: '50px', left: '50%', transform: 'translateX(-50%)', background: '#0f172a', color: '#38bdf8', padding: '10px 18px', borderRadius: '12px', zIndex: 9999, boxShadow: '0 8px 24px rgba(0,0,0,0.2)', fontWeight: '700', fontSize: '13px', border: '1px solid #38bdf8' }}>
-           {topToast}
+          {topToast}
         </div>
       )}
 
@@ -98,21 +99,22 @@ export default function TopBar() {
           <div style={{ background: '#ffffff', borderRadius: '24px', width: '100%', maxWidth: '600px', maxHeight: '80vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.3)' }}>
             <div style={{ padding: '20px 24px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span></span>
                 <span>{sw ? 'Faili na Picha Katika Chat' : 'Files & Media in Current Chat'}</span>
               </div>
               <button
                 onClick={() => setViewFilesModalOpen(false)}
-                style={{ background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '28px', height: '28px', cursor: 'pointer', fontWeight: '700' }}
+                style={{ background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '28px', height: '28px', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
-                
+                <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
               </button>
             </div>
             
             <div style={{ padding: '20px 24px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {extractedFiles.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '40px 20px', color: '#94a3b8' }}>
-                  <div style={{ fontSize: '32px', marginBottom: '8px' }}></div>
                   <div style={{ fontSize: '14px', fontWeight: '600' }}>
                     {sw ? 'Hakuna picha au faili zilizo zalishwa katika mazungumzo haya bado.' : 'No images or code files generated in this conversation yet.'}
                   </div>
@@ -162,7 +164,7 @@ export default function TopBar() {
           </svg>
         </button>
 
-        {/* Master AI Admin Console Access Icon Button (Only for Master Admin) */}
+        {/* Master AI Admin Console Access Icon Button */}
         {(isAdmin || user?.email === 'pj0040280@gmail.com') && (
           <button
             onClick={() => setActiveView('admin')}
@@ -172,48 +174,52 @@ export default function TopBar() {
               border: 'none',
               color: '#ffffff',
               borderRadius: '10px',
-              width: '36px',
-              height: '36px',
-              fontWeight: '900',
-              fontSize: '16px',
+              width: '40px',
+              height: '40px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               cursor: 'pointer',
               boxShadow: '0 4px 12px rgba(15, 23, 42, 0.2)'
             }}
           >
-            
+            <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+              <rect x="3" y="3" width="7" height="9" rx="1" />
+              <rect x="14" y="3" width="7" height="5" rx="1" />
+              <rect x="14" y="12" width="7" height="9" rx="1" />
+              <rect x="3" y="16" width="7" height="5" rx="1" />
+            </svg>
           </button>
         )}
       </div>
 
-      {/* Center Copetra AI Brand Header & Down Arrow Dropdown Trigger (Instagram Font Style) */}
+      {/* Center Copetra AI Brand Header */}
       <div ref={brandMenuRef} style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
         <div
           onClick={() => setBrandMenuOpen(!brandMenuOpen)}
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '8px',
+            gap: '10px',
             cursor: 'pointer',
-            padding: '4px 10px',
+            padding: '4px 12px',
             borderRadius: '12px',
             background: brandMenuOpen ? 'rgba(0,0,0,0.06)' : 'transparent',
             transition: 'background-color 0.2s ease',
             userSelect: 'none'
           }}
         >
-          <div style={{ width: '26px', height: '26px', borderRadius: '8px', overflow: 'hidden', border: '1px solid rgba(0,0,0,0.1)', boxShadow: '0 2px 6px rgba(0,0,0,0.08)', flexShrink: 0 }}>
-            <img src="/kronx_logo.jpg" alt="Copetra AI" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <div style={{ width: '30px', height: '30px', borderRadius: '8px', overflow: 'hidden', border: '1px solid rgba(0,0,0,0.1)', boxShadow: '0 2px 6px rgba(0,0,0,0.1)', flexShrink: 0, background: '#000000' }}>
+            <img src={COPETRA_LOGO_BASE64} alt="Copetra AI" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
           <span
-            className="copetra-brand-instagram instagram-font copetra-script-font"
             style={{
-              fontSize: '34px',
-              fontWeight: '400',
-              color: '#000000',
-              fontFamily: "'Grand Hotel', 'Pacifico', 'Dancing Script', 'Satisfy', 'Cookie', cursive",
-              letterSpacing: '0.5px',
-              lineHeight: 1.1,
-              paddingTop: '2px',
+              fontSize: '20px',
+              fontWeight: '800',
+              color: '#0f172a',
+              fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+              letterSpacing: '-0.5px',
+              lineHeight: 1.2,
               display: 'inline-block'
             }}
           >
@@ -224,20 +230,18 @@ export default function TopBar() {
             height={14}
             viewBox="0 0 24 24"
             fill="none"
-            stroke="#000000"
+            stroke="#0f172a"
             strokeWidth={2.5}
             strokeLinecap="round"
             strokeLinejoin="round"
             style={{
               transform: brandMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-              transition: 'transform 0.2s ease',
-              marginTop: '4px'
+              transition: 'transform 0.2s ease'
             }}
           >
             <polyline points="6 9 12 15 18 9" />
           </svg>
         </div>
-
 
         {/* Invisible Click-Outside Backdrop to auto-close dropdowns */}
         {(brandMenuOpen || menuOpen) && (
@@ -263,12 +267,12 @@ export default function TopBar() {
               padding: '20px',
               zIndex: 9999,
               animation: 'fadeIn 0.2s ease-out',
-              fontFamily: "Calibri, 'Calibri Light', sans-serif"
+              fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
-              <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#0284c7', color: '#fff', fontWeight: '900', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>
-                
+              <div style={{ width: '32px', height: '32px', borderRadius: '8px', overflow: 'hidden', background: '#000000', flexShrink: 0 }}>
+                <img src={COPETRA_LOGO_BASE64} alt="Copetra AI" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               </div>
               <div>
                 <div style={{ fontSize: '15px', fontWeight: '800', color: '#0f172a' }}>Copetra Developer API</div>
@@ -293,7 +297,7 @@ export default function TopBar() {
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Access:</span>
                 <span style={{ fontWeight: '700', color: user?.isDeveloper || user?.role === 'admin' ? '#10b981' : '#f59e0b' }}>
-                  {user?.isDeveloper || user?.role === 'admin' ? 'Granted ' : 'Ask admin to grant'}
+                  {user?.isDeveloper || user?.role === 'admin' ? 'Granted' : 'Ask admin to grant'}
                 </span>
               </div>
             </div>
@@ -354,7 +358,7 @@ export default function TopBar() {
               display: 'flex',
               flexDirection: 'column',
               gap: '4px',
-              fontFamily: "Calibri, 'Calibri Light', sans-serif"
+              fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
             }}
           >
             {/* 1. View files in chat */}
@@ -380,7 +384,7 @@ export default function TopBar() {
                 setMenuOpen(false)
                 if (activeConversationId) {
                   togglePinConversation(activeConversationId)
-                  showTopToast(!isPinned ? 'Chat Pinned to Top ' : 'Chat Unpinned')
+                  showTopToast(!isPinned ? 'Chat Pinned' : 'Chat Unpinned')
                 } else {
                   showTopToast('No active conversation to pin.')
                 }
@@ -392,7 +396,7 @@ export default function TopBar() {
               <svg width={16} height={16} viewBox="0 0 24 24" fill={isPinned ? '#0284c7' : 'none'} stroke="currentColor" strokeWidth={2}>
                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
               </svg>
-              <span>{isPinned ? (sw ? 'Yaliyobandikwa (Pinned )' : 'Pinned ') : (sw ? 'Bandika chat (Pin chat)' : 'Pin chat')}</span>
+              <span>{isPinned ? (sw ? 'Yaliyobandikwa (Pinned)' : 'Pinned') : (sw ? 'Bandika chat (Pin chat)' : 'Pin chat')}</span>
             </button>
 
             {/* 3. Archive chat */}
@@ -401,7 +405,7 @@ export default function TopBar() {
                 setMenuOpen(false)
                 if (activeConversationId) {
                   toggleArchiveConversation(activeConversationId)
-                  showTopToast(!isArchived ? 'Chat Archived ' : 'Chat Unarchived')
+                  showTopToast(!isArchived ? 'Chat Archived' : 'Chat Unarchived')
                 } else {
                   showTopToast('No active conversation to archive.')
                 }

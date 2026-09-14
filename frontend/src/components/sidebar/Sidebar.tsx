@@ -1,5 +1,8 @@
+'use client'
+
 import { useState } from 'react'
 import { useKronxStore } from '@/store/useKronxStore'
+import { COPETRA_LOGO_BASE64 } from '@/lib/brandLogo'
 
 export default function Sidebar() {
   const {
@@ -42,19 +45,19 @@ export default function Sidebar() {
   return (
     <>
       <div className="sidebar-overlay" onClick={toggleSidebar}></div>
-      <aside className="sidebar" style={{ width: '280px', background: '#f8fafc', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', flexShrink: 0, zIndex: 1000, fontFamily: "Calibri, 'Calibri Light', sans-serif" }}>
+      <aside className="sidebar" style={{ width: '280px', background: '#f8fafc', borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', flexShrink: 0, zIndex: 1000, fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
       {/* Brand Header */}
-      <div style={{ padding: '16px 16px 6px 16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <div style={{ width: '32px', height: '32px', borderRadius: '10px', overflow: 'hidden', border: '1px solid #e2e8f0', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', flexShrink: 0 }}>
-          <img src="/kronx_logo.jpg" alt="Copetra AI" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+      <div style={{ padding: '16px 16px 12px 16px', display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '1px solid #e2e8f0' }}>
+        <div style={{ width: '32px', height: '32px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e2e8f0', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', flexShrink: 0, background: '#000000' }}>
+          <img src={COPETRA_LOGO_BASE64} alt="Copetra AI" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
-        <span className="copetra-script-font instagram-font" style={{ fontSize: '26px', fontFamily: "'Grand Hotel', 'Pacifico', cursive", color: '#0f172a', letterSpacing: '0.3px', fontWeight: 'bold' }}>
+        <span style={{ fontSize: '18px', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", color: '#0f172a', letterSpacing: '-0.3px', fontWeight: '800' }}>
           Copetra AI
         </span>
       </div>
 
       {/* Top New Chat Action & Mobile Close */}
-      <div style={{ padding: '8px 16px 8px 16px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+      <div style={{ padding: '12px 16px 8px 16px', display: 'flex', gap: '8px', alignItems: 'center' }}>
         <button
           onClick={() => {
             newConversation()
@@ -87,7 +90,7 @@ export default function Sidebar() {
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
           placeholder={sw ? 'Tafuta historia...' : 'Search history...'}
-          style={{ width: '100%', padding: '6px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12.5px', background: '#ffffff', color: '#0f172a', outline: 'none' }}
+          style={{ width: '100%', padding: '8px 10px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '12.5px', background: '#ffffff', color: '#0f172a', outline: 'none' }}
         />
       </div>
 
@@ -98,7 +101,7 @@ export default function Sidebar() {
         {pinnedConvs.length > 0 && (
           <div style={{ marginBottom: '16px' }}>
             <div style={{ fontSize: '11px', fontWeight: '800', color: '#0284c7', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <span></span> {sw ? 'Yaliyobandikwa (Pinned)' : 'Pinned Chats'}
+              <span>{sw ? 'Yaliyobandikwa (Pinned)' : 'Pinned Chats'}</span>
             </div>
             {pinnedConvs.map(conv => (
               <div
@@ -110,7 +113,7 @@ export default function Sidebar() {
                 }}
               >
                 <span style={{ fontSize: '13px', fontWeight: '700', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>
-                   {conv.title}
+                  {conv.title}
                 </span>
                 <button
                   onClick={e => {
@@ -118,9 +121,12 @@ export default function Sidebar() {
                     togglePinConversation(conv.id)
                   }}
                   title="Unpin chat"
-                  style={{ background: 'none', border: 'none', color: '#0284c7', fontSize: '12px', cursor: 'pointer', padding: '2px 4px' }}
+                  style={{ background: 'none', border: 'none', color: '#0284c7', cursor: 'pointer', padding: '2px 4px', display: 'flex', alignItems: 'center' }}
                 >
-                  
+                  <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
                 </button>
               </div>
             ))}
@@ -169,9 +175,13 @@ export default function Sidebar() {
                   toggleArchiveConversation(conv.id)
                 }}
                 title="Archive chat"
-                style={{ background: 'none', border: 'none', color: '#64748b', fontSize: '11px', cursor: 'pointer', padding: '2px 4px' }}
+                style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: '2px 4px', display: 'flex', alignItems: 'center' }}
               >
-                
+                <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                  <polyline points="21 8 21 21 3 21 3 8" />
+                  <rect x="1" y="3" width="22" height="5" />
+                  <line x1="10" y1="12" x2="14" y2="12" />
+                </svg>
               </button>
               <button
                 onClick={e => {
@@ -179,9 +189,12 @@ export default function Sidebar() {
                   deleteConversation(conv.id)
                 }}
                 title="Delete chat"
-                style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '12px', cursor: 'pointer', padding: '2px 4px' }}
+                style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '2px 4px', display: 'flex', alignItems: 'center' }}
               >
-                
+                <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
               </button>
             </div>
           </div>
@@ -194,8 +207,10 @@ export default function Sidebar() {
               onClick={() => setShowArchived(!showArchived)}
               style={{ width: '100%', background: 'none', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11px', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.8px', cursor: 'pointer', padding: '4px 0' }}
             >
-              <span> {sw ? `Kumbukumbu zilizohifadhiwa (${archivedConvs.length})` : `Archived Chats (${archivedConvs.length})`}</span>
-              <span>{showArchived ? '' : ''}</span>
+              <span>{sw ? `Kumbukumbu zilizohifadhiwa (${archivedConvs.length})` : `Archived Chats (${archivedConvs.length})`}</span>
+              <svg width={10} height={10} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} style={{ transform: showArchived ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}>
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
             </button>
 
             {showArchived && archivedConvs.map(conv => (
@@ -232,9 +247,15 @@ export default function Sidebar() {
           <button
             onClick={() => setActiveView('admin')}
             title="AI Admin Dashboard"
-            style={{ width: '42px', height: '42px', borderRadius: '12px', background: '#0f172a', border: 'none', color: '#ffffff', fontWeight: '900', fontSize: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 14px rgba(15, 23, 42, 0.25)', margin: '0 auto' }}
+            style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', background: '#0f172a', border: 'none', color: '#ffffff', fontWeight: '700', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer', boxShadow: '0 4px 14px rgba(15, 23, 42, 0.25)' }}
           >
-            
+            <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+              <rect x="3" y="3" width="7" height="9" rx="1" />
+              <rect x="14" y="3" width="7" height="5" rx="1" />
+              <rect x="14" y="12" width="7" height="9" rx="1" />
+              <rect x="3" y="16" width="7" height="5" rx="1" />
+            </svg>
+            <span>Admin Console</span>
           </button>
         )}
 

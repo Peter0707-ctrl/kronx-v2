@@ -253,12 +253,12 @@ export function useChat() {
         currentState.setStreaming(false)
         if (typeof window !== 'undefined' && document.visibilityState === 'hidden') {
           const isSw = currentState.language === 'sw'
-          const title = ' Copetra AI'
+          const title = 'Copetra AI'
           const body = isSw ? 'Majibu yako yako tayari! Fungua kuona.' : 'Your response is ready! Open to view.'
           const options = {
             body,
-            icon: '/kronx_logo.jpg',
-            badge: '/kronx_logo.jpg',
+            icon: '/copetra_logo.jpg',
+            badge: '/copetra_logo.jpg',
             vibrate: [200, 100, 200]
           }
           if ('Notification' in window && Notification.permission === 'granted') {
@@ -388,12 +388,12 @@ export function useChat() {
         currentState.setStreaming(false)
         if (typeof window !== 'undefined' && document.visibilityState === 'hidden') {
           const isSw = currentState.language === 'sw'
-          const title = ' Copetra AI'
+          const title = 'Copetra AI'
           const body = isSw ? 'Majibu yako yako tayari! Fungua kuona.' : 'Your response is ready! Open to view.'
           const options = {
             body,
-            icon: '/kronx_logo.jpg',
-            badge: '/kronx_logo.jpg',
+            icon: '/copetra_logo.jpg',
+            badge: '/copetra_logo.jpg',
             vibrate: [200, 100, 200]
           }
           if ('Notification' in window && Notification.permission === 'granted') {

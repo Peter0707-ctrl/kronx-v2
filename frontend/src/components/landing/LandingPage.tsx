@@ -1,6 +1,7 @@
 'use client'
 
 import { useKronxStore } from '@/store/useKronxStore'
+import { COPETRA_LOGO_BASE64 } from '@/lib/brandLogo'
 
 interface Props {
   onStart: () => void
@@ -14,23 +15,21 @@ export default function LandingPage({ onStart }: Props) {
       {/* Landing Navbar */}
       <header className="landing-nav">
         <div className="landing-logo" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ width: '40px', height: '40px', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.25)', boxShadow: '0 4px 14px rgba(2, 132, 199, 0.4)', flexShrink: 0 }}>
-            <img src="/kronx_logo.jpg" alt="Copetra AI" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <div style={{ width: '40px', height: '40px', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.25)', boxShadow: '0 4px 14px rgba(2, 132, 199, 0.4)', flexShrink: 0, background: '#000000' }}>
+            <img src={COPETRA_LOGO_BASE64} alt="Copetra AI" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
           <span
-            className="landing-logo-title instagram-font copetra-script-font copetra-brand-title"
             style={{
-              fontSize: '36px',
-              fontFamily: "'Grand Hotel', 'Pacifico', 'Dancing Script', 'Satisfy', cursive",
-              fontWeight: 'normal',
+              fontSize: '24px',
+              fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+              fontWeight: '800',
               color: '#ffffff',
-              letterSpacing: '0.5px'
+              letterSpacing: '-0.5px'
             }}
           >
             Copetra AI
           </span>
         </div>
-
 
         <div className="landing-nav-right" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
           <button
@@ -74,7 +73,7 @@ export default function LandingPage({ onStart }: Props) {
         <div style={{ margin: '24px 0', width: '100%', maxWidth: '840px', borderRadius: '24px', overflow: 'hidden', border: '1px solid #334155', boxShadow: '0 20px 50px rgba(0, 0, 0, 0.3)' }}>
           <img
             src="/hero_banner.jpg"
-            alt="PJKRONX AI Companion Interface Showcase"
+            alt="Copetra AI Companion Interface Showcase"
             style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'cover' }}
           />
         </div>
@@ -143,32 +142,54 @@ export default function LandingPage({ onStart }: Props) {
 
         <div className="features-grid">
           <div className="feat-card">
-            <div className="feat-icon-box"></div>
+            <div className="feat-icon-box">
+              <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="#0284c7" strokeWidth={2}>
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+              </svg>
+            </div>
             <h3>Low-RAM Optimization</h3>
             <p>Runs seamlessly on 350MB-500MB RAM using single-model auto-detection for maximum speed.</p>
           </div>
 
           <div className="feat-card">
-            <div className="feat-icon-box"></div>
+            <div className="feat-icon-box">
+              <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="#0284c7" strokeWidth={2}>
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                <line x1="12" y1="19" x2="12" y2="23" />
+                <line x1="8" y1="23" x2="16" y2="23" />
+              </svg>
+            </div>
             <h3>Speech Recognition & Playback</h3>
-            <p>Full Speech-to-Text listening & Text-to-Speech playback in Kiswahili and English.</p>
+            <p>Full Speech-to-Text listening and Text-to-Speech playback in Kiswahili and English.</p>
           </div>
 
           <div className="feat-card">
-            <div className="feat-icon-box"></div>
+            <div className="feat-icon-box">
+              <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="#0284c7" strokeWidth={2}>
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 6v6l4 2" />
+              </svg>
+            </div>
             <h3>Personal Memory Vault</h3>
             <p>Intelligent vector memory vault stores personal facts and past business context.</p>
           </div>
 
           <div className="feat-card">
-            <div className="feat-icon-box"></div>
+            <div className="feat-icon-box">
+              <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="#0284c7" strokeWidth={2}>
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <line x1="3" y1="9" x2="21" y2="9" />
+                <line x1="9" y1="21" x2="9" y2="9" />
+              </svg>
+            </div>
             <h3>Glassmorphic Analytics Dashboard</h3>
             <p>Sleek dark obsidian dashboard tracking system telemetry, goals, and facts.</p>
           </div>
         </div>
       </section>
 
-      {/* Developer & Founder Social Links - Secure SVG Action Buttons */}
+      {/* Developer & Founder Social Links */}
       <section style={{ textAlign: 'center', padding: '32px 16px', background: 'rgba(15, 23, 42, 0.6)', borderRadius: '24px', margin: '36px auto 0 auto', maxWidth: '680px', border: '1px solid #334155' }}>
         <div style={{ fontSize: '13px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>
           Engineered by PJ COPETRANOVA
@@ -226,7 +247,7 @@ export default function LandingPage({ onStart }: Props) {
             <span>Direct Instagram Message</span>
           </a>
 
-          {/* Email Founder Direct Action Button (Gmail Webmail & Native Mail) */}
+          {/* Email Founder Direct Action Button */}
           <a
             href="https://mail.google.com/mail/?view=cm&fs=1&to=pb0040280@gmail.com&su=Inquiry%20from%20Copetra%20AI%20Platform"
             target="_blank"

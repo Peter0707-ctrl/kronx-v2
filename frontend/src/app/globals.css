@@ -41,15 +41,15 @@ button:not(.instagram-font):not(.copetra-script-font), input, textarea {
   font-family: "Calibri", "Calibri Light", sans-serif;
 }
 
-/* Script / Mcharazo Font styling for Copetra AI (Grand Hotel cursive like joyful) */
+/* Modern Clean Font styling for Copetra AI */
 .instagram-font,
 .copetra-brand-instagram,
 .copetra-script-font,
 .copetra-brand-title,
 .landing-logo-title {
-  font-family: 'Grand Hotel', 'Pacifico', 'Dancing Script', 'Satisfy', 'Cookie', cursive !important;
-  font-weight: 400 !important;
-  letter-spacing: 0.5px !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.5px !important;
   text-rendering: optimizeLegibility !important;
   -webkit-font-smoothing: antialiased !important;
   -moz-osx-font-smoothing: grayscale !important;
