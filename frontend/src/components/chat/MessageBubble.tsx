@@ -906,9 +906,7 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
       parsedClocks.push(clockData)
     }
 
-    parsedClocks.forEach(clk => {
-      displayContent = displayContent.replace(clk.rawTag, '')
-    })
+    displayContent = displayContent.replace(/\[WALL_CLOCK:[\s\S]*?\]/gi, '').trim()
   }
 
   return (
