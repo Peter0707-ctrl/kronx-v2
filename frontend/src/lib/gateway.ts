@@ -101,8 +101,7 @@ export function resolveMaxTokens(requested: unknown, unlimited = true): number {
   return Math.min(Math.max(raw, 1), 4096)
 }
 
-const SYSTEM_PROMPT = `You are Copetra AI, an elite academic AI assistant powered by PJ Copetranova.
-Provide clear, accurate, technically rigorous, and well-structured responses.`
+import { SYSTEM_PROMPT } from './copetraSystemPrompt'
 
 export async function createCompletion(opts: {
   messages: ChatMessage[]
