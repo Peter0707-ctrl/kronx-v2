@@ -16,6 +16,7 @@ import remarkGfm from 'remark-gfm'
 import JSZip from 'jszip'
 import { useKronxStore } from '@/store/useKronxStore'
 import { cleanAiResponse } from '@/lib/fastChat'
+import { WallClockWidget } from './WallClockWidget'
 
 function getExtensionForLang(lang?: string): string {
   const l = (lang || '').toLowerCase()
@@ -658,6 +659,8 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
     // 1. Thoroughly sanitize markdown, file attachment headers, code blocks, images, and tables
     let textToSpeak = message.content
       .replace(/\[IMAGE:[\s\S]*?\]/gi, '')
+      .replace(/\[WALL_CLOCK:[\s\S]*?\]/gi, '')
+      .replace(/\[VCARD:[\s\S]*?\]/gi, '')
       .replace(/\[[A-Z\s]+DOCUMENT ATTACHED:[\s\S]*?\]/gi, '')
       .replace(/Document Content:[\s\S]*?(?=\n\n|\n[A-Z]|$)/gi, '')
       .replace(/```[\s\S]*?```/g, ' [Code Block] ')
@@ -879,6 +882,35 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
     })
   }
 
+  // Check if response has parsed Wall Clock widgets
+  const parsedClocks: Array<{ time?: string; date?: string; timezone?: string; location?: string; rawTag: string }> = []
+  if (isAi && message.content) {
+    const clockRegex = /\[WALL_CLOCK:\s*([^\]]+)\]/gi
+    let clockMatch
+    while ((clockMatch = clockRegex.exec(message.content)) !== null) {
+      const rawTag = clockMatch[0]
+      const innerContent = clockMatch[1]
+      const clockData: { time?: string; date?: string; timezone?: string; location?: string; rawTag: string } = { rawTag }
+      const pairs = innerContent.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/)
+      for (const pair of pairs) {
+        const [key, ...valParts] = pair.split('=')
+        if (key && valParts.length > 0) {
+          const k = key.trim().toLowerCase()
+          const v = valParts.join('=').trim().replace(/^["']|["']$/g, '')
+          if (k === 'time') clockData.time = v
+          else if (k === 'date') clockData.date = v
+          else if (k === 'timezone' || k === 'tz') clockData.timezone = v
+          else if (k === 'location' || k === 'loc') clockData.location = v
+        }
+      }
+      parsedClocks.push(clockData)
+    }
+
+    parsedClocks.forEach(clk => {
+      displayContent = displayContent.replace(clk.rawTag, '')
+    })
+  }
+
   return (
     <div className={`msg-row ${isAi ? 'msg-ai' : 'msg-user'}`}>
       <div className={`bubble ${isAi ? 'bubble-ai' : 'bubble-user'}`} style={{ position: 'relative' }}>
@@ -1061,6 +1093,17 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
                 >
                   {displayContent}
                 </ReactMarkdown>
+
+                {/* Render interactive parsed Wall Clock widgets */}
+                {parsedClocks.map((clk, idx) => (
+                  <WallClockWidget
+                    key={`clock-${idx}`}
+                    initialTime={clk.time}
+                    date={clk.date}
+                    timezone={clk.timezone}
+                    location={clk.location}
+                  />
+                ))}
 
                 {/* Render interactive parsed vCards */}
                 {parsedCards.map((card, idx) => (

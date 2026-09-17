@@ -167,7 +167,17 @@ export function cleanAiResponse(text: string): string {
   return cleaned.trim()
 }
 
-export function solveDeterministically(query: string, mode: string = 'Academic', language: string = 'en'): { matched: boolean; answer: string } {
+export function solveDeterministically(
+  query: string,
+  mode: string = 'Academic',
+  language: string = 'en',
+  clientContext?: {
+    time?: string
+    date?: string
+    timezone?: string
+    location?: string
+  }
+): { matched: boolean; answer: string } {
   if (!query) return { matched: false, answer: '' }
   
   // Never intercept document attachments or image analysis queries
@@ -183,6 +193,62 @@ export function solveDeterministically(query: string, mode: string = 'Academic',
 
   const q = query.trim()
   const lower = q.toLowerCase()
+
+  // 0. REAL-TIME CLOCK, CALENDAR & LOCATION AWARENESS
+  const isTimeQuery = /\b(saa ngapi|muda gani|time is it|current time|what time|muda huu|what'?s the time|time now|saiv|sasa hivi|saa ya ukutani|onyesha saa|wall clock)\b/i.test(lower)
+  const isDateQuery = /\b(leo tarehe|tarehe ngapi|today'?s date|current date|what day is|leo ni siku|siku ya leo|tarehe ya leo)\b/i.test(lower)
+  const isLocationQuery = /\b(where am i|my location|eneo langu|nipo wapi|uko wapi|upo wapi|what is my timezone)\b/i.test(lower)
+
+  if (isTimeQuery || isDateQuery || isLocationQuery) {
+    const tz = clientContext?.timezone || 'Africa/Dar_es_Salaam'
+    const loc = clientContext?.location || (tz.includes('Dar_es_Salaam') ? 'Tanzania, East Africa' : tz)
+    const now = new Date()
+    let time12 = clientContext?.time
+    if (!time12) {
+      try {
+        time12 = now.toLocaleTimeString('en-US', { timeZone: tz, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })
+      } catch {
+        time12 = now.toLocaleTimeString('en-US', { hour12: true })
+      }
+    }
+    let time24 = ''
+    try {
+      time24 = now.toLocaleTimeString('en-US', { timeZone: tz, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
+    } catch {
+      time24 = now.toLocaleTimeString('en-US', { hour12: false })
+    }
+    let dateFormatted = clientContext?.date
+    if (!dateFormatted) {
+      try {
+        dateFormatted = now.toLocaleDateString('en-US', { timeZone: tz, weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+      } catch {
+        dateFormatted = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+      }
+    }
+
+    const isSwahili = language === 'sw' || /saa ngapi|muda|tarehe|leo|nipo|eneo|siku/i.test(lower)
+
+    if (isTimeQuery) {
+      const timeAnswer = isSwahili
+        ? `Kwa sasa ni saa **${time12}** (${time24} masaa 24), siku ya **${dateFormatted}**, **${loc}**.\n\n[WALL_CLOCK: time="${time12}", date="${dateFormatted}", timezone="${tz}", location="${loc}"]`
+        : `Currently, the time is **${time12}** (${time24} 24-hr) on **${dateFormatted}**, in **${loc}**.\n\n[WALL_CLOCK: time="${time12}", date="${dateFormatted}", timezone="${tz}", location="${loc}"]`
+      return { matched: true, answer: timeAnswer }
+    }
+
+    if (isDateQuery) {
+      const dateAnswer = isSwahili
+        ? `Leo ni siku ya **${dateFormatted}**, na muda kwa sasa ni saa **${time12}** (${loc}).\n\n[WALL_CLOCK: time="${time12}", date="${dateFormatted}", timezone="${tz}", location="${loc}"]`
+        : `Today is **${dateFormatted}**, and the current time is **${time12}** (${loc}).\n\n[WALL_CLOCK: time="${time12}", date="${dateFormatted}", timezone="${tz}", location="${loc}"]`
+      return { matched: true, answer: dateAnswer }
+    }
+
+    if (isLocationQuery) {
+      const locAnswer = isSwahili
+        ? `Kulingana na ukanda wa muda wa kifaa chako, uko katika ukanda wa **${tz}** (${loc}), ambapo muda kwa sasa ni saa **${time12}** (${dateFormatted}).\n\n[WALL_CLOCK: time="${time12}", date="${dateFormatted}", timezone="${tz}", location="${loc}"]`
+        : `Based on your device environment, your timezone is **${tz}** (${loc}), where the current time is **${time12}** on **${dateFormatted}**.\n\n[WALL_CLOCK: time="${time12}", date="${dateFormatted}", timezone="${tz}", location="${loc}"]`
+      return { matched: true, answer: locAnswer }
+    }
+  }
 
   // 1. PHYSICS: Newton's Second Law & Derivations
   if (

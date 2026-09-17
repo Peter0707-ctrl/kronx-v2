@@ -71,9 +71,13 @@ function buildGroqMessages(
   mode: string,
   history: HistoryMessage[],
   isVisionModel: boolean = true,
-  webSearchResults: string | null = null
+  webSearchResults: string | null = null,
+  clientContext?: { time?: string; date?: string; timezone?: string; location?: string }
 ): any[] {
   let systemPrompt = getModeSystemPrompt(mode)
+  if (clientContext?.time) {
+    systemPrompt += `\n\n[REAL-TIME USER ENVIRONMENT & CLOCK CONTEXT]:\n- Exact Current Time: ${clientContext.time}\n- Current Date: ${clientContext.date || ''}\n- Timezone: ${clientContext.timezone || 'Africa/Dar_es_Salaam'}\n- User Location: ${clientContext.location || 'Tanzania'}\nAlways provide the exact real-time clock and date with clear numbers when asked, and append the wall clock tag: [WALL_CLOCK: time="${clientContext.time}", date="${clientContext.date}", timezone="${clientContext.timezone}", location="${clientContext.location}"] at the end of the response.`
+  }
   if (webSearchResults) {
     systemPrompt += `\n\n[REAL-TIME VERIFIED WEB SEARCH DATA]:\n${webSearchResults}\n\nUse the above real-time verified search data to answer the user query with 100% factual accuracy.`
   }
@@ -171,14 +175,47 @@ async function fetchWebSearch(query: string): Promise<string | null> {
 export async function POST(req: NextRequest) {
   let message = '', mode = 'Friend'
   let history: HistoryMessage[] = []
+  let timezone = 'Africa/Dar_es_Salaam'
+  let userTime = ''
+  let userDate = ''
+  let location = 'Tanzania, East Africa'
 
   try {
     const body = await req.json()
     message = body.message || ''
     mode = body.mode || 'Friend'
     history = body.history || []
+    if (body.timezone) timezone = body.timezone
+    if (body.user_time) userTime = body.user_time
+    if (body.user_date) userDate = body.user_date
+    if (body.location) location = body.location
   } catch (e) {
     return NextResponse.json({ error: 'Invalid JSON request' }, { status: 400 })
+  }
+
+  if (!userTime) {
+    try {
+      userTime = new Date().toLocaleTimeString('en-US', { timeZone: timezone, hour12: true })
+    } catch {
+      userTime = new Date().toLocaleTimeString('en-US', { hour12: true })
+    }
+  }
+  if (!userDate) {
+    try {
+      userDate = new Date().toLocaleDateString('en-US', { timeZone: timezone, weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+    } catch {
+      userDate = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+    }
+  }
+  if (!location) {
+    location = timezone.includes('Dar_es_Salaam') || timezone.includes('Nairobi') ? 'Tanzania, East Africa' : timezone
+  }
+
+  const clientContext = {
+    time: userTime,
+    date: userDate,
+    timezone,
+    location
   }
 
   const encoder = new TextEncoder()
@@ -225,8 +262,8 @@ export async function POST(req: NextRequest) {
         return
       }
 
-      // Deterministic Academic & Math & Code Solver: Instant 10/10 Accurate Response
-      const detSolution = solveDeterministically(cleanUserMessage || message, mode, 'en')
+      // Deterministic Academic & Math & Code & Real-Time Clock Solver: Instant 10/10 Accurate Response
+      const detSolution = solveDeterministically(cleanUserMessage || message, mode, 'en', clientContext)
       if (detSolution.matched && detSolution.answer) {
         const clean = detSolution.answer.replace(/\r/g, '').replace(/\n/g, '\\n')
         controller.enqueue(encoder.encode(`data: ${clean}\n\n`))
@@ -275,8 +312,12 @@ export async function POST(req: NextRequest) {
                 ? `Please examine the attached image carefully and answer the user query with high precision.\n\nUser Question: ${cleanText}`
                 : `Please examine the attached image thoroughly, detailing all visual elements, UI components, text, metrics, and key data shown.`
 
+              const timeContextPrompt = clientContext?.time
+                ? `\n\n[REAL-TIME USER ENVIRONMENT & CLOCK CONTEXT]:\n- Exact Current Time: ${clientContext.time}\n- Current Date: ${clientContext.date}\n- Timezone: ${clientContext.timezone}\n- Location: ${clientContext.location}\nWhen answering time or location questions, provide the exact time and append: [WALL_CLOCK: time="${clientContext.time}", date="${clientContext.date}", timezone="${clientContext.timezone}", location="${clientContext.location}"]\n`
+                : ''
+
               parts.push({
-                text: `${getModeSystemPrompt(mode)}\n\n${promptText}`
+                text: `${getModeSystemPrompt(mode)}${timeContextPrompt}\n\n${promptText}`
               })
 
               if (imageMatch) {
@@ -336,7 +377,7 @@ export async function POST(req: NextRequest) {
         for (const apiKey of keys) {
           if (streamedAny) break
 
-          const groqMessages = buildGroqMessages(message, mode, history, true, webSearchResults)
+          const groqMessages = buildGroqMessages(message, mode, history, true, webSearchResults, clientContext)
           const isDocument = message.includes('DOCUMENT ATTACHED:') || message.includes('FILE ATTACHED:')
           const models = preferFastGroqModels({
             vision: false,
@@ -347,7 +388,7 @@ export async function POST(req: NextRequest) {
           for (const model of models) {
             if (streamedAny) break
             try {
-              const currentGroqMessages = buildGroqMessages(message, mode, history, false, webSearchResults)
+              const currentGroqMessages = buildGroqMessages(message, mode, history, false, webSearchResults, clientContext)
               const abortCtrl = new AbortController()
               const isLargeModel = /120b|70b|90b|27b/.test(model)
               const timeoutMs = isDocument
@@ -437,12 +478,13 @@ export async function POST(req: NextRequest) {
           try {
             const abortCtrl = new AbortController()
             const timeoutId = setTimeout(() => abortCtrl.abort(), 15000)
+            const openAiSys = getModeSystemPrompt(mode) + (clientContext?.time ? `\n\n[REAL-TIME USER ENVIRONMENT & CLOCK CONTEXT]: Exact Current Time: ${clientContext.time}, Date: ${clientContext.date}, Timezone: ${clientContext.timezone}, Location: ${clientContext.location}. Append [WALL_CLOCK: time="${clientContext.time}", date="${clientContext.date}", timezone="${clientContext.timezone}", location="${clientContext.location}"]` : '')
             const oRes = await fetch('https://api.openai.com/v1/chat/completions', {
               method: 'POST',
               headers: { 'Authorization': `Bearer ${oKey}`, 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 model: 'gpt-4o-mini',
-                messages: [{ role: 'system', content: getModeSystemPrompt(mode) }, { role: 'user', content: message }],
+                messages: [{ role: 'system', content: openAiSys }, { role: 'user', content: message }],
                 temperature: 0.35,
                 max_tokens: 2048
               }),

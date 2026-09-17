@@ -60,9 +60,13 @@ function buildGroqMessages(
   message: string,
   mode: string,
   history: HistoryMessage[] = [],
-  webSearchResults: string | null = null
+  webSearchResults: string | null = null,
+  clientContext?: { time?: string; date?: string; timezone?: string; location?: string }
 ): { role: string; content: any }[] {
-  const systemPrompt = getModeSystemPrompt(mode)
+  let systemPrompt = getModeSystemPrompt(mode)
+  if (clientContext?.time) {
+    systemPrompt += `\n\n[REAL-TIME USER ENVIRONMENT & CLOCK CONTEXT]:\n- Exact Current Time: ${clientContext.time}\n- Current Date: ${clientContext.date || ''}\n- Timezone: ${clientContext.timezone || 'Africa/Dar_es_Salaam'}\n- User Location: ${clientContext.location || 'Tanzania'}\nAlways provide the exact real-time clock and date with clear numbers when asked, and append the wall clock tag: [WALL_CLOCK: time="${clientContext.time}", date="${clientContext.date}", timezone="${clientContext.timezone}", location="${clientContext.location}"] at the end of the response.`
+  }
   let webSearchContext = ''
   if (webSearchResults) {
     webSearchContext = `\n\n[LIVE WEB SEARCH DATA]: The following live web search results were retrieved for this query:\n${webSearchResults}\nUse this live data to verify your facts, dates, and names and provide a 100% accurate, up-to-date response.`
@@ -114,12 +118,13 @@ async function callGroq(
   message: string,
   mode: string,
   history: HistoryMessage[] = [],
-  webSearchResults: string | null = null
+  webSearchResults: string | null = null,
+  clientContext?: { time?: string; date?: string; timezone?: string; location?: string }
 ): Promise<string | null> {
   const keys = groqApiKeys()
   if (keys.length === 0) return null
 
-  const groqMessages = buildGroqMessages(message, mode, history, webSearchResults)
+  const groqMessages = buildGroqMessages(message, mode, history, webSearchResults, clientContext)
   
   const hasVision = groqMessages.some(m => Array.isArray(m.content)) || message.includes('[IMAGE:')
   const isDocument = message.includes('DOCUMENT ATTACHED:') || message.includes('FILE ATTACHED:')
@@ -175,7 +180,11 @@ async function callGroq(
   return null
 }
 
-async function callGemini(message: string, mode: string): Promise<string | null> {
+async function callGemini(
+  message: string,
+  mode: string,
+  clientContext?: { time?: string; date?: string; timezone?: string; location?: string }
+): Promise<string | null> {
   const keys = geminiApiKeys()
   for (const key of keys) {
     const models = [
@@ -201,8 +210,12 @@ async function callGemini(message: string, mode: string): Promise<string | null>
           ? `Please examine the attached image carefully and answer the user query with high precision.\n\nUser Question: ${cleanText}`
           : `Please examine the attached image thoroughly, detailing all visual elements, UI components, text, metrics, and key data shown.`
 
+        const timeContextPrompt = clientContext?.time
+          ? `\n\n[REAL-TIME USER ENVIRONMENT & CLOCK CONTEXT]:\n- Exact Current Time: ${clientContext.time}\n- Current Date: ${clientContext.date}\n- Timezone: ${clientContext.timezone}\n- Location: ${clientContext.location}\nWhen answering time or location questions, provide the exact time and append: [WALL_CLOCK: time="${clientContext.time}", date="${clientContext.date}", timezone="${clientContext.timezone}", location="${clientContext.location}"]\n`
+          : ''
+
         parts.push({
-          text: `${getModeSystemPrompt(mode)}\n\n${promptText}`
+          text: `${getModeSystemPrompt(mode)}${timeContextPrompt}\n\n${promptText}`
         })
 
         if (imageMatch) {
@@ -242,18 +255,23 @@ async function callGemini(message: string, mode: string): Promise<string | null>
   return null
 }
 
-async function callOpenAi(message: string, mode: string): Promise<string | null> {
+async function callOpenAi(
+  message: string,
+  mode: string,
+  clientContext?: { time?: string; date?: string; timezone?: string; location?: string }
+): Promise<string | null> {
   const keys = openAiApiKeys()
   for (const key of keys) {
     try {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 12000)
+      const openAiSys = getModeSystemPrompt(mode) + (clientContext?.time ? `\n\n[REAL-TIME USER ENVIRONMENT & CLOCK CONTEXT]: Exact Current Time: ${clientContext.time}, Date: ${clientContext.date}, Timezone: ${clientContext.timezone}, Location: ${clientContext.location}. Append [WALL_CLOCK: time="${clientContext.time}", date="${clientContext.date}", timezone="${clientContext.timezone}", location="${clientContext.location}"]` : '')
       const res = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: 'gpt-4o-mini',
-          messages: [{ role: 'system', content: getModeSystemPrompt(mode) }, { role: 'user', content: message }],
+          messages: [{ role: 'system', content: openAiSys }, { role: 'user', content: message }],
           temperature: 0.35,
           max_tokens: 2048
         }),
@@ -350,13 +368,46 @@ async function fetchWebSearch(query: string): Promise<string | null> {
 export async function POST(req: NextRequest) {
   let message = '', mode = 'Friend'
   let history: HistoryMessage[] = []
+  let timezone = 'Africa/Dar_es_Salaam'
+  let userTime = ''
+  let userDate = ''
+  let location = 'Tanzania, East Africa'
 
   try {
     const body = await req.json().catch(() => ({}))
     message = body.message || ''
     mode = body.mode || 'Friend'
     history = body.history || []
+    if (body.timezone) timezone = body.timezone
+    if (body.user_time) userTime = body.user_time
+    if (body.user_date) userDate = body.user_date
+    if (body.location) location = body.location
   } catch { }
+
+  if (!userTime) {
+    try {
+      userTime = new Date().toLocaleTimeString('en-US', { timeZone: timezone, hour12: true })
+    } catch {
+      userTime = new Date().toLocaleTimeString('en-US', { hour12: true })
+    }
+  }
+  if (!userDate) {
+    try {
+      userDate = new Date().toLocaleDateString('en-US', { timeZone: timezone, weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+    } catch {
+      userDate = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+    }
+  }
+  if (!location) {
+    location = timezone.includes('Dar_es_Salaam') || timezone.includes('Nairobi') ? 'Tanzania, East Africa' : timezone
+  }
+
+  const clientContext = {
+    time: userTime,
+    date: userDate,
+    timezone,
+    location
+  }
 
   if (!message) return NextResponse.json({ response: 'Please provide a message.' }, { status: 400 })
 
@@ -374,8 +425,8 @@ export async function POST(req: NextRequest) {
   const greetingReply = matchGreeting(cleanUserMessage || message)
   if (greetingReply) return NextResponse.json({ response: greetingReply })
 
-  // Deterministic Academic & Math & Code Solver: Instant 10/10 Accurate Response
-  const detSolution = solveDeterministically(cleanUserMessage || message, mode, 'en')
+  // Deterministic Academic & Math & Code & Real-Time Clock Solver: Instant 10/10 Accurate Response
+  const detSolution = solveDeterministically(cleanUserMessage || message, mode, 'en', clientContext)
   if (detSolution.matched && detSolution.answer) {
     return NextResponse.json({ response: detSolution.answer })
   }
@@ -390,7 +441,7 @@ export async function POST(req: NextRequest) {
 
   // If user uploaded an image, execute Google Gemini Multimodal Vision FIRST
   if (hasAttachedImage) {
-    const geminiAnswer = await callGemini(message, mode)
+    const geminiAnswer = await callGemini(message, mode, clientContext)
     if (geminiAnswer) return NextResponse.json({ response: geminiAnswer })
   }
 
@@ -399,17 +450,17 @@ export async function POST(req: NextRequest) {
     message.includes('DOCUMENT ATTACHED:') || message.includes('FILE ATTACHED:')
 
   const webSearchResults = isDocumentMessage ? null : await fetchWebSearch(message)
-  const groqAnswer = await callGroq(message, mode, history, webSearchResults)
+  const groqAnswer = await callGroq(message, mode, history, webSearchResults, clientContext)
   if (groqAnswer) return NextResponse.json({ response: groqAnswer })
 
   // 2. Try Direct Google Gemini
   if (!hasAttachedImage) {
-    const geminiAnswer = await callGemini(message, mode)
+    const geminiAnswer = await callGemini(message, mode, clientContext)
     if (geminiAnswer) return NextResponse.json({ response: geminiAnswer })
   }
 
   // 3. Try Direct OpenAI
-  const openAiAnswer = await callOpenAi(message, mode)
+  const openAiAnswer = await callOpenAi(message, mode, clientContext)
   if (openAiAnswer) return NextResponse.json({ response: openAiAnswer })
 
   // 4. Try Ollama (Railway Internal & Local)

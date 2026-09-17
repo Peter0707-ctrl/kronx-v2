@@ -9,6 +9,10 @@ export interface ChatRequest {
   language: Language
   conversation_id: string
   history: { role: 'user' | 'ai'; content: string }[]
+  timezone?: string
+  user_time?: string
+  user_date?: string
+  location?: string
 }
 
 export async function sendMessage(payload: ChatRequest): Promise<string> {

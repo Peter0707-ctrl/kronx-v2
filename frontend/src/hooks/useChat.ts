@@ -144,8 +144,9 @@ export function useChat() {
       currentState.incrementChatUsage()
 
       // Dynamic LocalStorage Cache (v3 preamble-free zero-latency offline retrieval)
+      const isDynamicTimeQuery = /\b(saa ngapi|time is it|current time|what time|muda huu|leo tarehe|tarehe ngapi|today'?s date|current date|what day is|time now|saiv|sasa hivi)\b/i.test(text)
       const cacheKey = `kx_cache_v3:${currentState.mode}:${currentState.language}:${text.toLowerCase().trim()}`
-      if (typeof window !== 'undefined') {
+      if (typeof window !== 'undefined' && !isDynamicTimeQuery) {
         let cachedRes = localStorage.getItem(cacheKey) || localStorage.getItem(`kx_cache:${currentState.mode}:${currentState.language}:${text.toLowerCase().trim()}`)
         
         // Invalidate cache if it contains old preambles, acknowledgements, or internal tag leaks
@@ -194,12 +195,23 @@ export function useChat() {
         const memories = currentState.userMemories || []
         const memoryPrompt = memories.length > 0 ? `\n\n[PERSISTENT USER BRAIN MEMORY]:\n${memories.map(m => `- ${m}`).join('\n')}` : ''
 
+        // Real-time client timezone, time, and date parameters
+        const clientTz = typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone : 'Africa/Dar_es_Salaam'
+        const nowObj = new Date()
+        const userTimeStr = nowObj.toLocaleTimeString('en-US', { hour12: true, timeZone: clientTz })
+        const userDateStr = nowObj.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: clientTz })
+        const userLocationStr = clientTz.includes('Dar_es_Salaam') || clientTz.includes('Nairobi') ? 'Tanzania, East Africa' : clientTz
+
         const gen = streamMessage({
           message: `${text}${memoryPrompt}`,
           mode: currentState.mode,
           language: currentState.language,
           conversation_id: currentState.activeConversationId ?? 'new',
           history,
+          timezone: clientTz,
+          user_time: userTimeStr,
+          user_date: userDateStr,
+          location: userLocationStr,
         })
 
         let finalResponseText = ''
@@ -228,8 +240,8 @@ export function useChat() {
           currentState.updateLastAiMessage(bufferChunk)
         }
         
-        // Save successfully streamed response to cache for future instant load
-        if (finalResponseText && !finalResponseText.includes('maintenance') && typeof window !== 'undefined') {
+        // Save successfully streamed response to cache for future instant load (only for non-time queries)
+        if (finalResponseText && !finalResponseText.includes('maintenance') && !isDynamicTimeQuery && typeof window !== 'undefined') {
           localStorage.setItem(cacheKey, finalResponseText)
         }
         
@@ -237,12 +249,22 @@ export function useChat() {
       } catch (err) {
         console.warn('[Copetra AI stream fallback triggered]', err)
         try {
+          const clientTz = typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone : 'Africa/Dar_es_Salaam'
+          const nowObj = new Date()
+          const userTimeStr = nowObj.toLocaleTimeString('en-US', { hour12: true, timeZone: clientTz })
+          const userDateStr = nowObj.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: clientTz })
+          const userLocationStr = clientTz.includes('Dar_es_Salaam') || clientTz.includes('Nairobi') ? 'Tanzania, East Africa' : clientTz
+
           const directText = await sendMessage({
             message: text,
             mode: currentState.mode,
             language: currentState.language,
             conversation_id: currentState.activeConversationId ?? 'new',
             history: buildHistory(currentState.activeMessages().slice(0, -2)),
+            timezone: clientTz,
+            user_time: userTimeStr,
+            user_date: userDateStr,
+            location: userLocationStr,
           })
           currentState.replaceLastAiMessage(directText)
           postProcessResponse()
