@@ -8,7 +8,8 @@ import {
   preferFastGroqModels,
   cleanAiResponse,
   solveDeterministically,
-  matchImageGenerationRequest
+  matchImageGenerationRequest,
+  detectEmotionAndConversationalIntent
 } from '@/lib/fastChat'
 
 import { getModeSystemPrompt } from '@/lib/copetraSystemPrompt'
@@ -72,9 +73,13 @@ function buildGroqMessages(
   history: HistoryMessage[],
   isVisionModel: boolean = true,
   webSearchResults: string | null = null,
-  clientContext?: { time?: string; date?: string; timezone?: string; location?: string }
+  clientContext?: { time?: string; date?: string; timezone?: string; location?: string },
+  conversationalDirective?: string
 ): any[] {
   let systemPrompt = getModeSystemPrompt(mode)
+  if (conversationalDirective) {
+    systemPrompt += conversationalDirective
+  }
   if (clientContext?.time) {
     systemPrompt += `\n\n[REAL-TIME USER ENVIRONMENT & CLOCK CONTEXT]:\n- Exact Current Time: ${clientContext.time}\n- Current Date: ${clientContext.date || ''}\n- Timezone: ${clientContext.timezone || 'Africa/Dar_es_Salaam'}\n- User Location: ${clientContext.location || 'Tanzania'}\nAlways provide the exact real-time clock and date with clear numbers when asked, and append the wall clock tag: [WALL_CLOCK: time="${clientContext.time}", date="${clientContext.date}", timezone="${clientContext.timezone}", location="${clientContext.location}"] at the end of the response.`
   }
@@ -251,6 +256,12 @@ export async function POST(req: NextRequest) {
         .replace(/\[VISUAL_SUMMARY:.*?\]/gi, '')
         .trim()
 
+      // Emotional & Conversational Intent Detection: Activates Human Empathy & Adaptive Temperature
+      const intentResult = detectEmotionAndConversationalIntent(cleanUserMessage || message)
+      const isConversationalOrEmotional = intentResult.isConversational || mode === 'Friend'
+      const conversationalDirective = intentResult.promptDirective || (mode === 'Friend' ? `\n\n[FRIEND & COMPANION MODE ACTIVE]:\nRespond with deep human warmth, active listening, and conversational flow. Avoid rigid bullet points for personal dialogue.` : '')
+      const dynamicTemperature = isConversationalOrEmotional ? 0.68 : 0.35
+
       // Greetings-only instant response: fires ONLY when message is a pure greeting.
       // If user adds a question or topic after the greeting, it goes to the LLM instead.
       const greetingReply = matchGreeting(cleanUserMessage || message)
@@ -263,13 +274,16 @@ export async function POST(req: NextRequest) {
       }
 
       // Deterministic Academic & Math & Code & Real-Time Clock Solver: Instant 10/10 Accurate Response
-      const detSolution = solveDeterministically(cleanUserMessage || message, mode, 'en', clientContext)
-      if (detSolution.matched && detSolution.answer) {
-        const clean = detSolution.answer.replace(/\r/g, '').replace(/\n/g, '\\n')
-        controller.enqueue(encoder.encode(`data: ${clean}\n\n`))
-        controller.enqueue(encoder.encode('data: [DONE]\n\n'))
-        controller.close()
-        return
+      // Never intercept emotional, advice, or conversational questions with rigid formulas
+      if (!isConversationalOrEmotional) {
+        const detSolution = solveDeterministically(cleanUserMessage || message, mode, 'en', clientContext)
+        if (detSolution.matched && detSolution.answer) {
+          const clean = detSolution.answer.replace(/\r/g, '').replace(/\n/g, '\\n')
+          controller.enqueue(encoder.encode(`data: ${clean}\n\n`))
+          controller.enqueue(encoder.encode('data: [DONE]\n\n'))
+          controller.close()
+          return
+        }
       }
 
       // Image Generation Request in Chat: Instant Neural Canvas Renderer
@@ -317,7 +331,7 @@ export async function POST(req: NextRequest) {
                 : ''
 
               parts.push({
-                text: `${getModeSystemPrompt(mode)}${timeContextPrompt}\n\n${promptText}`
+                text: `${getModeSystemPrompt(mode)}${conversationalDirective}${timeContextPrompt}\n\n${promptText}`
               })
 
               if (imageMatch) {
@@ -339,7 +353,7 @@ export async function POST(req: NextRequest) {
                 },
                 body: JSON.stringify({
                   contents: [{ role: 'user', parts }],
-                  generationConfig: { temperature: 0.35, maxOutputTokens: 2048 }
+                  generationConfig: { temperature: dynamicTemperature, maxOutputTokens: 2048 }
                 }),
                 signal: abortCtrl.signal,
                 cache: 'no-store'
@@ -377,7 +391,7 @@ export async function POST(req: NextRequest) {
         for (const apiKey of keys) {
           if (streamedAny) break
 
-          const groqMessages = buildGroqMessages(message, mode, history, true, webSearchResults, clientContext)
+          const groqMessages = buildGroqMessages(message, mode, history, true, webSearchResults, clientContext, conversationalDirective)
           const isDocument = message.includes('DOCUMENT ATTACHED:') || message.includes('FILE ATTACHED:')
           const models = preferFastGroqModels({
             vision: false,
@@ -388,7 +402,7 @@ export async function POST(req: NextRequest) {
           for (const model of models) {
             if (streamedAny) break
             try {
-              const currentGroqMessages = buildGroqMessages(message, mode, history, false, webSearchResults, clientContext)
+              const currentGroqMessages = buildGroqMessages(message, mode, history, false, webSearchResults, clientContext, conversationalDirective)
               const abortCtrl = new AbortController()
               const isLargeModel = /120b|70b|90b|27b/.test(model)
               const timeoutMs = isDocument
@@ -407,7 +421,7 @@ export async function POST(req: NextRequest) {
                   messages: currentGroqMessages,
                   max_tokens: 2048,
                   max_completion_tokens: 2048,
-                  temperature: 0.35,
+                  temperature: dynamicTemperature,
                   top_p: 0.9,
                   stream: true,
                 }),
@@ -478,14 +492,14 @@ export async function POST(req: NextRequest) {
           try {
             const abortCtrl = new AbortController()
             const timeoutId = setTimeout(() => abortCtrl.abort(), 15000)
-            const openAiSys = getModeSystemPrompt(mode) + (clientContext?.time ? `\n\n[REAL-TIME USER ENVIRONMENT & CLOCK CONTEXT]: Exact Current Time: ${clientContext.time}, Date: ${clientContext.date}, Timezone: ${clientContext.timezone}, Location: ${clientContext.location}. Append [WALL_CLOCK: time="${clientContext.time}", date="${clientContext.date}", timezone="${clientContext.timezone}", location="${clientContext.location}"]` : '')
+            const openAiSys = getModeSystemPrompt(mode) + conversationalDirective + (clientContext?.time ? `\n\n[REAL-TIME USER ENVIRONMENT & CLOCK CONTEXT]: Exact Current Time: ${clientContext.time}, Date: ${clientContext.date}, Timezone: ${clientContext.timezone}, Location: ${clientContext.location}. Append [WALL_CLOCK: time="${clientContext.time}", date="${clientContext.date}", timezone="${clientContext.timezone}", location="${clientContext.location}"]` : '')
             const oRes = await fetch('https://api.openai.com/v1/chat/completions', {
               method: 'POST',
               headers: { 'Authorization': `Bearer ${oKey}`, 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 model: 'gpt-4o-mini',
                 messages: [{ role: 'system', content: openAiSys }, { role: 'user', content: message }],
-                temperature: 0.35,
+                temperature: dynamicTemperature,
                 max_tokens: 2048
               }),
               signal: abortCtrl.signal,

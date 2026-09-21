@@ -1,28 +1,112 @@
 /** Shared fast-path helpers for Copetra chat APIs. */
 
 export const SIMPLE_GREETINGS: Record<string, string> = {
-  hello: `Hello!  Welcome to **Copetra AI**! How can I help you today?`,
-  hi: `Hi there!  How can I assist you today?`,
-  hey: `Hey!  What can I do for you?`,
-  habari: `Habari njema!  Karibu **Copetra AI**! Ninaweza kukusaidia nini leo?`,
-  'habari yako': `Nzuri sana!  Karibu! Una swali gani leo?`,
-  'habari za leo': `Salama!  Karibu **Copetra AI**! Una swali gani leo?`,
-  mambo: `Poa sana!  Karibu **Copetra AI**! Unaweza kuniuliza chochote.`,
-  'mambo vipi': `Poa kabisa!  Karibu! Nikusaidie nini?`,
-  niaje: `Poa!  Nikusaidie nini leo?`,
-  shikamoo: `Marahaba!  Karibu sana **Copetra AI**! Nikusaidie nini?`,
-  jambo: `Jambo!  Karibu **Copetra AI**! Una swali gani?`,
-  sasa: `Sasa hivi!  Nikusaidie nini leo?`,
-  'sasa hivi': `Fiti!  Karibu **Copetra AI**! Nikusaidie nini?`,
-  'za uzima': `Salama kabisa!  Nikusaidie nini leo?`,
-  'who are you': `I am **Copetra AI** , your AI Assistant powered by **PJ COPETRANOVA**. How can I help you?`,
-  'wewe ni nani': `Mimi ni **Copetra AI** , msaidizi wako wa AI uliotengenezwa na **PJ COPETRANOVA**. Nikusaidie nini?`,
+  hello: `Hello! Welcome to **Copetra AI**! How are you feeling today?`,
+  hi: `Hi there! It is great to hear from you. How is your day going?`,
+  hey: `Hey! Good to see you. What is on your mind today?`,
+  habari: `Habari njema! Karibu sana **Copetra AI**. Siku yako inaendaje leo?`,
+  'habari yako': `Nzuri sana, namshukuru Mungu! Hali yako vipi leo?`,
+  'habari za leo': `Salama kabisa! Karibu **Copetra AI**. Mambo yanaendaje upande wako?`,
+  mambo: `Poa sana! Mambo vipi, unaendeleaje leo?`,
+  'mambo vipi': `Poa kabisa! Mambo yanaendaje upande wako leo?`,
+  niaje: `Poa sana! Hali yako ikoje leo, kila kitu kiko sawa?`,
+  shikamoo: `Marahaba! Karibu sana **Copetra AI**. Umeamkaje / Umeshindaje leo?`,
+  jambo: `Jambo zuri! Karibu sana. Unaendeleaje leo?`,
+  sasa: `Sasa hivi! Mambo vipi, unaendeleaje?`,
+  'sasa hivi': `Fiti kabisa! Habari za leo?`,
+  'za uzima': `Salama kabisa, tunashukuru uzima. Wewe unaendeleaje?`,
+  'who are you': `I am **Copetra AI**, your intelligent companion and assistant engineered by **PJ COPETRANOVA**. Whether you need deep research, life advice, or just a thoughtful conversation, I am here for you.`,
+  'wewe ni nani': `Mimi ni **Copetra AI**, msaidizi na rafiki yako wa kidijitali niliyetengenezwa na **PJ COPETRANOVA**. Iwe unahitaji utafiti, kodi, ushauri wa maisha, au mazungumzo ya kirafiki, niko hapa kwa ajili yako.`
 }
 
 export function matchSimpleGreeting(query: string): string | null {
   if (!query) return null
   const q = query.toLowerCase().trim().replace(/[!?.،,]+$/g, '').trim()
   return SIMPLE_GREETINGS[q] ?? null
+}
+
+export interface ConversationalIntentResult {
+  isConversational: boolean
+  category: 'emotional_support' | 'celebration' | 'casual_chat' | 'advice_dilemma' | 'general'
+  promptDirective: string
+}
+
+export function detectEmotionAndConversationalIntent(query: string): ConversationalIntentResult {
+  if (!query) {
+    return { isConversational: false, category: 'general', promptDirective: '' }
+  }
+
+  const clean = query
+    .replace(/\[IMAGE:.*?\]/gi, '')
+    .replace(/\[(WORD|PDF|EXCEL|POWERPOINT|TEXT|CODE) DOCUMENT ATTACHED:.*?\][\s\S]*/gi, '')
+    .replace(/\[PERSISTENT USER BRAIN MEMORY\][\s\S]*/gi, '')
+    .trim()
+  const lower = clean.toLowerCase()
+
+  // 1. Emotional Venting / Distress / Burnout / Fatigue
+  const isEmotional = /\b(nimechoka|kazi zimenilemea|kazi ngumu|sijui nifanyeje|sina amani|kila kitu kinaharibika|kila kitu kimeharibika|nimefadhaika|nina stress|huzuni|moyo unaniuma|nampenda|amenitenda|nimekata tamaa|nahisi kupotea|nahitaji ushauri|moyo wangu|nimevurugika|sina hamu|nateseka|kujisikia vibaya|najisikia vibaya|sitaki kuongea na mtu|i am tired|i'?m so tired|exhausted|burned out|burnout|overwhelmed|feel lost|i feel lost|don'?t know what to do|stressed out|heartbroken|depressed|sad today|so anxious|losing hope|can'?t take it anymore|hurting|feeling down)\b/i.test(lower)
+
+  if (isEmotional) {
+    return {
+      isConversational: true,
+      category: 'emotional_support',
+      promptDirective: `\n\n[EMPATHY & EMOTIONAL SUPPORT PROTOCOL ACTIVE]:
+The user is expressing emotional fatigue, stress, sadness, or personal distress.
+- Respond with genuine, deep human empathy, warmth, and care as a trusted close friend.
+- DO NOT use bullet points, numbered lists, clinical advice, or an academic lecture.
+- FIRST validate their feelings warmly in natural conversational prose (e.g. in Swahili: "Pole sana ndugu yangu, nakuelewa kabisa...", "Kwanza kabisa vuta pumzi ndefu, usijione upo peke yako kwenye hili").
+- Provide comforting, grounded perspective.
+- Conclude with a gentle, supportive open-ended question inviting them to share what feels heaviest right now.`
+    }
+  }
+
+  // 2. Life Dilemma / Advice Seeking
+  const isAdvice = /\b(ushauri|unanishauri|nishauri|nifanyeje|niache kazi|nianze biashara|nipo njia panda|niko njia panda|uamuzi mgumu|sijui nichague nini|should i quit|should i start|what is your advice|dilemma|tough decision|what would you do|help me decide)\b/i.test(lower)
+
+  if (isAdvice) {
+    return {
+      isConversational: true,
+      category: 'advice_dilemma',
+      promptDirective: `\n\n[HUMAN COUNSEL & ACTIVE LISTENING PROTOCOL ACTIVE]:
+The user is at a crossroad and seeking personal/career/life advice.
+- Respond as an emotionally intelligent mentor and trusted confidant.
+- Speak in warm, conversational paragraphs rather than rigid checklists.
+- Acknowledge the weight of the decision, explore the emotional and practical sides with compassion.
+- Ask a thoughtful, clarifying follow-up question to help them find clarity.`
+    }
+  }
+
+  // 3. Celebration / Breakthrough / Good News
+  const isCelebration = /\b(nimefaulu|nimepata kazi|nimepata mtaji|mungu mkubwa|nimefurahi|furaha tele|habari njema|kazi imetiki|nimefanikiwa|i passed|got the job|good news|so happy|celebrate|finally did it|won the)\b/i.test(lower)
+
+  if (isCelebration) {
+    return {
+      isConversational: true,
+      category: 'celebration',
+      promptDirective: `\n\n[SHARED CELEBRATION PROTOCOL ACTIVE]:
+The user is sharing a victory, joy, or positive milestone.
+- Celebrate with them with authentic, heartfelt excitement and warmth.
+- Recognize their hard work and dedication with genuine praise.
+- Ask a cheerful follow-up question about how they plan to mark or build upon this success.`
+    }
+  }
+
+  // 4. Casual Friendly Chat / Relational Banter
+  const isCasual = /\b(mambo vipi|za leo|za asubuhi|za jioni|za masiku|unaendeleaje|unafanya nini|unafanyaje|habari yako|wazima|niambie bwana|vipi wewe|mambo vipi bwana|how are you doing|how is your day|what'?s up|how are things|how are you today|how'?s it going|what are you up to)\b/i.test(lower)
+
+  if (isCasual && clean.length < 80) {
+    return {
+      isConversational: true,
+      category: 'casual_chat',
+      promptDirective: `\n\n[FRIENDLY HUMAN CONVERSATION ACTIVE]:
+The user is having a casual, friendly chat.
+- Respond in an open, warm, engaging, and conversational manner like a real friend.
+- Avoid robotic corporate formality or exam-style explanations.
+- Keep the dialogue flowing naturally with a friendly conversational return.`
+    }
+  }
+
+  return { isConversational: false, category: 'general', promptDirective: '' }
 }
 
 export function lastUserText(messages: { role?: string; content?: unknown }[]): string {
