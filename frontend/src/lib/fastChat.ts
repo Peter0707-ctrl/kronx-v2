@@ -43,7 +43,24 @@ export function detectEmotionAndConversationalIntent(query: string): Conversatio
     .trim()
   const lower = clean.toLowerCase()
 
-  // 1. Emotional Venting / Distress / Burnout / Fatigue
+  // 1. Anger / Hurt / Offense / Conflict / Irritation (e.g. hasira, nimekwazika, nimekerwa, nimekasirika)
+  const isAngerOrOffense = /\b(hasira|hasira sana|nakua na hasira|nakuwa na hasira|nimekasirika|kukasirika|nimekwazika|kukwazika|nilikwazika|kilichonikwaza|nimekerwa|kukerwa|kuudhi|inaniudhi|kuudhika|nimeudhika|amenikera|amenikwaza|amenikasirisha|wamenikera|ugomvi|kugombana|moyo unawaka|mood mbaya|kuchafukwa|sielewi kwann|sielewi kwa nini|mda kidogo sijachati|muda mrefu hatujachati|sijachati na ww|sijachati na wewe|angry|mad|pissed|pissed off|frustrated|annoyed|irritated|furious|offended|upset|temper|short temper)\b/i.test(lower)
+
+  if (isAngerOrOffense) {
+    return {
+      isConversational: true,
+      category: 'emotional_support',
+      promptDirective: `\n\n[ANGER, HURT & VENTING PROTOCOL ACTIVE — AUTHENTIC BROTHER/CONFIDANT PERSONA]:
+The user is expressing anger, being offended, frustrated, or dealing with an emotional conflict or bad mood.
+- ABSOLUTELY DO NOT MENTION SCHOOL, EXAMS, STUDYING, HOMEWORK, OR ACADEMICS! This is a personal life emotion, NOT a school issue.
+- DO NOT lecture them, tell them to do breathing exercises, or give generic self-help advice right away.
+- Talk directly like a loyal, down-to-earth brother and friend (e.g. in natural Swahili: 'Pole bro', 'Aah sasa nimekupata bro', 'Usibebe tu kichwani peke yako').
+- Ask them directly to tell you their story of what happened, raw and unfiltered: 'Nisimulie kilichokwaza leo—kama kilivyo, bila kuficha au ku-edit. Nitasikiliza kwanza, halafu tukiangalie pamoja.'
+- Listen first. Let them get it off their chest before analyzing.`
+    }
+  }
+
+  // 2. Emotional Venting / Distress / Burnout / Fatigue
   const isEmotional = /\b(nimechoka|kazi zimenilemea|kazi ngumu|sijui nifanyeje|sina amani|kila kitu kinaharibika|kila kitu kimeharibika|nimefadhaika|nina stress|huzuni|moyo unaniuma|nampenda|amenitenda|nimekata tamaa|nahisi kupotea|nahitaji ushauri|moyo wangu|nimevurugika|sina hamu|nateseka|kujisikia vibaya|najisikia vibaya|sitaki kuongea na mtu|i am tired|i'?m so tired|exhausted|burned out|burnout|overwhelmed|feel lost|i feel lost|don'?t know what to do|stressed out|heartbroken|depressed|sad today|so anxious|losing hope|can'?t take it anymore|hurting|feeling down)\b/i.test(lower)
 
   if (isEmotional) {
@@ -53,8 +70,9 @@ export function detectEmotionAndConversationalIntent(query: string): Conversatio
       promptDirective: `\n\n[EMPATHY & EMOTIONAL SUPPORT PROTOCOL ACTIVE]:
 The user is expressing emotional fatigue, stress, sadness, or personal distress.
 - Respond with genuine, deep human empathy, warmth, and care as a trusted close friend.
+- ABSOLUTELY DO NOT ASSUME THIS IS ABOUT SCHOOL OR STUDYING. Do not mention classes, subjects, or schoolwork unless the user explicitly brought them up.
 - DO NOT use bullet points, numbered lists, clinical advice, or an academic lecture.
-- FIRST validate their feelings warmly in natural conversational prose (e.g. in Swahili: "Pole sana ndugu yangu, nakuelewa kabisa...", "Kwanza kabisa vuta pumzi ndefu, usijione upo peke yako kwenye hili").
+- FIRST validate their feelings warmly in natural conversational prose (e.g. in Swahili: "Pole sana bro/ndugu yangu, nakuelewa kabisa...", "Usijione upo peke yako kwenye hili").
 - Provide comforting, grounded perspective.
 - Conclude with a gentle, supportive open-ended question inviting them to share what feels heaviest right now.`
     }

@@ -442,7 +442,7 @@ export async function POST(req: NextRequest) {
   // Emotional & Conversational Intent Detection: Activates Human Empathy & Adaptive Temperature
   const intentResult = detectEmotionAndConversationalIntent(cleanUserMessage || message)
   const isConversationalOrEmotional = intentResult.isConversational || mode === 'Friend'
-  const conversationalDirective = intentResult.promptDirective || (mode === 'Friend' ? `\n\n[FRIEND & COMPANION MODE ACTIVE]:\nRespond with deep human warmth, active listening, and conversational flow. Avoid rigid bullet points for personal dialogue.` : '')
+  const conversationalDirective = intentResult.promptDirective || (mode === 'Friend' ? `\n\n[FRIEND & COMPANION MODE ACTIVE]:\nRespond as an authentic brother and loyal confidant ('bro', 'ndugu yangu'). NEVER assume the user is talking about school, exams, or homework unless explicitly requested. If the user shares feelings or is upset, invite them to tell their story: 'Nisimulie kilichokwaza leo—kama kilivyo, bila kuficha. Nipo hapa kukusikiliza.'` : '')
   const dynamicTemperature = isConversationalOrEmotional ? 0.68 : 0.35
 
   // Greetings-only instant response: fires ONLY when message is a pure greeting.
