@@ -213,11 +213,16 @@ async function callGemini(
         // Build multimodal contents with inline_data for attached images
         const parts: any[] = []
         const imageMatch = message.match(/\[IMAGE:\s*(data:image\/([a-zA-Z0-9+]+);base64,([^\]\s]+))\s*\]/i)
-        const cleanText = message.replace(/\[IMAGE:[\s\S]*?\]/gi, '').trim()
+        const cleanText = message
+          .replace(/\[IMAGE:[\s\S]*?\]/gi, '')
+          .replace(/\[PERSISTENT USER BRAIN MEMORY\][\s\S]*/gi, '')
+          .replace(/\[FEEDBACK HISTORY[\s\S]*/gi, '')
+          .replace(/\[REAL-TIME VERIFIED WEB SEARCH DATA[\s\S]*/gi, '')
+          .trim()
 
         const promptText = cleanText
           ? `Please examine the attached image carefully and answer the user query with high precision.\n\nUser Question: ${cleanText}`
-          : `Please examine the attached image thoroughly, detailing all visual elements, UI components, text, metrics, and key data shown.`
+          : `Please examine the attached image thoroughly. Extract all visible text (OCR), identify what document, letter, or scene is shown, and provide a comprehensive, structured breakdown of its contents, requirements, dates, and key information.`
 
         const timeContextPrompt = clientContext?.time
           ? `\n\n[REAL-TIME USER ENVIRONMENT & CLOCK CONTEXT]:\n- Exact Current Time: ${clientContext.time}\n- Current Date: ${clientContext.date}\n- Timezone: ${clientContext.timezone}\n- Location: ${clientContext.location}\nWhen answering time or location questions, provide the exact time and append: [WALL_CLOCK: time="${clientContext.time}", date="${clientContext.date}", timezone="${clientContext.timezone}", location="${clientContext.location}"]\n`

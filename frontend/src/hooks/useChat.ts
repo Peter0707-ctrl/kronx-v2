@@ -193,7 +193,11 @@ export function useChat() {
       try {
         const history = buildHistory(currentState.activeMessages().slice(0, -2))
         const memories = currentState.userMemories || []
-        const memoryPrompt = memories.length > 0 ? `\n\n[PERSISTENT USER BRAIN MEMORY]:\n${memories.map(m => `- ${m}`).join('\n')}` : ''
+        const isPersonalQuery = /\b(who am i|my name|remember me|my memory|kuhusu mimi|unanijua|unajua nini kunihusu|my profile)\b/i.test(text)
+        const hasAttachment = text.includes('[IMAGE:') || text.includes('DOCUMENT ATTACHED:')
+        const memoryPrompt = (!hasAttachment && isPersonalQuery && memories.length > 0)
+          ? `\n\n[PERSISTENT USER BRAIN MEMORY]:\n${memories.map(m => `- ${m}`).join('\n')}`
+          : ''
 
         // Real-time client timezone, time, and date parameters
         const clientTz = typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone : 'Africa/Dar_es_Salaam'

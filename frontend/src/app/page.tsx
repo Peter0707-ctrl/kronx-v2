@@ -15,7 +15,7 @@ import ErrorBoundary from '@/components/ErrorBoundary'
 import { useChat } from '@/hooks/useChat'
 import { useKronxStore } from '@/store/useKronxStore'
 
-const CURRENT_APP_VERSION = 'v2026.09.21.1445'
+const CURRENT_APP_VERSION = 'v2026.09.21.1450'
 
 export default function Home() {
   const { send, regenerate, editAndResend } = useChat()
@@ -41,6 +41,18 @@ export default function Home() {
             }
           }
           keysToRemove.forEach(k => localStorage.removeItem(k))
+
+          // Purge stale memories inside Zustand store to prevent prompt pollution
+          try {
+            const storeData = localStorage.getItem('kronx-store')
+            if (storeData) {
+              const parsed = JSON.parse(storeData)
+              if (parsed?.state) {
+                parsed.state.userMemories = []
+                localStorage.setItem('kronx-store', JSON.stringify(parsed))
+              }
+            }
+          } catch { }
 
           // Clear Service Worker CacheStorage
           if ('caches' in window) {
