@@ -311,7 +311,17 @@ function CodeBlockRunner({ language, code, children, props }: any) {
   )
 }
 
-const ResilientMarkdownImage = ({ src, alt, onPreview }: { src?: string; alt?: string; onPreview: (s: string) => void }) => {
+const ResilientMarkdownImage = ({
+  src,
+  alt,
+  onPreview,
+  onEdit
+}: {
+  src?: string
+  alt?: string
+  onPreview: (s: string) => void
+  onEdit?: (s: string) => void
+}) => {
   const [currentSrc, setCurrentSrc] = useState(src || '')
   const [loading, setLoading] = useState(true)
   const [errorCount, setErrorCount] = useState(0)
@@ -333,18 +343,18 @@ const ResilientMarkdownImage = ({ src, alt, onPreview }: { src?: string; alt?: s
   }
 
   return (
-    <span style={{ display: 'inline-block', margin: '14px 0', position: 'relative', maxWidth: '512px', width: '100%', minHeight: loading ? '280px' : 'auto' }}>
+    <span style={{ display: 'inline-block', margin: '14px 0', position: 'relative', maxWidth: '580px', width: '100%', minHeight: loading ? '280px' : 'auto' }}>
       {loading && (
         <div style={{
           position: 'absolute', inset: 0,
-          background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
-          borderRadius: '16px', border: '1.5px dashed #cbd5e1',
+          background: 'linear-gradient(135deg, rgba(248, 250, 252, 0.95), rgba(241, 245, 249, 0.95))',
+          borderRadius: '20px', border: '1.5px dashed #cbd5e1',
           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
           gap: '12px', padding: '20px', zIndex: 2
         }}>
-          <div style={{ width: '28px', height: '28px', borderRadius: '50%', border: '3px solid #0284c7', borderTopColor: 'transparent', animation: 'imageLoadingSpin 1s linear infinite' }} />
-          <span style={{ fontSize: '11px', fontWeight: '800', color: '#64748b', textAlign: 'center' }}>
-             Generating visual concept... Please wait
+          <div style={{ width: '32px', height: '32px', borderRadius: '50%', border: '3px solid #0284c7', borderTopColor: 'transparent', animation: 'imageLoadingSpin 1s linear infinite' }} />
+          <span style={{ fontSize: '12px', fontWeight: '700', color: '#64748b', textAlign: 'center' }}>
+            Generating visual concept... Please wait
           </span>
           <style>{`@keyframes imageLoadingSpin { to { transform: rotate(360deg); } }`}</style>
         </div>
@@ -355,9 +365,9 @@ const ResilientMarkdownImage = ({ src, alt, onPreview }: { src?: string; alt?: s
         onLoad={handleLoad}
         onError={handleError}
         style={{ 
-          width: '100%', maxWidth: '512px', height: 'auto', 
-          borderRadius: '16px', border: '1px solid #bae6fd', 
-          boxShadow: '0 8px 24px rgba(2, 132, 199, 0.12)', 
+          width: '100%', maxWidth: '580px', height: 'auto', 
+          borderRadius: '20px', border: '1px solid rgba(226, 232, 240, 0.8)', 
+          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.12)', 
           display: 'block', cursor: 'pointer',
           opacity: loading ? 0 : 1,
           transition: 'opacity 0.3s ease-in-out'
@@ -365,29 +375,74 @@ const ResilientMarkdownImage = ({ src, alt, onPreview }: { src?: string; alt?: s
         onClick={() => !loading && onPreview(currentSrc)} 
       />
       {!loading && (
-        <a 
-          href={currentSrc} 
-          target="_blank" 
-          rel="noopener noreferrer" 
-          style={{ 
-            position: 'absolute', bottom: '12px', right: '12px', 
-            background: 'rgba(15, 23, 42, 0.85)', color: '#ffffff', 
-            padding: '6px 14px', borderRadius: '20px', 
-            fontSize: '12px', fontWeight: '700', textDecoration: 'none', 
-            display: 'flex', alignItems: 'center', gap: '6px', 
-            backdropFilter: 'blur(8px)', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)', 
-            transition: 'all 0.2s ease-in-out' 
-          }} 
-          onMouseOver={e => e.currentTarget.style.background = '#0f172a'} 
-          onMouseOut={e => e.currentTarget.style.background = 'rgba(15, 23, 42, 0.85)'}
-        >
-          <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="7 10 12 15 17 10" />
-            <line x1="12" y1="15" x2="12" y2="3" />
-          </svg>
-          <span>Download Image</span>
-        </a>
+        <>
+          {/* ChatGPT-style Edit button on bottom-left */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              if (onEdit) {
+                onEdit(currentSrc)
+              } else {
+                onPreview(currentSrc)
+              }
+            }}
+            style={{
+              position: 'absolute',
+              bottom: '12px',
+              left: '12px',
+              background: 'rgba(15, 23, 42, 0.75)',
+              color: '#ffffff',
+              padding: '6px 14px',
+              borderRadius: '20px',
+              fontSize: '12px',
+              fontWeight: '600',
+              border: '1px solid rgba(255, 255, 255, 0.18)',
+              backdropFilter: 'blur(8px)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+              transition: 'all 0.2s ease-in-out'
+            }}
+            onMouseOver={e => e.currentTarget.style.background = 'rgba(15, 23, 42, 0.95)'}
+            onMouseOut={e => e.currentTarget.style.background = 'rgba(15, 23, 42, 0.75)'}
+            title="Edit image filters and adjustments"
+          >
+            <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+            <span>Edit</span>
+          </button>
+
+          {/* ChatGPT-style Download button on bottom-right */}
+          <a 
+            href={currentSrc} 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            download
+            style={{ 
+              position: 'absolute', bottom: '12px', right: '12px', 
+              background: 'rgba(15, 23, 42, 0.75)', color: '#ffffff', 
+              width: '32px', height: '32px', borderRadius: '50%', 
+              border: '1px solid rgba(255, 255, 255, 0.18)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', 
+              backdropFilter: 'blur(8px)', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)', 
+              transition: 'all 0.2s ease-in-out',
+              textDecoration: 'none'
+            }} 
+            onMouseOver={e => e.currentTarget.style.background = 'rgba(15, 23, 42, 0.95)'} 
+            onMouseOut={e => e.currentTarget.style.background = 'rgba(15, 23, 42, 0.75)'}
+            title="Download Full Resolution"
+          >
+            <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+          </a>
+        </>
       )}
     </span>
   )
@@ -1085,8 +1140,17 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
                       )
                     },
                     img: ({node, src, alt}) => (
-                      <ResilientMarkdownImage src={src} alt={alt} onPreview={setPreviewModalImg} />
+                      <ResilientMarkdownImage
+                        src={src}
+                        alt={alt}
+                        onPreview={setPreviewModalImg}
+                        onEdit={(imgSrc) => {
+                          setPreviewModalImg(imgSrc)
+                          setIsEditingImage(true)
+                        }}
+                      />
                     )
+
                   }}
                 >
                   {displayContent}
