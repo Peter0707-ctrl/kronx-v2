@@ -443,21 +443,8 @@ export async function POST(req: NextRequest) {
   const intentResult = detectEmotionAndConversationalIntent(cleanUserMessage || message)
   const isConversationalOrEmotional = intentResult.isConversational || mode === 'Friend'
   const conversationalDirective = intentResult.promptDirective || (mode === 'Friend' ? `\n\n[FRIEND & COMPANION MODE ACTIVE]:\nRespond as an authentic brother and loyal confidant ('bro', 'ndugu yangu'). NEVER assume the user is talking about school, exams, or homework unless explicitly requested. If the user shares feelings or is upset, invite them to tell their story: 'Nisimulie kilichokwaza leo—kama kilivyo, bila kuficha. Nipo hapa kukusikiliza.'` : '')
-  const dynamicTemperature = isConversationalOrEmotional ? 0.68 : 0.35
-
-  // Greetings-only instant response: fires ONLY when message is a pure greeting.
-  // If user adds a question or topic, it goes to the LLM instead.
-  const greetingReply = matchGreeting(cleanUserMessage || message)
-  if (greetingReply) return NextResponse.json({ response: greetingReply })
-
-  // Deterministic Academic & Math & Code & Real-Time Clock Solver: Instant 10/10 Accurate Response
-  // Never intercept emotional, advice, or conversational questions with rigid formulas
-  if (!isConversationalOrEmotional) {
-    const detSolution = solveDeterministically(cleanUserMessage || message, mode, 'en', clientContext)
-    if (detSolution.matched && detSolution.answer) {
-      return NextResponse.json({ response: detSolution.answer })
-    }
-  }
+  // Adaptive Temperature: 0.7 for natural, warm, human conversation (like ChatGPT)
+  const dynamicTemperature = mode === 'Developer' || mode === 'Academic' ? 0.35 : 0.70
 
   // Image Generation Request in Chat: Instant Neural Canvas Renderer
   const imgGen = matchImageGenerationRequest(cleanUserMessage || message)
