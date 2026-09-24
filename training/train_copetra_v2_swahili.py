@@ -1,8 +1,11 @@
 """
 =============================================================================
 Copetra AI - Phase 2: Native Swahili Mastery & Universal Agent Engine
-Fine-tuning Qwen2.5-7B on 1,500+ Real Swahili Instructions + Copetra Agent Core
-Targets: Fluent Natural Swahili, Zero Hallucinations, Universal Problem Solving
+Fine-tuning Qwen2.5-7B on Multi-Source Swahili Datasets:
+1. Alpaca Cleaned Swahili (3,000 instruction-response pairs)
+2. Nadhari Swahili Thinking (Chain-of-Thought Deep Reasoning in Swahili)
+3. Copetra Sovereign Core (First Principles, Law, Business, Tech, Psychology)
+Targets: Fluent Natural Swahili, Deep Reasoning, Universal Problem Solving
 Zero emojis.
 =============================================================================
 """
@@ -62,41 +65,78 @@ COPETRA_CORE = [
             {"role": "user", "content": "Biashara yangu ya mgahawa inakaribia kufilisika, madeni yananisonga na wateja wamepungua kwa asilimia 70 ndani ya miezi mitatu. Nifanye nini kuokoa hii meli kabla haijazama?"},
             {"role": "assistant", "content": "Huu ni wakati wa vita ya kibiashara, na badala ya kuingiwa na hofu, lazima tuchukue hatua za dharura za kijeshi kuokoa mgahawa wako ndani ya siku 14 zijazo:\n\nHatua ya 1: Kusimamisha Kuvuja kwa Pesa (Cash Bleed Triage):\n- Punguza menyu mara moja: Ondoa vyakula vyote vinavyoharibika haraka au vinavyouzika kidogo. Baki na vyakula 5 hadi 7 vinavyopendwa zaidi, vyenye faida kubwa na vinavyoandaliwa haraka.\n- Jadiliana na wenye madeni: Wakabili uso kwa uso na uwaambie ukweli: 'Nipeni miezi miwili bila riba, nabadilisha mfumo wa uendeshaji ili niwalipe jasho lenu badala ya kufunga biashara na ninyi msipate chochote.' Asilimia 90 ya wadai watakubali kuliko kupoteza pesa zao zote.\n\nHatua ya 2: Kupata Pesa Haraka (Immediate Cash Injection):\n- Anzisha mfumo wa Chakula cha Maofisini: Tembelea maofisi, benki, na maduka yaliyo ndani ya kilomita 2 kutoka mgahawani. Wape ofa ya chakula cha mchana chenye ubora kinachofikishwa ofisini kwa mwezi mzima kwa bei maalum ya jumla iliyolipwa kabla. Hii inakupa fedha taslimu mkononi mara moja.\n\nHatua ya 3: Usimamizi Mkali wa Upotevu wa Malighafi:\n- Weka kizuizi kwenye stoo: Pima unga, mchele, nyama, na mafuta kwa mizani kabla ya kupika.\n\nHatua ya 4: Masoko ya Nguvu ya Eneo Lako:\n- Tumia WhatsApp Business na video fupi za jikoni zikionyesha usafi, mvuto wa chakula, na ofa ya kinywaji cha bure kwa wateja 30 wa kwanza kila siku."}
         ]
+    },
+    {
+        "messages": [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": "Nipe mwongozo wa kisheria kuhusu utatuzi wa mgogoro wa kodi na TRA nchini Tanzania kabla ya kufikishwa mahakamani."},
+            {"role": "assistant", "content": "Nchini Tanzania, utatuzi wa mgogoro wa kodi kati ya mlipakodi na Mamlaka ya Mapato Tanzania (TRA) unaongozwa na Sheria ya Usimamizi wa Kodi (Tax Administration Act, Cap 438):\n\nHatua ya 1: Kupokea Hati ya Makadirio (Notice of Assessment):\nUnapopokea hati ya makadirio ya kodi usiyokubaliana nayo, una siku thelathini (30) kutoka tarehe ya kupokea kuwasilisha pingamizi rasmi kwa Kamishna Mkuu (Notice of Objection to Assessment).\n\nHatua ya 2: Masharti ya Pingamizi Halali (Valid Objection):\nIli pingamizi lako liwe halali kisheria:\n1. Lazima liwe kwa maandishi likieleza sababu za kina za kisheria na mahesabu.\n2. Lazima ulipe kiasi kisichobishaniwa (undisputed tax) au theluthi moja (1/3) ya kodi iliyokadiriwa, au uombe msamaha maalum wa kutolipa hiyo theluthi moja kutoka kwa Kamishna Mkuu kwa kuonyesha sababu za kiuchumi.\n\nHatua ya 3: Uamuzi wa Kamishna (Commissioner's Decision):\nKamishna Mkuu akitoa uamuzi wa kukataa au kubadili kidogo makadirio na bado haujaridhika, una haki ya kukata rufaa kwenye Bodi ya Rufaa za Kodi (Tax Revenue Appeals Board - TRAB) ndani ya siku thelathini (30).\n\nTahadhari ya Kisheria: Kamwe usipitishe siku 30 za pingamizi bila kuwasilisha nyaraka, vinginevyo makadirio yanakuwa ya mwisho kisheria na TRA hutoa Agizo la Wakala (Agency Notice) kuzuia akaunti zako za benki."}
+        ]
+    },
+    {
+        "messages": [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": "Ni jinsi gani naweza kusanifu mfumo wa API unaoweza kupokea miamala 10,000 kwa sekunde bila seva kuzimika?"},
+            {"role": "assistant", "content": "Kusanifu mfumo wenye uwezo wa kushughulikia miamala 10,000 kwa sekunde (10k TPS) bila kufeli kunahitaji usanifu wa Asynchronous na Event-Driven kulingana na misingi ifuatayo:\n\n1. Safu ya Mbele (Ingress & Load Balancing):\n- Tumia NGINX au Envoy kama Reverse Proxy yenye Algorithm ya Round-Robin au Least-Connections.\n- Weka Cloudflare au AWS CloudFront mbele kwa ajili ya DDoS mitigation na SSL termination ili kuondoa mzigo wa usimbaji fiche (encryption overhead) kwenye seva za programu.\n\n2. Safu ya API (Stateless Compute):\n- Jenga huduma zisizohifadhi hali (Stateless Services) kwa lugha za kasi kubwa kama Go (Golang) au Rust zenye uwezo mkubwa wa concurrency kupitia Goroutines / Tokio async runtime.\n- Tumia Rate Limiting (Token Bucket algorithm kupitia Redis) kuzuia mashambulizi ya ghafla.\n\n3. Ujumbe Usio wa Moja kwa Moja (Message Queuing):\n- Kamwe usiandike moja kwa moja kwenye hifadhidata ya msingi (Database) wakati wa muamala.\n- Pokea ombi, thibitisha usahihi wake (validation), litumie kwenye Apache Kafka au RabbitMQ ndani ya milisekunde 2, kisha mrudishie mteja jibu la 202 Accepted lenye Transaction ID ya kufuatilia.\n\n4. Hifadhidata na Ushughulikiaji (Database & Workers):\n- Tumia Worker Pools kusoma miamala kutoka Kafka na kuandika kwenye hifadhidata.\n- Tumia Redis Cluster kama kache (Cache) kwa taarifa zinazosomwa mara kwa mara.\n- Tumia Database Sharding au Distributed SQL (kama CockroachDB au ScyllaDB) badala ya Single-Node PostgreSQL ili kueneza mzigo wa I/O kwenye diski tofauti."}
+        ]
     }
 ]
 
-print("[1/5] Inapakua mifano 1,200 ya Kiswahili halisi kutoka Hugging Face (iamshnoo/alpaca-cleaned-swahili)...")
-raw_swahili = load_dataset("iamshnoo/alpaca-cleaned-swahili", split="train[:1200]")
-
 all_conversations = []
 
-# Ingiza Copetra Core mara 30 ili iwe na uzito mkubwa wa utambulisho
+# Ingiza Copetra Core mara 30 ili iwe na uzito mkubwa wa uongozi
 for _ in range(30):
     for entry in COPETRA_CORE:
         all_conversations.append(entry)
 
-# Ingiza mifano 1,200 ya Kiswahili halisi
-for row in raw_swahili:
-    instruction = str(row.get("instruction") or "").strip()
-    input_text = str(row.get("input") or "").strip()
-    output_text = str(row.get("output") or "").strip()
+# 1. Dataset ya Kwanza: Alpaca Cleaned Swahili (Mifano 3,000)
+print("[1/5] Inapakua mifano 3,000 ya Kiswahili kutoka iamshnoo/alpaca-cleaned-swahili...")
+try:
+    alpaca_swahili = load_dataset("iamshnoo/alpaca-cleaned-swahili", split="train[:3000]")
+    for row in alpaca_swahili:
+        inst = str(row.get("instruction") or "").strip()
+        inp = str(row.get("input") or "").strip()
+        out = str(row.get("output") or "").strip()
+        if not inst or not out:
+            continue
+        p = f"{inst}\n\nMaelezo ya ziada: {inp}" if inp else inst
+        all_conversations.append({
+            "messages": [
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": p},
+                {"role": "assistant", "content": out}
+            ]
+        })
+    print(f"-> Imepakia mifano {len(alpaca_swahili)} kutoka Alpaca Cleaned Swahili!")
+except Exception as e:
+    print(f"Onyo: Imeshindwa kupakia alpaca-swahili: {e}")
 
-    if not instruction or not output_text:
-        continue
+# 2. Dataset ya Pili: Nadhari Swahili Thinking (Chain-of-Thought Deep Reasoning)
+print("[2/5] Inapakua data za kina za kufikiri kimantiki (Swahili Thinking - Chain of Thought)...")
+try:
+    thinking_dataset = load_dataset("Nadhari/Swahili-Thinking", split="train")
+    for row in thinking_dataset:
+        msgs = row.get("messages", [])
+        if not msgs or len(msgs) < 2:
+            continue
+        formatted_msgs = [{"role": "system", "content": SYSTEM_PROMPT}]
+        for m in msgs:
+            role = m.get("role")
+            content = m.get("content", "")
+            if role in ["user", "human"]:
+                formatted_msgs.append({"role": "user", "content": content})
+            elif role in ["assistant", "gpt"]:
+                formatted_msgs.append({"role": "assistant", "content": content})
+        if len(formatted_msgs) >= 3:
+            all_conversations.append({"messages": formatted_msgs})
+    print(f"-> Imepakia mifano ya Chain-of-Thought Reasoning kutoka Nadhari/Swahili-Thinking!")
+except Exception as e:
+    print(f"Onyo: Imeshindwa kupakia Swahili-Thinking: {e}")
 
-    prompt = f"{instruction}\n\nMaelezo ya ziada: {input_text}" if input_text else instruction
-    all_conversations.append({
-        "messages": [
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": prompt},
-            {"role": "assistant", "content": output_text}
-        ]
-    })
-
-print(f"[2/5] Jumla ya data za mafunzo zilizoandaliwa: {len(all_conversations)} mifano ya Kiswahili fasaha!")
+print(f"[3/5] Jumla ya data za mafunzo: {len(all_conversations)} mifano ya Kiswahili fasaha na uelewa wa kina!")
 
 # Pakia Qwen2.5-7B
-print("[3/5] Inapakia mtandao wa Qwen2.5-7B kwenye T4 GPU...")
+print("[4/5] Inapakia mtandao wa Qwen2.5-7B...")
 max_seq_length = 1024
 model, tokenizer = FastLanguageModel.from_pretrained(
     model_name="unsloth/Qwen2.5-7B-Instruct-bnb-4bit",
@@ -131,8 +171,8 @@ def formatting_func(batch):
 dataset = Dataset.from_list(all_conversations)
 dataset = dataset.map(formatting_func, batched=True)
 
-# 4. Endesha Mafunzo ya Kiswahili
-print("[4/5] Inaanza mafunzo rasmi ya Kiswahili fasaha (Hatua 100)...")
+# 4. Endesha Mafunzo ya Kiswahili na Kufikiri (Hatua 150)
+print("[5/5] Inaanza mafunzo rasmi (Hatua 150 za Kiswahili na Deep Reasoning)...")
 trainer = SFTTrainer(
     model=model,
     tokenizer=tokenizer,
@@ -145,11 +185,11 @@ trainer = SFTTrainer(
         per_device_train_batch_size=2,
         gradient_accumulation_steps=4,
         warmup_steps=10,
-        max_steps=100,
+        max_steps=150,
         learning_rate=2e-4,
         fp16=not torch.cuda.is_bf16_supported(),
         bf16=torch.cuda.is_bf16_supported(),
-        logging_steps=5,
+        logging_steps=10,
         optim="adamw_8bit",
         output_dir="copetra_swahili_outputs",
     ),
@@ -157,7 +197,7 @@ trainer = SFTTrainer(
 
 trainer.train()
 
-# 5. Zalisha faili jipya la GGUF
-print("[5/5] Mafunzo ya Kiswahili yamekamilika! Inazalisha copetra-v2-swahili-7b.gguf...")
+# 6. Zalisha faili jipya la GGUF
+print("Mafunzo yamekamilika! Inazalisha copetra-v2-swahili-7b.gguf...")
 model.save_pretrained_gguf("copetra-v2-swahili-7b", tokenizer, quantization_method="q4_k_m")
-print("HONGERA SANA: Faili jipya lenye Kiswahili fasaha lipo tayari: copetra-v2-swahili-7b_gguf/Qwen2.5-7B-Instruct.Q4_K_M.gguf")
+print("Kazi imekamilika: copetra-v2-swahili-7b_gguf/Qwen2.5-7B-Instruct.Q4_K_M.gguf lipo tayari!")
