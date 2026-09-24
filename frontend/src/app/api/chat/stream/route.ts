@@ -373,6 +373,68 @@ export async function POST(req: NextRequest) {
         for (const apiKey of keys) {
           if (streamedAny) break
 
+          // 0. Dedicated Copetra Proprietary AI Engine (Local/Self-hosted Node)
+          const localAiUrl = process.env.COPETRA_LOCAL_AI_URL
+          if (localAiUrl && !hasAttachedImage) {
+            try {
+              const localModel = process.env.COPETRA_LOCAL_AI_MODEL || 'copetra-v1'
+              const localHeaders: Record<string, string> = { 'Content-Type': 'application/json' }
+              if (process.env.COPETRA_LOCAL_AI_KEY) {
+                localHeaders['Authorization'] = `Bearer ${process.env.COPETRA_LOCAL_AI_KEY}`
+              }
+              const abortCtrl = new AbortController()
+              const timeoutId = setTimeout(() => abortCtrl.abort(), 20000)
+              const localRes = await fetch(localAiUrl, {
+                method: 'POST',
+                headers: localHeaders,
+                body: JSON.stringify({
+                  model: localModel,
+                  messages: [{ role: 'system', content: getModeSystemPrompt(mode) + conversationalDirective }, { role: 'user', content: cleanUserMessage || message }],
+                  stream: true,
+                  temperature: dynamicTemperature,
+                  frequency_penalty: 0.35,
+                  presence_penalty: 0.25
+                }),
+                signal: abortCtrl.signal,
+                cache: 'no-store'
+              })
+              clearTimeout(timeoutId)
+              if (localRes.ok && localRes.body) {
+                const reader = localRes.body.getReader()
+                const decoder = new TextDecoder()
+                let buffer = ''
+                let hasStarted = false
+                while (true) {
+                  const { done, value } = await reader.read()
+                  if (done) break
+                  buffer += decoder.decode(value, { stream: true })
+                  const lines = buffer.split('\n')
+                  buffer = lines.pop() || ''
+                  for (const line of lines) {
+                    const trimmed = line.trim()
+                    if (!trimmed || trimmed === 'data: [DONE]') continue
+                    if (trimmed.startsWith('data: ')) {
+                      try {
+                        const json = JSON.parse(trimmed.slice(6))
+                        const delta = json.choices?.[0]?.delta?.content || json.message?.content || json.response
+                        if (delta) {
+                          hasStarted = true
+                          const clean = delta.replace(/\r/g, '').replace(/\n/g, '\\n')
+                          controller.enqueue(encoder.encode(`data: ${clean}\n\n`))
+                        }
+                      } catch { }
+                    }
+                  }
+                }
+                if (hasStarted) {
+                  controller.enqueue(encoder.encode('data: [DONE]\n\n'))
+                  controller.close()
+                  return
+                }
+              }
+            } catch { }
+          }
+
           const groqMessages = buildGroqMessages(message, mode, history, true, webSearchResults, clientContext, conversationalDirective)
           const isDocument = message.includes('DOCUMENT ATTACHED:') || message.includes('FILE ATTACHED:')
           const models = preferFastGroqModels({
@@ -383,6 +445,7 @@ export async function POST(req: NextRequest) {
 
           for (const model of models) {
             if (streamedAny) break
+
             try {
               const currentGroqMessages = buildGroqMessages(message, mode, history, false, webSearchResults, clientContext, conversationalDirective)
               const abortCtrl = new AbortController()

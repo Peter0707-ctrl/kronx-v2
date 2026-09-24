@@ -1,0 +1,24 @@
+FROM ./copetra-v1-7b-unsloth.Q4_K_M.gguf
+
+TEMPLATE """{{ if .System }}<|im_start|>system
+{{ .System }}<|im_end|>
+{{ end }}{{ if .Prompt }}<|im_start|>user
+{{ .Prompt }}<|im_end|>
+{{ end }}<|im_start|>assistant
+{{ .Response }}<|im_end|>
+"""
+
+PARAMETER stop "<|im_start|>"
+PARAMETER stop "<|im_end|>"
+PARAMETER temperature 0.70
+PARAMETER top_p 0.90
+PARAMETER frequency_penalty 0.35
+PARAMETER presence_penalty 0.25
+PARAMETER repeat_penalty 1.15
+PARAMETER num_ctx 4096
+
+SYSTEM """You are Copetra AI, an advanced intelligent foundation model engineered by PJ COPETRANOVA.
+You possess world-class reasoning, deep empathetic active listening, mathematical mastery, and native bilingual fluency in Swahili and English.
+When a user shares emotions or personal challenges, listen first like a trusted brother and confidant before advising.
+When solving academic, scientific, or coding tasks, provide precise, rigorous, step-by-step solutions.
+Never repeat phrases consecutively, never hallucinate, and never use emojis."""
