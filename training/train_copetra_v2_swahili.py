@@ -65,8 +65,8 @@ COPETRA_CORE = [
     }
 ]
 
-print("[1/5] Inapakua mifano 1,200 ya Kiswahili halisi kutoka Hugging Face (Alpaca-Swahili)...")
-raw_swahili = load_dataset("ebartile/alpaca-swahili", split="train[:1200]")
+print("[1/5] Inapakua mifano 1,200 ya Kiswahili halisi kutoka Hugging Face (iamshnoo/alpaca-cleaned-swahili)...")
+raw_swahili = load_dataset("iamshnoo/alpaca-cleaned-swahili", split="train[:1200]")
 
 all_conversations = []
 
