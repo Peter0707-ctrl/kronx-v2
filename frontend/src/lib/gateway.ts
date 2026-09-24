@@ -61,7 +61,10 @@ function groqChatPayload(opts: {
     temperature: opts.temperature,
     max_tokens: opts.maxTokens,
     max_completion_tokens: opts.maxTokens,
+    frequency_penalty: 0.35,
+    presence_penalty: 0.25,
     stream: opts.stream,
+
   }
   if (opts.model.includes('gpt-oss')) {
     payload.reasoning_effort = 'low'

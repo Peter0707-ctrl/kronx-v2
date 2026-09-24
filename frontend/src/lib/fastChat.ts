@@ -267,8 +267,14 @@ export function cleanAiResponse(text: string): string {
     cleaned = cleaned.replace(/([\uD800-\uDBFF][\uDC00-\uDFFF])|[\u2600-\u27BF]/g, '')
   } catch { }
 
+  // 5. De-duplicate pathological LLM repetition loops (consecutive repeated clauses/phrases)
+  try {
+    cleaned = cleaned.replace(/(\b[^\n\r.,;!?]{10,80}[,;!?]?\s*)\1{2,}/gi, '$1')
+  } catch { }
+
   return cleaned.trim()
 }
+
 
 export function solveDeterministically(
   query: string,

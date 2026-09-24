@@ -15,7 +15,7 @@ import ErrorBoundary from '@/components/ErrorBoundary'
 import { useChat } from '@/hooks/useChat'
 import { useKronxStore } from '@/store/useKronxStore'
 
-const CURRENT_APP_VERSION = 'v2026.09.21.1515'
+const CURRENT_APP_VERSION = 'v2026.09.24.2025'
 
 export default function Home() {
   const { send, regenerate, editAndResend } = useChat()

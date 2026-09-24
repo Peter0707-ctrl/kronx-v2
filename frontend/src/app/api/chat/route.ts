@@ -162,9 +162,12 @@ async function callGroq(
             max_completion_tokens: 2048,
             temperature: dynamicTemperature,
             top_p: 0.9,
+            frequency_penalty: 0.35,
+            presence_penalty: 0.25,
             stream: false,
             ...(model.includes('gpt-oss') ? { reasoning_effort: 'low' } : {}),
           }),
+
           signal: controller.signal,
           cache: 'no-store',
         })
@@ -297,8 +300,11 @@ async function callOpenAi(
           model: 'gpt-4o-mini',
           messages: [{ role: 'system', content: openAiSys }, { role: 'user', content: message }],
           temperature: dynamicTemperature,
-          max_tokens: 2048
+          max_tokens: 2048,
+          frequency_penalty: 0.35,
+          presence_penalty: 0.25
         }),
+
         signal: controller.signal,
         cache: 'no-store'
       })

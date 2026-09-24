@@ -405,8 +405,11 @@ export async function POST(req: NextRequest) {
                   max_completion_tokens: 2048,
                   temperature: dynamicTemperature,
                   top_p: 0.9,
+                  frequency_penalty: 0.35,
+                  presence_penalty: 0.25,
                   stream: true,
                 }),
+
                 signal: abortCtrl.signal,
                 cache: 'no-store',
               })
@@ -482,8 +485,11 @@ export async function POST(req: NextRequest) {
                 model: 'gpt-4o-mini',
                 messages: [{ role: 'system', content: openAiSys }, { role: 'user', content: message }],
                 temperature: dynamicTemperature,
-                max_tokens: 2048
+                max_tokens: 2048,
+                frequency_penalty: 0.35,
+                presence_penalty: 0.25
               }),
+
               signal: abortCtrl.signal,
               cache: 'no-store'
             })
