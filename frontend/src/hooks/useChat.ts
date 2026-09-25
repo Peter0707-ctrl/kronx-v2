@@ -143,28 +143,27 @@ export function useChat() {
       }
       currentState.incrementChatUsage()
 
-      // Dynamic LocalStorage Cache (v3 preamble-free zero-latency offline retrieval)
-      const isDynamicTimeQuery = /\b(saa ngapi|time is it|current time|what time|muda huu|leo tarehe|tarehe ngapi|today'?s date|current date|what day is|time now|saiv|sasa hivi)\b/i.test(text)
-      const cacheKey = `kx_cache_v3:${currentState.mode}:${currentState.language}:${text.toLowerCase().trim()}`
-      if (typeof window !== 'undefined' && !isDynamicTimeQuery) {
-        let cachedRes = localStorage.getItem(cacheKey) || localStorage.getItem(`kx_cache:${currentState.mode}:${currentState.language}:${text.toLowerCase().trim()}`)
+      // Dynamic & Real-time Action Queries: Never cache real-time, local, food, order, or pricing queries
+      const isDynamicOrActionQuery = /\b(saa ngapi|time is it|current time|what time|muda huu|leo tarehe|tarehe ngapi|today'?s date|current date|what day is|time now|saiv|sasa hivi|kfc|pizza|burger|order|delivery|pickup|near me|karibu|chakula|restaurant|mgahawa|menu|bei|price|gharama|hisa|rate|dola|news|habari|weather|flights|hotel|lodge)\b/i.test(text)
+      const cacheKey = `kx_cache_v4:${currentState.mode}:${currentState.language}:${text.toLowerCase().trim()}`
+      if (typeof window !== 'undefined' && !isDynamicOrActionQuery) {
+        let cachedRes = localStorage.getItem(cacheKey)
         
-        // Invalidate cache if it contains old preambles, acknowledgements, or internal tag leaks
+        // Invalidate cache if it contains old preambles, stalling phrases, or internal leaks
         if (
           cachedRes && (
             cachedRes.toLowerCase().includes('hello! i am copetra ai') ||
             cachedRes.toLowerCase().includes('welcome to copetra ai') ||
-            cachedRes.toLowerCase().includes('hi there! i am copetra ai') ||
-            cachedRes.toLowerCase().includes('i have analyzed your request regarding') ||
+            cachedRes.toLowerCase().includes('pole bro') ||
+            cachedRes.toLowerCase().includes('talabat') ||
+            cachedRes.toLowerCase().includes('jumia food') ||
             cachedRes.toLowerCase().includes('[persi]') ||
             cachedRes.toLowerCase().includes('[persi')
           )
         ) {
           localStorage.removeItem(cacheKey)
-          localStorage.removeItem(`kx_cache:${currentState.mode}:${currentState.language}:${text.toLowerCase().trim()}`)
           cachedRes = null
         }
-
 
         if (cachedRes && !text.includes('[IMAGE:') && !text.includes('DOCUMENT ATTACHED:')) {
           currentState.addMessage(text, 'user')
@@ -244,8 +243,8 @@ export function useChat() {
           currentState.updateLastAiMessage(bufferChunk)
         }
         
-        // Save successfully streamed response to cache for future instant load (only for non-time queries)
-        if (finalResponseText && !finalResponseText.includes('maintenance') && !isDynamicTimeQuery && typeof window !== 'undefined') {
+        // Save successfully streamed response to cache for future instant load (only for static knowledge queries)
+        if (finalResponseText && !finalResponseText.includes('maintenance') && !isDynamicOrActionQuery && typeof window !== 'undefined') {
           localStorage.setItem(cacheKey, finalResponseText)
         }
         

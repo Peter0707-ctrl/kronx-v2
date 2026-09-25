@@ -460,6 +460,15 @@ export const useKronxStore = create<KronxStore>()(
     }),
     {
       name: 'kronx-storage', // name of the item in the storage (must be unique)
+      version: 3,
+      migrate: (persistedState: any) => {
+        if (persistedState) {
+          if (persistedState.mode === 'Friend' || !persistedState.mode) {
+            persistedState.mode = 'Universal'
+          }
+        }
+        return persistedState
+      },
       partialize: (state) => Object.fromEntries(
         Object.entries(state).filter(([key]) => !['isStreaming', 'authModalOpen', 'settingsModalOpen', 'sidebarOpen'].includes(key))
       ),
