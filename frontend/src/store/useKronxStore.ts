@@ -79,7 +79,7 @@ export const useKronxStore = create<KronxStore>()(
     (set, get) => ({
       activeConversationId: null,
       conversations: [],
-      mode: 'Friend',
+      mode: 'Universal',
       language: 'en',
       isStreaming: false,
       activeView: 'chat',

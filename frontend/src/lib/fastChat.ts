@@ -233,7 +233,7 @@ export function needsLiveWebSearch(query: string): boolean {
   if (!clean || clean.length < 8) return false
   if (matchSimpleGreeting(clean)) return false
 
-  return /\b(current news|breaking news|live score|today's weather|current price of|who is the current (president|prime minister|ceo)|election results? (2025|2026)|match score)\b/i.test(
+  return /\b(kfc|pizza|burger|order|delivery|pickup|near me|karibu nami|karibu yangu|restaurant|mgahawa|menu|chakula|current news|breaking news|live score|today's weather|current price of|bei ya|bei gani|gharama|exchange rate|who is the current (president|prime minister|ceo)|election results? (2025|2026)|match score|ajira|flights|ndege|events|hoteli|hotel|lodge|wapi naweza)\b/i.test(
     clean
   )
 }

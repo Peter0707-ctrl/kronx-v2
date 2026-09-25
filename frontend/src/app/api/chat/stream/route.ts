@@ -130,44 +130,53 @@ async function fetchWebSearch(query: string): Promise<string | null> {
       .trim()
 
     if (!cleanQuery || cleanQuery.length < 3) return null
-    const lower = cleanQuery.toLowerCase()
-    const needsSearch = /\b(latest news|breaking news|live score|today's weather|current price of|who is the current (president|prime minister|ceo)|tournament results? (2025|2026)|match score|election results? (2025|2026)|search the web for|what is the date today|today's date)\b/i.test(lower)
-    if (!needsSearch) return null
 
     let searchSnippet = ''
 
-    // 1. Wikipedia API Search for live encyclopedia accuracy
+    // 1. DuckDuckGo HTML Real Live Web Search
     try {
-      const wikiRes = await fetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(cleanQuery)}&utf8=&format=json&origin=*`, {
-        headers: { 'User-Agent': 'CopetraAI/2.0 (Academic Search Engine)' }
+      const searchTerms = cleanQuery + (/\b(kfc|pizza|order|delivery|near me|karibu|restaurant|mgahawa|bei|hotel|lodge)\b/i.test(cleanQuery) && !cleanQuery.toLowerCase().includes('tanzania') ? ' Tanzania Dar es Salaam' : '')
+      const ddgHtmlRes = await fetch(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(searchTerms)}`, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' },
+        signal: AbortSignal.timeout(6000)
       })
-      if (wikiRes.ok) {
-        const wikiData = await wikiRes.json()
-        const searchResults = wikiData?.query?.search || []
-        if (searchResults.length > 0) {
-          searchSnippet += searchResults.slice(0, 3).map((s: any) => {
-            const cleanSnippet = s.snippet.replace(/<[^>]*>?/gm, '')
-            return `[Fact Context - ${s.title}]: ${cleanSnippet}`
-          }).join('\n\n')
+      if (ddgHtmlRes.ok) {
+        const html = await ddgHtmlRes.text()
+        const snippetRegex = /<a class="result__snippet[^"]*"[^>]*>([\s\S]*?)<\/a>/gi
+        let m: RegExpExecArray | null
+        let count = 0
+        while ((m = snippetRegex.exec(html)) !== null && count < 4) {
+          const text = m[1].replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&quot;/g, '"').trim()
+          if (text.length > 25) {
+            searchSnippet += `\n- ${text}`
+            count++
+          }
         }
       }
     } catch (e) {
-      console.warn('Wikipedia API fetch warning:', e)
+      console.warn('DuckDuckGo HTML search error:', e)
     }
 
-    // 2. DuckDuckGo Instant API Search
-    try {
-      const ddgRes = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(cleanQuery)}&format=json&no_redirect=1&no_html=1&skip_disambig=1`, {
-        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
-      })
-      if (ddgRes.ok) {
-        const ddgData = await ddgRes.json()
-        if (ddgData.AbstractText) {
-          searchSnippet += `\n\n[Live Context - ${ddgData.Heading || 'DuckDuckGo'}]: ${ddgData.AbstractText}`
+    // 2. Wikipedia API Search fallback
+    if (!searchSnippet) {
+      try {
+        const wikiRes = await fetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(cleanQuery)}&utf8=&format=json&origin=*`, {
+          headers: { 'User-Agent': 'CopetraAI/2.0' },
+          signal: AbortSignal.timeout(4000)
+        })
+        if (wikiRes.ok) {
+          const wikiData = await wikiRes.json()
+          const searchResults = wikiData?.query?.search || []
+          if (searchResults.length > 0) {
+            searchSnippet += searchResults.slice(0, 2).map((s: any) => {
+              const cleanSnippet = s.snippet.replace(/<[^>]*>?/gm, '')
+              return `\n- [${s.title}]: ${cleanSnippet}`
+            }).join('')
+          }
         }
+      } catch (e) {
+        console.warn('Wikipedia API fetch warning:', e)
       }
-    } catch (e) {
-      console.warn('DuckDuckGo fetch warning:', e)
     }
 
     return searchSnippet ? searchSnippet.trim() : null
@@ -178,17 +187,17 @@ async function fetchWebSearch(query: string): Promise<string | null> {
 }
 
 export async function POST(req: NextRequest) {
-  let message = '', mode = 'Friend'
+  let message = '', mode = 'Universal'
   let history: HistoryMessage[] = []
   let timezone = 'Africa/Dar_es_Salaam'
   let userTime = ''
   let userDate = ''
-  let location = 'Tanzania, East Africa'
+  let location = 'Dar es Salaam, Tanzania, East Africa'
 
   try {
     const body = await req.json()
     message = body.message || ''
-    mode = body.mode || 'Friend'
+    mode = body.mode && body.mode !== 'Friend' ? body.mode : 'Universal'
     history = body.history || []
     if (body.timezone) timezone = body.timezone
     if (body.user_time) userTime = body.user_time
@@ -212,8 +221,8 @@ export async function POST(req: NextRequest) {
       userDate = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
     }
   }
-  if (!location) {
-    location = timezone.includes('Dar_es_Salaam') || timezone.includes('Nairobi') ? 'Tanzania, East Africa' : timezone
+  if (!location || location === 'Tanzania, East Africa') {
+    location = 'Dar es Salaam, Tanzania, East Africa'
   }
 
   const clientContext = {
@@ -226,8 +235,6 @@ export async function POST(req: NextRequest) {
   const encoder = new TextEncoder()
 
   // CRITICAL: Skip web search entirely when a document is attached.
-  // Running web search on a document message causes random Wikipedia/web results
-  // to be injected instead of the AI analyzing the actual uploaded document.
   const isDocumentMessage = /\[(WORD|PDF|EXCEL|POWERPOINT|TEXT|CODE)\s+DOCUMENT ATTACHED:/i.test(message) ||
     message.includes('DOCUMENT ATTACHED:') || message.includes('FILE ATTACHED:')
   const greetingReply = matchGreeting(message)
@@ -258,10 +265,10 @@ export async function POST(req: NextRequest) {
 
       // Emotional & Conversational Intent Detection: Activates Human Empathy & Adaptive Temperature
       const intentResult = detectEmotionAndConversationalIntent(cleanUserMessage || message)
-      const isConversationalOrEmotional = intentResult.isConversational || mode === 'Friend'
-      const conversationalDirective = intentResult.promptDirective || (mode === 'Friend' ? `\n\n[FRIEND & COMPANION MODE ACTIVE]:\nRespond as an authentic brother and loyal confidant ('bro', 'ndugu yangu'). NEVER assume the user is talking about school, exams, or homework unless explicitly requested. If the user shares feelings or is upset, invite them to tell their story: 'Nisimulie kilichokwaza leo—kama kilivyo, bila kuficha. Nipo hapa kukusikiliza.'` : '')
-      // Adaptive Temperature: 0.7 for natural, warm, human conversation (like ChatGPT)
-      const dynamicTemperature = mode === 'Developer' || mode === 'Academic' ? 0.35 : 0.70
+      const isConversationalOrEmotional = intentResult.isConversational
+      const conversationalDirective = intentResult.promptDirective || ''
+      // Adaptive Temperature: 0.65 for natural, sharp, executive answers
+      const dynamicTemperature = mode === 'Developer' || mode === 'Academic' ? 0.35 : 0.65
 
       // Image Generation Request in Chat: Instant Neural Canvas Renderer
       const imgGen = matchImageGenerationRequest(cleanUserMessage || message)

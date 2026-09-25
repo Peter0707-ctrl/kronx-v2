@@ -1,4 +1,4 @@
-export type KronxMode = 'Friend' | 'Teacher' | 'Business' | 'Research' | 'Quick'
+export type KronxMode = 'Universal' | 'Friend' | 'Teacher' | 'Business' | 'Research' | 'Quick'
 
 export type Language = 'sw' | 'en'
 
