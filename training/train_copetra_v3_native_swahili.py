@@ -12,7 +12,11 @@ Zero emojis.
 """
 
 import json
-import torch
+import os, gc, torch
+gc.collect()
+if torch.cuda.is_available():
+    torch.cuda.empty_cache()
+
 from datasets import load_dataset, Dataset
 from unsloth import FastLanguageModel
 from unsloth.chat_templates import get_chat_template
