@@ -23,7 +23,9 @@ function mapUser(row: any) {
   }
 }
 
-export async function GET() {
+const HIDDEN_USER_EMAILS = ['deangarlus@gmail.com']
+
+export async function GET(req: NextRequest) {
   try {
     await ensureDb()
 
@@ -36,8 +38,21 @@ export async function GET() {
         AND expires_at < NOW();
     `)
 
+    const { searchParams } = new URL(req.url)
+    const emailParam = searchParams.get('email')?.toLowerCase().trim()
+    const includeHidden = searchParams.get('include_hidden') === 'true'
+
+    if (emailParam) {
+      const result = await pool.query('SELECT * FROM users WHERE LOWER(email) = $1 LIMIT 1', [emailParam])
+      return NextResponse.json(result.rows.map(mapUser))
+    }
+
     const result = await pool.query('SELECT * FROM users ORDER BY created_at ASC')
-    return NextResponse.json(result.rows.map(mapUser))
+    const rows = includeHidden
+      ? result.rows
+      : result.rows.filter((r) => !HIDDEN_USER_EMAILS.includes((r.email || '').toLowerCase().trim()))
+
+    return NextResponse.json(rows.map(mapUser))
   } catch (e: any) {
     console.error('DB GET Error', e)
     return NextResponse.json([], { status: 500 })

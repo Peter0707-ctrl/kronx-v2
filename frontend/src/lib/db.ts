@@ -7,12 +7,16 @@ const connectionString =
 export const pool = new Pool({ connectionString })
 
 let ready = false
+let migrationPromise: Promise<void> | null = null
 
 export async function ensureDb() {
   if (ready) return
+  if (migrationPromise) return migrationPromise
 
-  const client = await pool.connect()
-  try {
+  migrationPromise = (async () => {
+    const client = await pool.connect()
+    try {
+      console.log('[DB] Running ensureDb migrations...')
     await client.query(`
       CREATE TABLE IF NOT EXISTS users (
         id VARCHAR(255) PRIMARY KEY,
@@ -55,6 +59,22 @@ export async function ensureDb() {
     await client.query(`CREATE INDEX IF NOT EXISTS idx_api_keys_user_id ON api_keys(user_id)`)
     await client.query(`CREATE INDEX IF NOT EXISTS idx_api_keys_api_key ON api_keys(api_key)`)
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS system_api_keys (
+        id VARCHAR(255) PRIMARY KEY,
+        system_name VARCHAR(255) NOT NULL,
+        api_key VARCHAR(255) UNIQUE NOT NULL,
+        api_secret_hash VARCHAR(255) NOT NULL,
+        secret_prefix VARCHAR(32) NOT NULL,
+        permissions JSONB DEFAULT '["*"]'::jsonb,
+        rate_limit_rpm INTEGER DEFAULT 120,
+        is_active BOOLEAN DEFAULT TRUE,
+        last_used_at TIMESTAMP NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `)
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_system_api_keys_api_key ON system_api_keys(api_key)`)
+
     // Migrate legacy single user.api_key rows into api_keys
     await client.query(`
       INSERT INTO api_keys (id, user_id, project_name, key_prefix, api_key, callback_url, is_active)
@@ -89,11 +109,15 @@ export async function ensureDb() {
         )
       `)
     }
-  } finally {
-    client.release()
-  }
+      ready = true
+      console.log('[DB] ensureDb migrations completed successfully.')
+    } finally {
+      client.release()
+      migrationPromise = null
+    }
+  })()
 
-  ready = true
+  return migrationPromise
 }
 
 export const PUBLIC_API_BASE =

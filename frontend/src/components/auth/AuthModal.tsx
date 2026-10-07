@@ -75,10 +75,12 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
 
     if (tab === 'login') {
       try {
-        const res = await fetch('/api/users')
+        const cleanEmail = email.trim().toLowerCase()
+        let res = await fetch(`/api/users?email=${encodeURIComponent(cleanEmail)}`)
+        if (!res.ok) res = await fetch('/api/users')
         if (res.ok) {
           const allUsers = await res.json()
-          const existingUser = allUsers.find((u: any) => u.email.toLowerCase() === email.trim().toLowerCase())
+          const existingUser = allUsers.find((u: any) => u.email.toLowerCase() === cleanEmail)
           
           if (!existingUser && !isMasterAdmin) {
             alert(sw ? "Akaunti haipatikani. Tafadhali jisajili." : "Account not found in the system. Please register first.")

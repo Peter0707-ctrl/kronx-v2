@@ -1,4 +1,4 @@
-import { randomBytes } from 'crypto'
+import { randomBytes, createHash, timingSafeEqual } from 'crypto'
 import { NextRequest } from 'next/server'
 import { ensureDb, pool } from './db'
 
@@ -17,20 +17,52 @@ export type ApiKeyRecord = {
   isDeveloper?: boolean
   apiUnlimitedTokens?: boolean
   role?: string
+  isSystemKey?: boolean
+  systemName?: string
 }
 
 export function generateApiKeyValue() {
   return `cpk_${randomBytes(24).toString('hex')}`
 }
 
-export function extractBearerOrApiKey(req: NextRequest): string | null {
+export function extractCredentials(req: NextRequest): { apiKey: string | null; apiSecret: string | null } {
   const auth = req.headers.get('authorization') || req.headers.get('Authorization')
-  if (auth?.toLowerCase().startsWith('bearer ')) {
-    const token = auth.slice(7).trim()
-    if (token) return token
+  let apiKey: string | null = null
+  let apiSecret: string | null = null
+
+  if (auth) {
+    if (auth.toLowerCase().startsWith('bearer ')) {
+      const token = auth.slice(7).trim()
+      if (token.includes(':')) {
+        const [k, s] = token.split(':')
+        apiKey = k.trim()
+        apiSecret = s.trim()
+      } else {
+        apiKey = token
+      }
+    } else if (auth.toLowerCase().startsWith('basic ')) {
+      try {
+        const decoded = Buffer.from(auth.slice(6).trim(), 'base64').toString('utf-8')
+        const colonIdx = decoded.indexOf(':')
+        if (colonIdx !== -1) {
+          apiKey = decoded.slice(0, colonIdx).trim()
+          apiSecret = decoded.slice(colonIdx + 1).trim()
+        }
+      } catch {}
+    }
   }
+
   const headerKey = req.headers.get('x-api-key') || req.headers.get('X-Api-Key')
-  return headerKey?.trim() || null
+  if (headerKey) apiKey = headerKey.trim()
+
+  const headerSecret = req.headers.get('x-api-secret') || req.headers.get('X-Api-Secret')
+  if (headerSecret) apiSecret = headerSecret.trim()
+
+  return { apiKey, apiSecret }
+}
+
+export function extractBearerOrApiKey(req: NextRequest): string | null {
+  return extractCredentials(req).apiKey
 }
 
 export function apiError(
@@ -67,25 +99,93 @@ function mapKeyRow(row: any): ApiKeyRecord {
   }
 }
 
-/** Authenticate a public API request via developer API key. */
+/** Authenticate a public API request via developer API key or system credentials. */
 export async function authenticateApiKey(req: NextRequest): Promise<
   | { ok: true; key: ApiKeyRecord }
   | { ok: false; response: Response }
 > {
   await ensureDb()
-  const apiKey = extractBearerOrApiKey(req)
+  const { apiKey, apiSecret } = extractCredentials(req)
 
   if (!apiKey) {
     return {
       ok: false,
       response: apiError(
-        'Missing API key. Send Authorization: Bearer <key> or x-api-key: <key>.',
+        'Missing API key. Send Authorization: Bearer <key>, x-api-key: <key>, or Authorization: Basic base64(key:secret).',
         401,
         'missing_api_key'
       ),
     }
   }
 
+  // 1. Check Machine-to-Machine System API Keys (No user account required)
+  try {
+    const sysResult = await pool.query(
+      `SELECT id, system_name, api_key, api_secret_hash, secret_prefix, permissions, is_active, last_used_at, created_at
+       FROM system_api_keys
+       WHERE api_key = $1
+       LIMIT 1`,
+      [apiKey]
+    )
+
+    if (sysResult.rows.length > 0) {
+      const sysRow = sysResult.rows[0]
+      if (sysRow.is_active === false) {
+        return {
+          ok: false,
+          response: apiError('This system API key has been revoked.', 403, 'key_revoked'),
+        }
+      }
+
+      // If an API secret is provided, verify against SHA-256 hash using timing-safe comparison
+      if (apiSecret) {
+        const incomingHash = createHash('sha256').update(apiSecret).digest('hex')
+        const storedHash = String(sysRow.api_secret_hash || '').toLowerCase()
+        const match =
+          incomingHash.length === storedHash.length &&
+          timingSafeEqual(Buffer.from(incomingHash), Buffer.from(storedHash))
+
+        if (!match) {
+          return {
+            ok: false,
+            response: apiError('Invalid API secret.', 403, 'invalid_api_secret'),
+          }
+        }
+      }
+
+      // Update last_used_at asynchronously
+      pool
+        .query(`UPDATE system_api_keys SET last_used_at = NOW() WHERE id = $1`, [sysRow.id])
+        .catch(() => {})
+
+      return {
+        ok: true,
+        key: {
+          id: sysRow.id,
+          userId: `system:${sysRow.id}`,
+          projectName: sysRow.system_name,
+          keyPrefix: sysRow.api_key.slice(0, 12),
+          apiKey: sysRow.api_key,
+          callbackUrl: null,
+          isActive: true,
+          lastUsedAt: sysRow.last_used_at,
+          createdAt: sysRow.created_at,
+          userEmail: `${sysRow.id}@system.kronx.local`,
+          userName: sysRow.system_name,
+          isDeveloper: true,
+          role: 'system',
+          apiUnlimitedTokens: true,
+          isSystemKey: true,
+          systemName: sysRow.system_name,
+        },
+      }
+    }
+  } catch (sysErr) {
+    // Graceful fallback to user keys if table lookup fails
+    console.warn('[developerAuth] system_api_keys lookup failed:', sysErr)
+  }
+
+  // 2. Check User-Bound API Keys
   const result = await pool.query(
     `SELECT
        k.id, k.user_id, k.project_name, k.key_prefix, k.api_key, k.callback_url,

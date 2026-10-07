@@ -73,7 +73,7 @@ export default function DeveloperPanel() {
   useEffect(() => {
     // Refresh developer flag from server (admin grant source of truth)
     if (!user?.email) return
-    fetch('/api/users')
+    fetch(`/api/users?email=${encodeURIComponent(user.email.toLowerCase())}`)
       .then((r) => r.json())
       .then((list: any[]) => {
         const me = Array.isArray(list)
@@ -582,14 +582,19 @@ echo $response;`,
 
           {docTab === 'auth' && (
             <div>
-              <p style={{ marginTop: 0 }}>Send your API key on every request using either header:</p>
+              <p style={{ marginTop: 0 }}><strong>Project Keys (User accounts):</strong></p>
               <pre style={preStyle}>{`Authorization: Bearer cpk_...\nx-api-key: cpk_...`}</pre>
               <p>
                 Keys look like <code>cpk_…</code>. Each key belongs to one project. Revoked keys return{' '}
                 <code>403 key_revoked</code>.
               </p>
-              <p style={{ marginBottom: 0 }}>
-                Accounts without admin-granted developer access receive <code>403 developer_not_granted</code>.
+              <p style={{ marginTop: 12 }}><strong>System Keys (Machine-to-Machine without accounts):</strong></p>
+              <p style={{ margin: '4px 0 8px' }}>
+                For microservices and external backend systems without user accounts, authenticate using System API Key & Secret pairs:
+              </p>
+              <pre style={preStyle}>{`x-api-key: cpk_sys_...\nx-api-secret: cps_sec_...\n\n# Or HTTP Basic Auth:\nAuthorization: Basic base64(cpk_sys_...:cps_sec_...)`}</pre>
+              <p style={{ marginBottom: 0, fontSize: 12, color: '#64748b' }}>
+                To generate new system key pairs, run <code>npm run keys:generate</code> in the terminal.
               </p>
             </div>
           )}

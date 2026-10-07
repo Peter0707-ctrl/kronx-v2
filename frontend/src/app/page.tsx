@@ -141,7 +141,7 @@ export default function Home() {
 
     // Sync logged-in user profile & plan directly from PostgreSQL DB (assigned by Admin)
     if (user?.email) {
-      fetch('/api/users')
+      fetch(`/api/users?email=${encodeURIComponent(user.email.toLowerCase())}`)
         .then(res => res.json())
         .then(users => {
           if (Array.isArray(users)) {
