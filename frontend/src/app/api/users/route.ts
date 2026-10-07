@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createHash } from 'crypto'
 import { ensureDb, pool } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
@@ -105,9 +106,16 @@ export async function POST(req: NextRequest) {
       expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
     }
 
+    let passHash: string | null = null
+    if (user.password) {
+      passHash = createHash('sha256').update(String(user.password).trim()).digest('hex')
+    } else if (user.passwordHash || user.password_hash) {
+      passHash = String(user.passwordHash || user.password_hash)
+    }
+
     const query = `
-      INSERT INTO users (id, name, email, role, plan, avatar, last_active, conversation_count, is_developer, api_unlimited_tokens, expires_at, api_key, callback_url)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+      INSERT INTO users (id, name, email, role, plan, avatar, last_active, conversation_count, is_developer, api_unlimited_tokens, expires_at, api_key, callback_url, password_hash)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
       ON CONFLICT (email) DO UPDATE SET
         name = EXCLUDED.name,
         role = EXCLUDED.role,
@@ -118,7 +126,8 @@ export async function POST(req: NextRequest) {
         api_unlimited_tokens = EXCLUDED.api_unlimited_tokens,
         expires_at = EXCLUDED.expires_at,
         api_key = COALESCE(EXCLUDED.api_key, users.api_key),
-        callback_url = COALESCE(EXCLUDED.callback_url, users.callback_url)
+        callback_url = COALESCE(EXCLUDED.callback_url, users.callback_url),
+        password_hash = COALESCE(EXCLUDED.password_hash, users.password_hash)
       RETURNING *;
     `
 
@@ -141,6 +150,7 @@ export async function POST(req: NextRequest) {
       expiresAt,
       user.apiKey || null,
       user.callbackUrl || null,
+      passHash,
     ]
 
     const result = await pool.query(query, values)

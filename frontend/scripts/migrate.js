@@ -93,6 +93,9 @@ async function runMigration() {
     await client.query(
       `ALTER TABLE users ADD COLUMN IF NOT EXISTS api_unlimited_tokens BOOLEAN DEFAULT TRUE;`
     )
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255);`)
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_code VARCHAR(32);`)
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_code_expires TIMESTAMP NULL;`)
 
     // 3. Update permissions
     console.log('      - Updating developer & admin unlimited tokens...')
