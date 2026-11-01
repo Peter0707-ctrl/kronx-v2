@@ -238,6 +238,7 @@ export function cleanAiResponse(text: string): string {
   cleaned = cleaned.replace(/^Here is my thought process:[\s\S]*?(?=\n\n(?:[#A-Z0-9`]|```|\d+\.)|$)/gi, '')
 
   // 3. Remove internal system/attachment tags if echoed
+  cleaned = cleaned.replace(/\[WALL_CLOCK:[^\]]*\]/gi, '')
   cleaned = cleaned.replace(/\[IMAGE ATTACHMENT ANALYZED\]:[^\n]*/gi, '')
   cleaned = cleaned.replace(/\[PERSISTENT USER BRAIN MEMORY\][\s\S]*/gi, '')
   cleaned = cleaned.replace(/\[FEEDBACK HISTORY\][\s\S]*/gi, '')
