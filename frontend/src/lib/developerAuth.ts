@@ -118,17 +118,35 @@ export async function authenticateApiKey(req: NextRequest): Promise<
     }
   }
 
-  // 1. Check Machine-to-Machine System API Keys (No user account required)
-  try {
-    const sysResult = await pool.query(
-      `SELECT id, system_name, api_key, api_secret_hash, secret_prefix, permissions, is_active, last_used_at, created_at
-       FROM system_api_keys
-       WHERE api_key = $1
-       LIMIT 1`,
-      [apiKey]
-    )
+  // 1. Check Machine-to-Machine System API Keys (Both apiKey AND apiSecret are strictly mandatory)
+  if (apiKey.startsWith('cpk_sys_')) {
+    if (!apiSecret) {
+      return {
+        ok: false,
+        response: apiError(
+          'System API keys require an accompanying API secret (x-api-secret header or Bearer key:secret).',
+          401,
+          'missing_api_secret'
+        ),
+      }
+    }
 
-    if (sysResult.rows.length > 0) {
+    try {
+      const sysResult = await pool.query(
+        `SELECT id, system_name, api_key, api_secret_hash, secret_prefix, permissions, is_active, last_used_at, created_at
+         FROM system_api_keys
+         WHERE api_key = $1
+         LIMIT 1`,
+        [apiKey]
+      )
+
+      if (sysResult.rows.length === 0) {
+        return {
+          ok: false,
+          response: apiError('Invalid system API key.', 403, 'invalid_api_key'),
+        }
+      }
+
       const sysRow = sysResult.rows[0]
       if (sysRow.is_active === false) {
         return {
@@ -137,23 +155,19 @@ export async function authenticateApiKey(req: NextRequest): Promise<
         }
       }
 
-      // If an API secret is provided, verify against SHA-256 hash using timing-safe comparison
-      if (apiSecret) {
-        const incomingHash = createHash('sha256').update(apiSecret).digest('hex')
-        const storedHash = String(sysRow.api_secret_hash || '').toLowerCase()
-        const match =
-          incomingHash.length === storedHash.length &&
-          timingSafeEqual(Buffer.from(incomingHash), Buffer.from(storedHash))
+      const incomingHash = createHash('sha256').update(apiSecret).digest('hex').toLowerCase()
+      const storedHash = String(sysRow.api_secret_hash || '').toLowerCase()
+      const match =
+        incomingHash.length === storedHash.length &&
+        timingSafeEqual(Buffer.from(incomingHash), Buffer.from(storedHash))
 
-        if (!match) {
-          return {
-            ok: false,
-            response: apiError('Invalid API secret.', 403, 'invalid_api_secret'),
-          }
+      if (!match) {
+        return {
+          ok: false,
+          response: apiError('Invalid API secret.', 403, 'invalid_api_secret'),
         }
       }
 
-      // Update last_used_at asynchronously
       pool
         .query(`UPDATE system_api_keys SET last_used_at = NOW() WHERE id = $1`, [sysRow.id])
         .catch(() => {})
@@ -179,10 +193,12 @@ export async function authenticateApiKey(req: NextRequest): Promise<
           systemName: sysRow.system_name,
         },
       }
+    } catch {
+      return {
+        ok: false,
+        response: apiError('System key verification failed.', 500, 'internal_error'),
+      }
     }
-  } catch (sysErr) {
-    // Graceful fallback to user keys if table lookup fails
-    console.warn('[developerAuth] system_api_keys lookup failed:', sysErr)
   }
 
   // 2. Check User-Bound API Keys

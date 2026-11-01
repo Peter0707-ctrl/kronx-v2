@@ -117,7 +117,12 @@ async function main() {
       process.env.DATABASE_URL ||
       envLocal.DATABASE_URL ||
       envDefault.DATABASE_URL ||
-      'postgresql://postgres:TdoGwPBGGbhiWgarnDevahuPxoehQspt@postgres.railway.internal:5432/railway'
+      ''
+
+    if (!connectionString) {
+      console.error('Error: DATABASE_URL is required when using --save-db.')
+      process.exit(1)
+    }
 
     const pool = new Pool({ connectionString, connectionTimeoutMillis: 8000 })
     try {

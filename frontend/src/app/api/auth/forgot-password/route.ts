@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { randomInt } from 'crypto'
 import { ensureDb, pool } from '@/lib/db'
+import { verifyAdminAuthorization } from '@/lib/secretVault'
 
 export const dynamic = 'force-dynamic'
 
-/**
- * POST /api/auth/forgot-password
- * Initiates the password recovery workflow by generating a secure 6-digit OTP code
- */
+const MASTER_ADMIN_EMAIL = 'pj0040280@gmail.com'
+
 export async function POST(req: NextRequest) {
   try {
     await ensureDb()
@@ -17,6 +17,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { success: false, message: 'Please provide a valid email address.' },
         { status: 400 }
+      )
+    }
+
+    const isAdminRequest = verifyAdminAuthorization(req.headers.get('x-admin-key'))
+
+    // Prevent unauthenticated password reset requests against the Master Admin account
+    if (rawEmail === MASTER_ADMIN_EMAIL && !isAdminRequest) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Master Administrator password cannot be reset without hardware/master key verification.',
+        },
+        { status: 403 }
       )
     }
 
@@ -36,10 +49,7 @@ export async function POST(req: NextRequest) {
     }
 
     const user = userResult.rows[0]
-
-    // Generate secure 6-digit verification code
-    const resetCode = Math.floor(100000 + Math.random() * 900000).toString()
-    // Expires in 15 minutes
+    const resetCode = randomInt(100000, 999999).toString()
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000)
 
     await pool.query(
@@ -49,19 +59,16 @@ export async function POST(req: NextRequest) {
       [resetCode, expiresAt, rawEmail]
     )
 
-    console.log(`[AUTH] Password reset requested for ${rawEmail}. Code: ${resetCode}`)
-
     return NextResponse.json({
       success: true,
-      message: 'Nambari ya uhakiki imetolewa kikamilifu / Verification code generated successfully.',
-      code: resetCode,
+      message: 'Nambari ya uhakiki imetolewa kikamilifu / Verification code generated.',
+      ...(isAdminRequest ? { code: resetCode } : {}),
       email: user.email,
       expiresAt: expiresAt.toISOString(),
     })
-  } catch (error: any) {
-    console.error('[AUTH FORGOT PASSWORD ERROR]', error)
+  } catch {
     return NextResponse.json(
-      { success: false, message: error?.message || 'Server error while generating reset code.' },
+      { success: false, message: 'Server error while generating reset code.' },
       { status: 500 }
     )
   }

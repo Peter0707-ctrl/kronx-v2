@@ -30,8 +30,6 @@ function mapUser(row: any, includeAdminFields = false) {
   }
 }
 
-const HIDDEN_USER_EMAILS = ['deangarlus@gmail.com']
-
 export async function GET(req: NextRequest) {
   try {
     await ensureDb()
@@ -45,22 +43,33 @@ export async function GET(req: NextRequest) {
         AND expires_at < NOW();
     `)
 
-    const { searchParams } = new URL(req.url)
-    const emailParam = searchParams.get('email')?.toLowerCase().trim()
-    const includeHidden = searchParams.get('include_hidden') === 'true'
+    const adminKeyHeader = req.headers.get('x-admin-key')
+    const isAdminRequest = verifyAdminAuthorization(adminKeyHeader)
 
-    if (emailParam) {
-      const result = await pool.query('SELECT * FROM users WHERE LOWER(email) = $1 LIMIT 1', [emailParam])
-      return NextResponse.json(result.rows.map(mapUser))
+    if (isAdminRequest) {
+      // Return ALL users to the authenticated Master Admin — zero hidden users allowed
+      const result = await pool.query('SELECT * FROM users ORDER BY created_at ASC')
+      return NextResponse.json(result.rows.map((r) => mapUser(r, true)))
     }
 
-    const result = await pool.query('SELECT * FROM users ORDER BY created_at ASC')
-    const rows = includeHidden
-      ? result.rows
-      : result.rows.filter((r) => !HIDDEN_USER_EMAILS.includes((r.email || '').toLowerCase().trim()))
+    const emailParam = (
+      req.nextUrl.searchParams.get('email') ||
+      req.headers.get('x-user-email') ||
+      ''
+    )
+      .toLowerCase()
+      .trim()
 
-    return NextResponse.json(rows.map(mapUser))
-  } catch (e: any) {
+    if (!emailParam || !emailParam.includes('@')) {
+      return NextResponse.json([], { status: 200 })
+    }
+
+    const single = await pool.query(
+      'SELECT * FROM users WHERE LOWER(email) = $1 LIMIT 1',
+      [emailParam]
+    )
+    return NextResponse.json(single.rows.map((r) => mapUser(r, false)))
+  } catch {
     console.error('[api/users GET] Database query failed')
     return NextResponse.json([], { status: 500 })
   }
@@ -80,7 +89,6 @@ export async function POST(req: NextRequest) {
     const isAdminRequest = verifyAdminAuthorization(adminKeyHeader)
     const isMasterAdminEmail = emailLower === 'pj0040280@gmail.com'
 
-    // Prevent unauthenticated privilege escalation or tampering with the Master Admin account
     if (isMasterAdminEmail && !isAdminRequest) {
       return NextResponse.json(
         { success: false, error: 'Forbidden: Master administrator credentials required.' },
@@ -101,7 +109,6 @@ export async function POST(req: NextRequest) {
       targetPlan = ['free', 'plus', 'premium', 'pro'].includes(user.plan) ? user.plan : 'free'
       targetIsDeveloper = Boolean(user.isDeveloper)
     } else {
-      // Self-service: never allow escalating role/plan/developer
       const existing = await pool.query(
         'SELECT role, plan, is_developer FROM users WHERE LOWER(email) = $1 LIMIT 1',
         [emailLower]
@@ -119,11 +126,14 @@ export async function POST(req: NextRequest) {
     }
 
     let passHash: string | null = null
-    if (user.password) {
-      passHash = createHash('sha256').update(String(user.password).trim()).digest('hex')
-    } else if (user.passwordHash || user.password_hash) {
+    if (user.password && typeof user.password === 'string' && user.password.trim()) {
+      passHash = createHash('sha256').update(user.password.trim()).digest('hex')
+    } else if (isAdminRequest && (user.passwordHash || user.password_hash)) {
       passHash = String(user.passwordHash || user.password_hash)
     }
+
+    const safeName = String(user.name || emailLower.split('@')[0]).replace(/[<>]/g, '').slice(0, 120)
+    const safeId = String(user.id || `u-${Date.now()}`).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 120)
 
     const query = `
       INSERT INTO users (id, name, email, role, plan, avatar, last_active, conversation_count, is_developer, api_unlimited_tokens, expires_at, api_key, callback_url, password_hash)
@@ -139,7 +149,7 @@ export async function POST(req: NextRequest) {
         expires_at = EXCLUDED.expires_at,
         api_key = COALESCE(EXCLUDED.api_key, users.api_key),
         callback_url = COALESCE(EXCLUDED.callback_url, users.callback_url),
-        password_hash = COALESCE(EXCLUDED.password_hash, users.password_hash)
+        password_hash = COALESCE(users.password_hash, EXCLUDED.password_hash)
       RETURNING *;
     `
 
@@ -159,14 +169,14 @@ export async function POST(req: NextRequest) {
       targetIsDeveloper,
       unlimitedTokens,
       expiresAt,
-      user.apiKey || null,
-      user.callbackUrl || null,
+      null,
+      null,
       passHash,
     ]
 
     const result = await pool.query(query, values)
     return NextResponse.json({ success: true, user: mapUser(result.rows[0], isAdminRequest) })
-  } catch (e: any) {
+  } catch {
     console.error('[api/users POST] Database write failed')
     return NextResponse.json({ success: false, error: 'Operation failed' }, { status: 500 })
   }

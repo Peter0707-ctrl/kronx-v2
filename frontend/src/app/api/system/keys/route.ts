@@ -3,65 +3,44 @@ import { randomBytes, createHash } from 'crypto'
 import { v4 as uuidv4 } from 'uuid'
 import { ensureDb, pool } from '@/lib/db'
 import { apiError } from '@/lib/developerAuth'
+import { verifyAdminAuthorization } from '@/lib/secretVault'
 
 export const dynamic = 'force-dynamic'
 
-async function verifyAdminOrMaster(req: NextRequest) {
-  // 1. Check MASTER_KEY / ADMIN_KEY from env
-  const masterKey = process.env.SYSTEM_MASTER_KEY || process.env.ADMIN_KEY || 'kronx-master-system-2026'
-  const providedMaster = req.headers.get('x-master-key') || req.headers.get('x-admin-key')
-  if (providedMaster && providedMaster === masterKey) {
-    return { ok: true, source: 'master_key' }
-  }
-
-  // 2. Check admin user session
-  const userId = req.headers.get('x-user-id')?.trim()
-  const email = req.headers.get('x-user-email')?.toLowerCase().trim()
-  if (userId && email) {
-    await ensureDb()
-    const res = await pool.query(
-      `SELECT id, role, is_developer FROM users WHERE id = $1 AND LOWER(email) = $2 LIMIT 1`,
-      [userId, email]
-    )
-    const user = res.rows[0]
-    if (user && (user.role === 'admin' || user.is_developer)) {
-      return { ok: true, source: 'admin_user', userId: user.id }
+function verifySystemAdmin(req: NextRequest) {
+  const providedKey = req.headers.get('x-admin-key') || req.headers.get('x-master-key')
+  if (!verifyAdminAuthorization(providedKey)) {
+    return {
+      ok: false as const,
+      response: apiError(
+        'Unauthorized. Valid Master Administrator key (x-admin-key) is required.',
+        403,
+        'unauthorized_system_access'
+      ),
     }
   }
-
-  return {
-    ok: false,
-    response: apiError(
-      'Unauthorized. Provide valid x-master-key or admin credentials.',
-      401,
-      'system_unauthorized'
-    ),
-  }
+  return { ok: true as const }
 }
 
-/**
- * GET /api/system/keys
- * List active machine-to-machine system API keys (secrets are never returned)
- */
 export async function GET(req: NextRequest) {
   try {
-    const auth = await verifyAdminOrMaster(req)
+    const auth = verifySystemAdmin(req)
     if (!auth.ok) return auth.response
 
     await ensureDb()
-    const res = await pool.query(`
-      SELECT id, system_name, api_key, secret_prefix, permissions, rate_limit_rpm, is_active, last_used_at, created_at
-      FROM system_api_keys
-      ORDER BY created_at DESC
-    `)
+    const res = await pool.query(
+      `SELECT id, system_name, api_key, secret_prefix, permissions, rate_limit_rpm, is_active, last_used_at, created_at
+       FROM system_api_keys
+       ORDER BY created_at DESC`
+    )
 
     return NextResponse.json({
       success: true,
-      systems: res.rows.map((r) => ({
+      systemKeys: res.rows.map((r) => ({
         id: r.id,
         systemName: r.system_name,
-        apiKey: r.api_key,
-        secretPrefix: `${r.secret_prefix}…`,
+        apiKey: `${String(r.api_key).slice(0, 14)}...`,
+        secretPrefix: `${r.secret_prefix}...`,
         permissions: r.permissions,
         rateLimitRpm: r.rate_limit_rpm,
         isActive: r.is_active,
@@ -70,20 +49,14 @@ export async function GET(req: NextRequest) {
       })),
       count: res.rows.length,
     })
-  } catch (err: any) {
-    console.error('[system/keys GET]', err)
-    return apiError(err?.message || 'Failed to list system keys', 500, 'system_keys_error')
+  } catch {
+    return apiError('Failed to list system keys', 500, 'system_keys_error')
   }
 }
 
-/**
- * POST /api/system/keys
- * Generate and register a new system API Key + API Secret pair
- * Body: { systemName: string, permissions?: string[], rateLimitRpm?: number }
- */
 export async function POST(req: NextRequest) {
   try {
-    const auth = await verifyAdminOrMaster(req)
+    const auth = verifySystemAdmin(req)
     if (!auth.ok) return auth.response
 
     await ensureDb()
@@ -115,7 +88,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        message: 'System API key & secret generated. Save the apiSecret now; it will not be displayed again.',
+        message: 'System API key and secret generated. Save the apiSecret now; it will not be displayed again.',
         credentials: {
           id,
           systemName,
@@ -130,20 +103,14 @@ export async function POST(req: NextRequest) {
       },
       { status: 201 }
     )
-  } catch (err: any) {
-    console.error('[system/keys POST]', err)
-    return apiError(err?.message || 'Failed to generate system keys', 500, 'system_keys_error')
+  } catch {
+    return apiError('Failed to generate system keys', 500, 'system_keys_error')
   }
 }
 
-/**
- * DELETE /api/system/keys
- * Revoke or hard delete a system key
- * Body: { id: string, hardDelete?: boolean }
- */
 export async function DELETE(req: NextRequest) {
   try {
-    const auth = await verifyAdminOrMaster(req)
+    const auth = verifySystemAdmin(req)
     if (!auth.ok) return auth.response
 
     await ensureDb()
@@ -162,8 +129,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true, revokedId: id })
-  } catch (err: any) {
-    console.error('[system/keys DELETE]', err)
-    return apiError(err?.message || 'Failed to revoke system key', 500, 'system_keys_error')
+  } catch {
+    return apiError('Failed to revoke system key', 500, 'system_keys_error')
   }
 }

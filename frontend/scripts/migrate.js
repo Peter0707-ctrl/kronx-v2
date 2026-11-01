@@ -49,7 +49,12 @@ async function runMigration() {
     process.env.DATABASE_URL ||
     envLocal.DATABASE_URL ||
     envDefault.DATABASE_URL ||
-    'postgresql://postgres:TdoGwPBGGbhiWgarnDevahuPxoehQspt@postgres.railway.internal:5432/railway'
+    ''
+
+  if (!connectionString) {
+    console.error('[MIGRATION ERROR] DATABASE_URL environment variable or --url argument is required.')
+    process.exit(1)
+  }
 
   const maskedUrl = connectionString.replace(/:([^:@]+)@/, ':****@')
   console.log(`[1/5] Target Database: ${maskedUrl}`)
@@ -193,9 +198,9 @@ async function runMigration() {
     console.log(`      Total Users in DB:    ${usersCountRes.rows[0].count}`)
     console.log(`      Total API Keys in DB: ${keysCountRes.rows[0].count}`)
 
-    console.log('\n[5/5] Migration completed successfully! \u2705\n')
+    console.log('\n[5/5] Migration completed successfully!\n')
   } catch (err) {
-    console.error('\n[MIGRATION ERROR] \u274c Failed to run database migration:')
+    console.error('\n[MIGRATION ERROR] Failed to run database migration:')
     console.error(err.message)
     if (err.code === 'ECONNREFUSED') {
       console.error('\nTip: The database host refused the connection.')
