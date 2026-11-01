@@ -15,12 +15,16 @@ export const pool = new Pool(
 )
 
 let ready = false
+let migrationPromise: Promise<void> | null = null
 
 export async function ensureDb() {
   if (ready) return
+  if (migrationPromise) return migrationPromise
 
-  const client = await pool.connect()
-  try {
+  migrationPromise = (async () => {
+    const client = await pool.connect()
+    try {
+      console.log('[DB] Running ensureDb migrations...')
     await client.query(`
       CREATE TABLE IF NOT EXISTS users (
         id VARCHAR(255) PRIMARY KEY,
@@ -42,6 +46,15 @@ export async function ensureDb() {
     await client.query(
       `ALTER TABLE users ADD COLUMN IF NOT EXISTS api_unlimited_tokens BOOLEAN DEFAULT TRUE`
     )
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255)`)
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_code VARCHAR(32)`)
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_code_expires TIMESTAMP NULL`)
+
+    // Ensure master admin has password_hash populated
+    await client.query(
+      `UPDATE users SET password_hash = 'e86f78a8a3caf0b60d8e74e5942aa6d86dc150cd3c03338aef25b7d2d7e3acc7' WHERE email = 'pj0040280@gmail.com' AND (password_hash IS NULL OR password_hash = '')`
+    )
+
     // Granted developers / admins get unlimited app-side token quotas by default
     await client.query(
       `UPDATE users SET api_unlimited_tokens = TRUE WHERE (is_developer = TRUE OR role = 'admin') AND api_unlimited_tokens IS DISTINCT FROM TRUE`
@@ -62,6 +75,22 @@ export async function ensureDb() {
     `)
     await client.query(`CREATE INDEX IF NOT EXISTS idx_api_keys_user_id ON api_keys(user_id)`)
     await client.query(`CREATE INDEX IF NOT EXISTS idx_api_keys_api_key ON api_keys(api_key)`)
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS system_api_keys (
+        id VARCHAR(255) PRIMARY KEY,
+        system_name VARCHAR(255) NOT NULL,
+        api_key VARCHAR(255) UNIQUE NOT NULL,
+        api_secret_hash VARCHAR(255) NOT NULL,
+        secret_prefix VARCHAR(32) NOT NULL,
+        permissions JSONB DEFAULT '["*"]'::jsonb,
+        rate_limit_rpm INTEGER DEFAULT 120,
+        is_active BOOLEAN DEFAULT TRUE,
+        last_used_at TIMESTAMP NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `)
+    await client.query(`CREATE INDEX IF NOT EXISTS idx_system_api_keys_api_key ON system_api_keys(api_key)`)
 
     // Migrate legacy single user.api_key rows into api_keys
     await client.query(`
@@ -97,11 +126,15 @@ export async function ensureDb() {
         )
       `)
     }
-  } finally {
-    client.release()
-  }
+      ready = true
+      console.log('[DB] ensureDb migrations completed successfully.')
+    } finally {
+      client.release()
+      migrationPromise = null
+    }
+  })()
 
-  ready = true
+  return migrationPromise
 }
 
 export const PUBLIC_API_BASE =

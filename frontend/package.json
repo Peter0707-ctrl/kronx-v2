@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db:migrate": "node scripts/migrate.js",
+    "keys:generate": "node scripts/generate-system-keys.js"
   },
   "dependencies": {
     "jszip": "^3.10.1",
