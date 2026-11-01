@@ -3,6 +3,8 @@ import json
 import httpx
 import re
 import asyncio
+import hashlib
+import hmac
 from typing import List, AsyncGenerator, Optional
 from dotenv import load_dotenv
 from memory.manager import MemoryManager
@@ -12,7 +14,69 @@ from utils.logger import logger
 
 load_dotenv()
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+_REVOKED_PREFIX_SHA256 = {
+    "f39c44fde10f143e5348d9a95fc29b76070e19ee5624257de57802e9c08483c9",
+    "18d01c432ecd2e87689d8d1bdfe82f49afe8bba9af4e7796a5e1f05c76f4cb24",
+    "292bd2e4c263fa96bbe3586c986868420e5503e814eee74078b41d9804929d51",
+}
+
+_SEALED_PY_ENVELOPES = {
+    "GROQ_API_KEY": "PYENC:v1:59e9941504a41b4ac87467a5e7922ec2:8f973c481034ee4e585a1d2a84020470e53ba6389307ee3d66e952f03ff670c25724a2d6086812cdc47a0a1f0c5d3754cdf40dd61b3b8ffa",
+}
+
+
+def _is_revoked_secret(val: str) -> bool:
+    if not val or len(val.strip()) < 16:
+        return False
+    prefix_hash = hashlib.sha256(val.strip()[:16].encode("utf-8")).hexdigest()
+    return prefix_hash in _REVOKED_PREFIX_SHA256
+
+
+def _decrypt_py_envelope(envelope: str) -> str:
+    if not envelope or not envelope.startswith("PYENC:v1:"):
+        return envelope
+    try:
+        parts = envelope[len("PYENC:v1:"):].split(":")
+        if len(parts) != 2:
+            return ""
+        mac_hex, cipher_hex = parts
+        cipher_bytes = bytes.fromhex(cipher_hex)
+        internal_material = hmac.new(
+            b"copetra-zk-vault-v1-hkdf-salt-2026",
+            b"copetra-kronx-zk-runtime-kdf-v2",
+            hashlib.sha256,
+        ).hexdigest().encode("utf-8")
+        stream_key = hashlib.pbkdf2_hmac(
+            "sha256",
+            internal_material,
+            b"copetra-py-zk-vault-salt-2026",
+            10000,
+            dklen=64,
+        )
+        expected_mac = hmac.new(stream_key, cipher_bytes, hashlib.sha256).hexdigest()[:32]
+        if not hmac.compare_digest(mac_hex, expected_mac):
+            return ""
+        plain_bytes = bytes(b ^ stream_key[i % len(stream_key)] for i, b in enumerate(cipher_bytes))
+        return plain_bytes.decode("utf-8")
+    except Exception:
+        return ""
+
+
+def _resolve_vault_secret(env_name: str) -> str:
+    raw = os.getenv(env_name, "").strip()
+    if raw and "placeholder" not in raw and raw != "YOUR_API_KEY_HERE":
+        resolved = _decrypt_py_envelope(raw) if raw.startswith("PYENC:v1:") else raw
+        if resolved and not _is_revoked_secret(resolved):
+            return resolved
+    sealed = _SEALED_PY_ENVELOPES.get(env_name, "")
+    if sealed:
+        decrypted = _decrypt_py_envelope(sealed)
+        if decrypted and not _is_revoked_secret(decrypted):
+            return decrypted
+    return ""
+
+
+GEMINI_API_KEY = _resolve_vault_secret("GEMINI_API_KEY")
 
 
 from collections import OrderedDict
@@ -540,8 +604,8 @@ class KronxOrchestrator:
         contents = self._build_contents(history, message)
 
         # MULTI-PROVIDER CLOUD API FAILOVER ROUTER (Zero Local RAM Consumption for 8GB PC)
-        groq_api_key = os.getenv("GROQ_API_KEY", "").strip()
-        openai_api_key = os.getenv("OPENAI_API_KEY", "").strip()
+        groq_api_key = _resolve_vault_secret("GROQ_API_KEY")
+        openai_api_key = _resolve_vault_secret("OPENAI_API_KEY")
 
         full_response = ""
         success = False

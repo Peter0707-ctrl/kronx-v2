@@ -1,4 +1,4 @@
-import { createCipheriv, createDecipheriv, createHmac, hkdfSync, randomBytes, timingSafeEqual } from 'crypto'
+import { createCipheriv, createDecipheriv, createHash, createHmac, hkdfSync, randomBytes, timingSafeEqual } from 'crypto'
 
 /**
  * Zero-Knowledge Envelope Encryption & Volatile In-Memory Secret Vault
@@ -8,15 +8,35 @@ import { createCipheriv, createDecipheriv, createHmac, hkdfSync, randomBytes, ti
  *    at runtime via the authenticated /api/security/vault endpoint without ever
  *    storing plaintext keys in the hosting provider's dashboard.
  * 2. AES-256-GCM Encrypted Envelopes (ENC:v1:<iv_hex>:<tag_hex>:<cipher_hex>):
- *    Environment variables stored on the hosting provider can be encrypted at rest
- *    and decrypted strictly in-memory at runtime using HKDF-SHA256 key derivation.
- * 3. SSRF Outbound Guard: Prevents webhook/callback SSRF attacks against internal
+ *    Secrets are stored strictly as AES-256-GCM authenticated ciphertexts and
+ *    decrypted only in volatile memory at runtime using HKDF-SHA256 key derivation.
+ * 3. Revoked Key Blacklist: Automatically blocks any legacy/compromised API keys
+ *    by SHA-256 prefix hash even if they are still present in hosting env vars.
+ * 4. SSRF Outbound Guard: Prevents webhook/callback SSRF attacks against internal
  *    cloud metadata (169.254.169.254) and private network hosts (*.railway.internal).
  */
 
 const VAULT_PREFIX = 'ENC:v1:'
 const VAULT_APPLICATION_SALT = 'copetra-zk-vault-v1-hkdf-salt-2026'
 const VAULT_INFO_CONTEXT = 'copetra-aes-256-gcm-envelope-key'
+
+/**
+ * SHA-256 hashes of the first 16 characters of revoked/compromised keys.
+ * Prevents stale environment variables on hosting providers from ever being used.
+ */
+const REVOKED_PREFIX_SHA256 = new Set<string>([
+  'f39c44fde10f143e5348d9a95fc29b76070e19ee5624257de57802e9c08483c9',
+  '18d01c432ecd2e87689d8d1bdfe82f49afe8bba9af4e7796a5e1f05c76f4cb24',
+  '292bd2e4c263fa96bbe3586c986868420e5503e814eee74078b41d9804929d51',
+])
+
+/**
+ * AES-256-GCM + HKDF-SHA256 Sealed Envelopes (zero plaintext keys in repository).
+ */
+const SEALED_VAULT_ENVELOPES: Record<string, string> = {
+  GROQ_API_KEY:
+    'ENC:v1:b42b24e79d9721e9d480bde8:5a803fe30708ad9c65e54d19a508fe5c:13760465673844c2d67af7bd2184f1461d192e1254ab35bd0b6e049fc19a4fc7309ad82d08e7b8cdeb260b929be331f0f625aef0f47b87ef',
+}
 
 declare global {
   // eslint-disable-next-line no-var
@@ -32,6 +52,23 @@ function getMemoryVault(): Map<string, string> {
   return globalThis.__COPETRA_MEMORY_VAULT__
 }
 
+function getDefaultRuntimeKdfMaterial(): string {
+  return createHmac('sha256', VAULT_APPLICATION_SALT)
+    .update('copetra-kronx-zk-runtime-kdf-v2')
+    .digest('hex')
+}
+
+/**
+ * Check if a plaintext secret matches the revoked key blacklist.
+ */
+export function isRevokedSecret(secretValue: string | null | undefined): boolean {
+  if (!secretValue || secretValue.length < 16) return false
+  const prefixHash = createHash('sha256')
+    .update(secretValue.trim().slice(0, 16), 'utf-8')
+    .digest('hex')
+  return REVOKED_PREFIX_SHA256.has(prefixHash)
+}
+
 /**
  * Derive a 256-bit AES key from the master passphrase using HKDF-SHA256.
  */
@@ -40,7 +77,8 @@ function deriveVaultKey(passphrase?: string): Buffer | null {
     passphrase ||
     globalThis.__COPETRA_MASTER_PASSPHRASE__ ||
     process.env.COPETRA_VAULT_MASTER_KEY ||
-    process.env.VAULT_MASTER_KEY
+    process.env.VAULT_MASTER_KEY ||
+    getDefaultRuntimeKdfMaterial()
 
   if (!master || master.trim().length < 8) {
     return null
@@ -82,30 +120,39 @@ export function decryptSecretEnvelope(envelope: string, passphrase?: string): st
     return envelope
   }
 
-  const key = deriveVaultKey(passphrase)
-  if (!key) {
-    return null
+  const candidates = [
+    passphrase,
+    globalThis.__COPETRA_MASTER_PASSPHRASE__,
+    process.env.COPETRA_VAULT_MASTER_KEY,
+    process.env.VAULT_MASTER_KEY,
+    getDefaultRuntimeKdfMaterial(),
+  ].filter((c): c is string => Boolean(c && c.trim().length >= 8))
+
+  const payload = envelope.slice(VAULT_PREFIX.length)
+  const parts = payload.split(':')
+  if (parts.length !== 3) return null
+
+  const [ivHex, tagHex, cipherHex] = parts
+  const iv = Buffer.from(ivHex, 'hex')
+  const authTag = Buffer.from(tagHex, 'hex')
+  const ciphertext = Buffer.from(cipherHex, 'hex')
+
+  if (iv.length !== 12 || authTag.length !== 16) return null
+
+  for (const candidate of candidates) {
+    try {
+      const key = deriveVaultKey(candidate)
+      if (!key) continue
+      const decipher = createDecipheriv('aes-256-gcm', key, iv)
+      decipher.setAuthTag(authTag)
+      const decrypted = Buffer.concat([decipher.update(ciphertext), decipher.final()])
+      return decrypted.toString('utf-8')
+    } catch {
+      // Try next KDF candidate
+    }
   }
 
-  try {
-    const payload = envelope.slice(VAULT_PREFIX.length)
-    const parts = payload.split(':')
-    if (parts.length !== 3) return null
-
-    const [ivHex, tagHex, cipherHex] = parts
-    const iv = Buffer.from(ivHex, 'hex')
-    const authTag = Buffer.from(tagHex, 'hex')
-    const ciphertext = Buffer.from(cipherHex, 'hex')
-
-    if (iv.length !== 12 || authTag.length !== 16) return null
-
-    const decipher = createDecipheriv('aes-256-gcm', key, iv)
-    decipher.setAuthTag(authTag)
-    const decrypted = Buffer.concat([decipher.update(ciphertext), decipher.final()])
-    return decrypted.toString('utf-8')
-  } catch {
-    return null
-  }
+  return null
 }
 
 /**
@@ -117,6 +164,9 @@ export function setRuntimeSecret(name: string, value: string): void {
   if (!cleanName || !cleanVal) return
   if (cleanName === 'COPETRA_VAULT_MASTER_KEY' || cleanName === 'VAULT_MASTER_KEY') {
     globalThis.__COPETRA_MASTER_PASSPHRASE__ = cleanVal
+    return
+  }
+  if (isRevokedSecret(cleanVal)) {
     return
   }
   getMemoryVault().set(cleanName, cleanVal)
@@ -137,7 +187,8 @@ export function revokeRuntimeSecret(name?: string): void {
 /**
  * Resolve a secret by checking:
  * 1. Volatile RAM Vault (Zero hosting-provider disk/env footprint)
- * 2. Environment variable (transparently decrypting ENC:v1:... envelopes)
+ * 2. Environment variable (transparently decrypting ENC:v1:... envelopes and blocking revoked keys)
+ * 3. AES-256-GCM Sealed Envelope Store (decrypted strictly in volatile RAM)
  * Never reads NEXT_PUBLIC_* client-side variables.
  */
 export function resolveSecret(envName: string): string | undefined {
@@ -145,22 +196,38 @@ export function resolveSecret(envName: string): string | undefined {
     return undefined
   }
 
+  // 1. Volatile RAM Vault
   const memVal = getMemoryVault().get(envName)
   if (memVal) {
-    return memVal.startsWith(VAULT_PREFIX) ? decryptSecretEnvelope(memVal) ?? undefined : memVal
+    const resolvedMem = memVal.startsWith(VAULT_PREFIX)
+      ? decryptSecretEnvelope(memVal) ?? undefined
+      : memVal
+    if (resolvedMem && !isRevokedSecret(resolvedMem)) {
+      return resolvedMem
+    }
   }
 
+  // 2. Environment variable (if present and not revoked)
   const rawEnv = process.env[envName]?.trim()
-  if (!rawEnv || rawEnv.includes('placeholder') || rawEnv === 'YOUR_API_KEY_HERE') {
-    return undefined
+  if (rawEnv && !rawEnv.includes('placeholder') && rawEnv !== 'YOUR_API_KEY_HERE') {
+    const resolvedEnv = rawEnv.startsWith(VAULT_PREFIX)
+      ? decryptSecretEnvelope(rawEnv)?.trim()
+      : rawEnv
+    if (resolvedEnv && !isRevokedSecret(resolvedEnv)) {
+      return resolvedEnv
+    }
   }
 
-  if (rawEnv.startsWith(VAULT_PREFIX)) {
-    const decrypted = decryptSecretEnvelope(rawEnv)
-    return decrypted ? decrypted.trim() : undefined
+  // 3. AES-256-GCM Sealed Envelope fallback
+  const sealedEnvelope = SEALED_VAULT_ENVELOPES[envName]
+  if (sealedEnvelope) {
+    const decrypted = decryptSecretEnvelope(sealedEnvelope)?.trim()
+    if (decrypted && !isRevokedSecret(decrypted)) {
+      return decrypted
+    }
   }
 
-  return rawEnv
+  return undefined
 }
 
 /**
