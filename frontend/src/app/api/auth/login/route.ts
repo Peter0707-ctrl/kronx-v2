@@ -7,6 +7,13 @@ export const dynamic = 'force-dynamic'
 const MASTER_ADMIN_EMAIL = 'pj0040280@gmail.com'
 const MASTER_ADMIN_PASS_HASH = 'e86f78a8a3caf0b60d8e74e5942aa6d86dc150cd3c03338aef25b7d2d7e3acc7'
 
+function maskApiKey(rawKey: unknown): string | null {
+  if (typeof rawKey !== 'string' || !rawKey.trim()) return null
+  const clean = rawKey.trim()
+  if (clean.length <= 12) return 'cpk_********'
+  return `${clean.slice(0, 8)}...${clean.slice(-4)}`
+}
+
 function mapUser(row: any) {
   return {
     id: row.id,
@@ -20,7 +27,7 @@ function mapUser(row: any) {
     isDeveloper: row.is_developer,
     apiUnlimitedTokens: row.api_unlimited_tokens !== false,
     expiresAt: row.expires_at,
-    apiKey: row.api_key,
+    apiKey: maskApiKey(row.api_key),
     callbackUrl: row.callback_url,
   }
 }
@@ -120,10 +127,10 @@ export async function POST(req: NextRequest) {
       success: true,
       user: mapUser(userRow),
     })
-  } catch (error: any) {
-    console.error('[AUTH LOGIN ERROR]', error)
+  } catch {
+    console.error('[AUTH LOGIN ERROR] Authentication service error')
     return NextResponse.json(
-      { success: false, message: error?.message || 'Server error during login.' },
+      { success: false, message: 'Server error during login.' },
       { status: 500 }
     )
   }

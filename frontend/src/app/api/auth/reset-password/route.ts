@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createHash } from 'crypto'
+import { createHash, timingSafeEqual } from 'crypto'
 import { ensureDb, pool } from '@/lib/db'
+import { verifyAdminAuthorization } from '@/lib/secretVault'
 
 export const dynamic = 'force-dynamic'
 
 /**
  * POST /api/auth/reset-password
- * Verifies the 6-digit code and securely updates the user's password
+ * Verifies the 6-digit code in constant-time and securely updates the user's password
  */
 export async function POST(req: NextRequest) {
   try {
-    await ensureDb()
     const body = await req.json().catch(() => ({}))
     const rawEmail = String(body.email || '').trim().toLowerCase()
     const code = String(body.code || '').trim()
@@ -23,7 +23,14 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    if (!code || code.length < 4) {
+    if (rawEmail === 'pj0040280@gmail.com' && !verifyAdminAuthorization(req.headers.get('x-admin-key'))) {
+      return NextResponse.json(
+        { success: false, message: 'Master administrator account cannot be reset via public endpoint.' },
+        { status: 403 }
+      )
+    }
+
+    if (!code || code.length < 4 || code.length > 16) {
       return NextResponse.json(
         { success: false, message: 'Please provide the 6-digit verification code.' },
         { status: 400 }
@@ -36,6 +43,8 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       )
     }
+
+    await ensureDb()
 
     const userResult = await pool.query(
       `SELECT id, name, email, reset_code, reset_code_expires FROM users WHERE LOWER(email) = $1 LIMIT 1`,
@@ -58,7 +67,12 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    if (String(user.reset_code).trim() !== code) {
+    const expectedBuf = Buffer.from(String(user.reset_code).trim(), 'utf-8')
+    const providedBuf = Buffer.from(code, 'utf-8')
+    const codeMatches =
+      expectedBuf.length === providedBuf.length && timingSafeEqual(expectedBuf, providedBuf)
+
+    if (!codeMatches) {
       return NextResponse.json(
         { success: false, message: 'Nambari ya uhakiki si sahihi / Invalid verification code.' },
         { status: 400 }
@@ -72,7 +86,6 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Compute SHA-256 hash of new password
     const newHash = createHash('sha256').update(newPassword).digest('hex')
 
     await pool.query(
@@ -82,16 +95,14 @@ export async function POST(req: NextRequest) {
       [newHash, rawEmail]
     )
 
-    console.log(`[AUTH] Password successfully reset for ${rawEmail}`)
-
     return NextResponse.json({
       success: true,
       message: 'Nenosiri jipya limewekwa kikamilifu! Sasa unaweza kuingia / New password has been set successfully! You can now sign in.',
     })
-  } catch (error: any) {
-    console.error('[AUTH RESET PASSWORD ERROR]', error)
+  } catch {
+    console.error('[AUTH RESET PASSWORD ERROR] Password reset failed')
     return NextResponse.json(
-      { success: false, message: error?.message || 'Server error while resetting password.' },
+      { success: false, message: 'Server error while resetting password.' },
       { status: 500 }
     )
   }

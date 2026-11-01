@@ -32,6 +32,24 @@ function mapUser(row: any, includeAdminFields = false) {
 
 export async function GET(req: NextRequest) {
   try {
+    const adminKeyHeader = req.headers.get('x-admin-key')
+    const isAdminRequest = verifyAdminAuthorization(adminKeyHeader)
+
+    const emailParam = (
+      req.nextUrl.searchParams.get('email') ||
+      req.headers.get('x-user-email') ||
+      ''
+    )
+      .toLowerCase()
+      .trim()
+
+    if (!isAdminRequest && (!emailParam || !emailParam.includes('@'))) {
+      return NextResponse.json(
+        { error: 'Forbidden: Valid administrator authorization or user session required.' },
+        { status: 403 }
+      )
+    }
+
     await ensureDb()
 
     await pool.query(`
@@ -43,25 +61,10 @@ export async function GET(req: NextRequest) {
         AND expires_at < NOW();
     `)
 
-    const adminKeyHeader = req.headers.get('x-admin-key')
-    const isAdminRequest = verifyAdminAuthorization(adminKeyHeader)
-
     if (isAdminRequest) {
       // Return ALL users to the authenticated Master Admin — zero hidden users allowed
       const result = await pool.query('SELECT * FROM users ORDER BY created_at ASC')
       return NextResponse.json(result.rows.map((r) => mapUser(r, true)))
-    }
-
-    const emailParam = (
-      req.nextUrl.searchParams.get('email') ||
-      req.headers.get('x-user-email') ||
-      ''
-    )
-      .toLowerCase()
-      .trim()
-
-    if (!emailParam || !emailParam.includes('@')) {
-      return NextResponse.json([], { status: 200 })
     }
 
     const single = await pool.query(
