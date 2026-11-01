@@ -1,5 +1,6 @@
 /** Shared fast-path helpers for Copetra chat APIs. */
 import { expandImagePrompt } from './imagePromptEnhancer'
+import { resolveSecret } from './secretVault'
 
 export const SIMPLE_GREETINGS: Record<string, string> = {
   hello: `Hello! Welcome to **Copetra AI**! How are you feeling today?`,
@@ -137,41 +138,23 @@ export function lastUserText(messages: { role?: string; content?: unknown }[]): 
   return ''
 }
 
-function getFallbackGroqKey(): string {
-  const p1 = 'gsk'
-  const p2 = 'BlqTnA0XRKYodf48pRenWGdyb3FYw05dniAykmJ6kEHa12ZETvbA'
-  return `${p1}_${p2}`
-}
-
 export function groqApiKeys(): string[] {
-  const defaultKey = getFallbackGroqKey()
   const keys = [
-    process.env.GROQ_API_KEY,
-    process.env.GROQ_API_KEY_2,
-    process.env.GROQ_KEY,
-    process.env.GROQ_SECRET_KEY,
-    process.env.NEXT_PUBLIC_GROQ_API_KEY,
-    defaultKey
+    resolveSecret('GROQ_API_KEY'),
+    resolveSecret('GROQ_API_KEY_2'),
+    resolveSecret('GROQ_KEY'),
+    resolveSecret('GROQ_SECRET_KEY'),
   ].filter(
     (k): k is string => Boolean(k && k.trim() && !k.includes('placeholder') && k.startsWith('gsk_'))
   )
   return Array.from(new Set(keys))
 }
 
-function getFallbackGeminiKey(): string {
-  const p1 = 'AQ'
-  const p2 = 'Ab8RN6JplKHLBZzfvvH4L4WWp3NCnwFOUOlWOMW-GSSBGnPw7g'
-  return `${p1}.${p2}`
-}
-
 export function geminiApiKeys(): string[] {
-  const defaultKey = getFallbackGeminiKey()
   const keys = [
-    process.env.GEMINI_API_KEY,
-    process.env.GOOGLE_API_KEY,
-    process.env.NEXT_PUBLIC_GEMINI_API_KEY,
-    process.env.GEMINI_API_KEY_2,
-    defaultKey
+    resolveSecret('GEMINI_API_KEY'),
+    resolveSecret('GOOGLE_API_KEY'),
+    resolveSecret('GEMINI_API_KEY_2'),
   ].filter(
     (k): k is string => Boolean(k && k.trim() && !k.includes('placeholder') && k.length > 20)
   )
@@ -180,9 +163,8 @@ export function geminiApiKeys(): string[] {
 
 export function openAiApiKeys(): string[] {
   const keys = [
-    process.env.OPENAI_API_KEY,
-    process.env.OPENAI_KEY,
-    process.env.NEXT_PUBLIC_OPENAI_API_KEY,
+    resolveSecret('OPENAI_API_KEY'),
+    resolveSecret('OPENAI_KEY'),
   ].filter(
     (k): k is string => Boolean(k && k.trim() && !k.includes('placeholder') && k.startsWith('sk-'))
   )

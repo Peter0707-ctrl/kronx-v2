@@ -47,7 +47,7 @@ export default function AdminDashboard() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-admin-key': user?.adminKey || 'e86f78a8a3caf0b60d8e74e5942aa6d86dc150cd3c03338aef25b7d2d7e3acc7'
+            'x-admin-key': user?.adminKey || ''
           },
           body: JSON.stringify(userToUpdate)
         })
@@ -78,7 +78,7 @@ export default function AdminDashboard() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-admin-key': user?.adminKey || 'e86f78a8a3caf0b60d8e74e5942aa6d86dc150cd3c03338aef25b7d2d7e3acc7'
+            'x-admin-key': user?.adminKey || ''
           },
           body: JSON.stringify(userToUpdate)
         })
@@ -102,12 +102,16 @@ export default function AdminDashboard() {
       .then(data => setTelemetry(data))
       .catch(err => console.warn('[Admin telemetry fetch fail]', err))
 
-    // Fetch live users list from backend
-    fetch('/api/users')
+    // Fetch live users list from backend using authenticated admin key
+    fetch('/api/users', {
+      headers: {
+        'x-admin-key': user?.adminKey || ''
+      }
+    })
       .then(res => res.json())
-      .then(data => setUsersList(data))
+      .then(data => setUsersList(Array.isArray(data) ? data : []))
       .catch(err => console.warn('[Users fetch fail]', err))
-  }, [])
+  }, [user?.adminKey])
 
   const handleToggleRole = (userId: string) => {
     setUsersList(prev =>
@@ -268,7 +272,7 @@ export default function AdminDashboard() {
                     method: 'POST',
                     headers: {
                       'Content-Type': 'application/json',
-                      'x-admin-key': user?.adminKey || 'e86f78a8a3caf0b60d8e74e5942aa6d86dc150cd3c03338aef25b7d2d7e3acc7'
+                      'x-admin-key': user?.adminKey || ''
                     },
                     body: JSON.stringify(newUser)
                   }).catch(e => console.error('Failed to save manually added user to DB:', e))

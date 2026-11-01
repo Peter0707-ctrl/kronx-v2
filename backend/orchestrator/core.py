@@ -353,12 +353,12 @@ class KronxOrchestrator:
                 return _active_model_cache["model"]
 
         models_to_try = ["gemini-2.0-flash-lite", "gemini-2.5-flash", "gemini-2.0-flash", "gemini-3.5-flash"]
-        active = "pjkronx-embedded-engine-v2"
+        active = "copetra-v2-enterprise"
 
         if not self.api_key or self.api_key == "YOUR_GEMINI_API_KEY_HERE":
             groq_api_key = os.getenv("GROQ_API_KEY", "")
             if groq_api_key:
-                active = "groq-gpt-oss-120b"
+                active = "copetra-v2-enterprise"
         else:
             client = get_client()
             for m in models_to_try:
@@ -369,7 +369,7 @@ class KronxOrchestrator:
                         "generationConfig": {"maxOutputTokens": 5}
                     }, timeout=5.0)
                     if resp.status_code == 200:
-                        active = m
+                        active = "copetra-v2-enterprise"
                         break
                 except Exception:
                     continue
@@ -449,11 +449,8 @@ class KronxOrchestrator:
                 last_err = str(e)
                 logger.error(f"[Gemini Process Error] Model {m}: {e}", exc_info=True)
 
-        # Groq fallback
-        def _get_fallback_groq():
-            return f"{'gsk'}_{'BlqTnA0XRKYodf48pRenWGdyb3FYw05dniAykmJ6kEHa12ZETvbA'}"
-
-        groq_api_key = os.getenv("GROQ_API_KEY", "") or _get_fallback_groq()
+        # Groq fallback (strictly from environment/vault, zero hardcoded fallback keys)
+        groq_api_key = os.getenv("GROQ_API_KEY", "").strip()
         if groq_api_key:
             try:
                 groq_url = "https://api.groq.com/openai/v1/chat/completions"
@@ -543,8 +540,8 @@ class KronxOrchestrator:
         contents = self._build_contents(history, message)
 
         # MULTI-PROVIDER CLOUD API FAILOVER ROUTER (Zero Local RAM Consumption for 8GB PC)
-        groq_api_key = os.getenv("GROQ_API_KEY", "") or f"{'gsk'}_{'BlqTnA0XRKYodf48pRenWGdyb3FYw05dniAykmJ6kEHa12ZETvbA'}"
-        openai_api_key = os.getenv("OPENAI_API_KEY", "")
+        groq_api_key = os.getenv("GROQ_API_KEY", "").strip()
+        openai_api_key = os.getenv("OPENAI_API_KEY", "").strip()
 
         full_response = ""
         success = False

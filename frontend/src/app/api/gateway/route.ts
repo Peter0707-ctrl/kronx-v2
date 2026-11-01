@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { authenticateApiKey, apiError } from '@/lib/developerAuth'
+import { validateSafeOutboundUrl } from '@/lib/secretVault'
 import {
   createCompletionWithFallback,
   normalizeMessages,
@@ -39,10 +40,20 @@ export async function POST(req: NextRequest) {
     const temperature = typeof body.temperature === 'number' ? body.temperature : 0.5
     const unlimited = Boolean(auth.key.apiUnlimitedTokens)
     const maxTokens = resolveMaxTokens(body.max_tokens, unlimited)
-    const callbackUrl =
+    const rawCallbackUrl =
       body.callback_url || body.callbackUrl || body.webhook_url || body.webhookUrl || auth.key.callbackUrl
 
-    if (callbackUrl && !stream) {
+    if (rawCallbackUrl && !stream) {
+      const safeCallback = validateSafeOutboundUrl(rawCallbackUrl)
+      if (!safeCallback.ok) {
+        return apiError(
+          `Invalid callback URL: ${safeCallback.reason}`,
+          400,
+          'invalid_callback_url'
+        )
+      }
+      const callbackUrl = safeCallback.url
+
       void (async () => {
         const result = await createCompletionWithFallback({
           messages,
@@ -54,7 +65,7 @@ export async function POST(req: NextRequest) {
         const answer =
           result.ok && result.stream === false ? result.text : 'Generation failed.'
 
-        await fetch(String(callbackUrl), {
+        await fetch(callbackUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

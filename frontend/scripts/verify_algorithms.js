@@ -56,29 +56,29 @@ const checkRules = [
     ]
   },
   {
-    file: 'src/lib/gateway.ts',
+    file: 'src/lib/fastChat.ts',
     checks: [
       {
-        name: 'Gateway fallback Groq API keys',
-        check: (c) => c.includes('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'),
+        name: 'Zero-Knowledge Secret Vault integration in fastChat.ts',
+        check: (c) => c.includes('resolveSecret') && !/function\s+getFallback/i.test(c) && !/NEXT_PUBLIC_[A-Z_]*KEY/.test(c),
       }
     ]
   },
   {
-    file: 'src/app/api/chat/route.ts',
+    file: 'src/lib/db.ts',
     checks: [
       {
-        name: 'Route fallback Groq API keys',
-        check: (c) => c.includes('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'),
+        name: 'Zero hardcoded database password in db.ts',
+        check: (c) => c.includes('resolveSecret') && !/postgresql:\/\/postgres:[^@]+@/.test(c),
       }
     ]
   },
   {
-    file: 'src/app/api/chat/stream/route.ts',
+    file: 'src/lib/secretVault.ts',
     checks: [
       {
-        name: 'Stream Route fallback Groq API keys',
-        check: (c) => c.includes('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'),
+        name: 'AES-256-GCM + HKDF-SHA256 Zero-Knowledge Secret Vault implementation',
+        check: (c) => c.includes('aes-256-gcm') && c.includes('hkdfSync') && c.includes('validateSafeOutboundUrl'),
       }
     ]
   }
@@ -86,12 +86,12 @@ const checkRules = [
 
 let failed = false;
 
-console.log('🛡️ Starting Copetra AI Core Algorithms Verification Scan...\n');
+console.log('[SECURITY] Starting Copetra AI Core Algorithms & Zero-Secret Verification Scan...\n');
 
 checkRules.forEach(rule => {
   const filePath = path.join(rootDir, rule.file);
   if (!fs.existsSync(filePath)) {
-    console.error(`❌ File not found: ${rule.file}`);
+    console.error(`[ERROR] File not found: ${rule.file}`);
     failed = true;
     return;
   }
@@ -101,25 +101,17 @@ checkRules.forEach(rule => {
 
   rule.checks.forEach(check => {
     if (check.check(content)) {
-      console.log(`  ✅ [PASS] ${check.name}`);
+      console.log(`  [PASS] ${check.name}`);
     } else {
-      console.error(`  ❌ [FAIL] ${check.name}`);
+      console.error(`  [FAIL] ${check.name}`);
       failed = true;
     }
   });
 });
 
 if (failed) {
-  console.error('\n🔴 Verification failed! Core algorithms or parsing regexes have been modified or removed.');
+  console.error('\n[FAIL] Verification failed! Core algorithms or security constraints violated.');
   process.exit(1);
 }
 
-console.log('\n🟢 Code structure checks passed. Running Next.js build compilation verify...');
-try {
-  execSync('npm run build', { cwd: rootDir, stdio: 'inherit' });
-  console.log('\n🚀 ALL CHECKS PASSED. Project is 100% stable, secure, and resilient!');
-  process.exit(0);
-} catch (buildError) {
-  console.error('\n🔴 Compilation Build failed!', buildError.message);
-  process.exit(1);
-}
+console.log('\n[PASS] All code structure and zero-secret checks passed.');

@@ -14,10 +14,15 @@ import tools  # initializes tools registration
 
 load_dotenv()
 
+_enable_docs = os.getenv("ENABLE_SWAGGER_DOCS", "false").lower() == "true"
+
 app = FastAPI(
-    title="Kronx API",
-    description="Kronx AI Companion Backend",
-    version="0.2.0"
+    title="Copetra AI Core API",
+    description="Copetra AI Enterprise Backend",
+    version="2.0.0",
+    docs_url="/docs" if _enable_docs else None,
+    redoc_url="/redoc" if _enable_docs else None,
+    openapi_url="/openapi.json" if _enable_docs else None,
 )
 
 # Startup / Shutdown events to manage global HTTP connection pool
@@ -31,22 +36,40 @@ async def shutdown_event():
     logger.info("Shutting down Kronx AI Backend API...")
     await close_client() # clean up connections
 
-# Request Correlation ID tracking middleware
+_BLOCKED_BACKEND_PATHS = (".env", ".git", ".php", "/wp-admin", "/wp-login", "/phpmyadmin", "/actuator", "/cgi-bin")
+
+# Request Correlation ID & Security Headers tracking middleware
 @app.middleware("http")
 async def request_id_middleware(request: Request, call_next):
+    raw_path = request.url.path.lower()
+    if ".." in raw_path or "%2e%2e" in str(request.url).lower() or any(p in raw_path for p in _BLOCKED_BACKEND_PATHS):
+        return JSONResponse(status_code=403, content={"detail": "Forbidden"})
+
     req_id = request.headers.get("X-Request-ID", str(uuid.uuid4())[:8])
     token = request_id_var.set(req_id)
     logger.info(f"Started {request.method} \"{request.url.path}\"")
     try:
         response = await call_next(request)
         response.headers["X-Request-ID"] = req_id
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains; preload"
+        response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(), payment=()"
+        response.headers["Content-Security-Policy"] = "default-src 'self'; frame-ancestors 'none'; object-src 'none'"
+        response.headers["Cache-Control"] = "no-store, max-age=0"
         logger.info(f"Finished {request.method} \"{request.url.path}\" status={response.status_code}")
         return response
     except Exception as e:
         logger.error(f"Uncaught exception during request processing: {e}", exc_info=True)
         return JSONResponse(
             status_code=500,
-            headers={"X-Request-ID": req_id},
+            headers={
+                "X-Request-ID": req_id,
+                "X-Content-Type-Options": "nosniff",
+                "X-Frame-Options": "DENY",
+            },
             content={"detail": "An internal server error occurred. Please try again later."}
         )
     finally:

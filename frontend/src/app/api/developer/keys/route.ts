@@ -6,6 +6,7 @@ import {
   generateApiKeyValue,
   apiError,
 } from '@/lib/developerAuth'
+import { validateSafeOutboundUrl } from '@/lib/secretVault'
 
 export const dynamic = 'force-dynamic'
 
@@ -55,7 +56,15 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json().catch(() => ({}))
     const projectName = String(body.projectName || body.project_name || '').trim()
-    const callbackUrl = body.callbackUrl || body.callback_url || null
+    const rawCallbackUrl = body.callbackUrl || body.callback_url || null
+    let callbackUrl: string | null = null
+    if (rawCallbackUrl) {
+      const safe = validateSafeOutboundUrl(rawCallbackUrl)
+      if (!safe.ok) {
+        return apiError(`Invalid callbackUrl: ${safe.reason}`, 400, 'invalid_callback_url')
+      }
+      callbackUrl = safe.url
+    }
 
     if (!projectName || projectName.length < 2) {
       return apiError('projectName is required (min 2 characters).', 400, 'missing_project_name')

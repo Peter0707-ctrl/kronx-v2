@@ -1,10 +1,18 @@
 import { Pool } from 'pg'
+import { resolveSecret } from './secretVault'
 
-const connectionString =
-  process.env.DATABASE_URL ||
-  'postgresql://postgres:TdoGwPBGGbhiWgarnDevahuPxoehQspt@postgres.railway.internal:5432/railway'
+const connectionString = resolveSecret('DATABASE_URL') || process.env.DATABASE_URL || ''
 
-export const pool = new Pool({ connectionString })
+export const pool = new Pool(
+  connectionString
+    ? {
+        connectionString,
+        max: 10,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 5000,
+      }
+    : undefined
+)
 
 let ready = false
 

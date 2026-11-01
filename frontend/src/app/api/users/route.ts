@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ensureDb, pool } from '@/lib/db'
+import { verifyAdminAuthorization } from '@/lib/secretVault'
 
 export const dynamic = 'force-dynamic'
 
-const MASTER_ADMIN_HASH = 'e86f78a8a3caf0b60d8e74e5942aa6d86dc150cd3c03338aef25b7d2d7e3acc7'
+function maskApiKey(rawKey: unknown): string | null {
+  if (typeof rawKey !== 'string' || !rawKey.trim()) return null
+  const clean = rawKey.trim()
+  if (clean.length <= 12) return 'cpk_********'
+  return `${clean.slice(0, 8)}...${clean.slice(-4)}`
+}
 
-function mapUser(row: any) {
+function mapUser(row: any, includeAdminFields = false) {
   return {
     id: row.id,
     name: row.name,
@@ -15,15 +21,15 @@ function mapUser(row: any) {
     avatar: row.avatar,
     lastActive: row.last_active,
     conversationCount: row.conversation_count,
-    isDeveloper: row.is_developer,
+    isDeveloper: Boolean(row.is_developer),
     apiUnlimitedTokens: row.api_unlimited_tokens !== false,
     expiresAt: row.expires_at,
-    apiKey: row.api_key,
-    callbackUrl: row.callback_url,
+    apiKey: includeAdminFields ? maskApiKey(row.api_key) : null,
+    callbackUrl: includeAdminFields ? row.callback_url : null,
   }
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     await ensureDb()
 
@@ -36,10 +42,34 @@ export async function GET() {
         AND expires_at < NOW();
     `)
 
-    const result = await pool.query('SELECT * FROM users ORDER BY created_at ASC')
-    return NextResponse.json(result.rows.map(mapUser))
+    const adminKeyHeader = req.headers.get('x-admin-key')
+    const isAdminRequest = verifyAdminAuthorization(adminKeyHeader)
+
+    if (isAdminRequest) {
+      const result = await pool.query('SELECT * FROM users ORDER BY created_at ASC')
+      return NextResponse.json(result.rows.map((r) => mapUser(r, true)))
+    }
+
+    // Non-admin callers may only query their own single profile by email
+    const emailParam = (
+      req.nextUrl.searchParams.get('email') ||
+      req.headers.get('x-user-email') ||
+      ''
+    )
+      .toLowerCase()
+      .trim()
+
+    if (!emailParam || !emailParam.includes('@')) {
+      return NextResponse.json([], { status: 200 })
+    }
+
+    const single = await pool.query(
+      'SELECT * FROM users WHERE LOWER(email) = $1 LIMIT 1',
+      [emailParam]
+    )
+    return NextResponse.json(single.rows.map((r) => mapUser(r, false)))
   } catch (e: any) {
-    console.error('DB GET Error', e)
+    console.error('[api/users GET] Database query failed')
     return NextResponse.json([], { status: 500 })
   }
 }
@@ -47,41 +77,47 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     await ensureDb()
-    const user = await req.json()
+    const user = await req.json().catch(() => ({}))
+
+    const emailLower = String(user.email || '').toLowerCase().trim()
+    if (!emailLower || !emailLower.includes('@') || emailLower.length > 254) {
+      return NextResponse.json({ success: false, error: 'Valid email is required' }, { status: 400 })
+    }
 
     const adminKeyHeader = req.headers.get('x-admin-key')
-    const isAdminRequest = adminKeyHeader === MASTER_ADMIN_HASH
-
-    const emailLower = (user.email || '').toLowerCase().trim()
+    const isAdminRequest = verifyAdminAuthorization(adminKeyHeader)
     const isMasterAdminEmail = emailLower === 'pj0040280@gmail.com'
 
-    let targetRole = user.role || 'user'
-    let targetPlan = user.plan || 'free'
+    // Prevent unauthenticated privilege escalation or tampering with the Master Admin account
+    if (isMasterAdminEmail && !isAdminRequest) {
+      return NextResponse.json(
+        { success: false, error: 'Forbidden: Master administrator credentials required.' },
+        { status: 403 }
+      )
+    }
+
+    let targetRole = 'user'
+    let targetPlan = 'free'
     let targetIsDeveloper = false
 
-    if (isMasterAdminEmail) {
+    if (isMasterAdminEmail && isAdminRequest) {
       targetRole = 'admin'
       targetPlan = 'premium'
       targetIsDeveloper = true
     } else if (isAdminRequest) {
-      // Admin console may change role / plan / developer grant
-      targetRole = user.role || 'user'
-      targetPlan = user.plan || 'free'
+      targetRole = user.role === 'admin' ? 'admin' : 'user'
+      targetPlan = ['free', 'plus', 'premium', 'pro'].includes(user.plan) ? user.plan : 'free'
       targetIsDeveloper = Boolean(user.isDeveloper)
     } else {
       // Self-service: never allow escalating role/plan/developer
       const existing = await pool.query(
-        'SELECT role, plan, is_developer FROM users WHERE LOWER(email) = $1',
+        'SELECT role, plan, is_developer FROM users WHERE LOWER(email) = $1 LIMIT 1',
         [emailLower]
       )
       if (existing.rows.length > 0) {
         targetRole = existing.rows[0].role || 'user'
         targetPlan = existing.rows[0].plan || 'free'
         targetIsDeveloper = Boolean(existing.rows[0].is_developer)
-      } else {
-        targetRole = 'user'
-        targetPlan = 'free'
-        targetIsDeveloper = false
       }
     }
 
@@ -89,6 +125,9 @@ export async function POST(req: NextRequest) {
     if (targetPlan && targetPlan !== 'free') {
       expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
     }
+
+    const safeName = String(user.name || emailLower.split('@')[0]).replace(/[<>]/g, '').slice(0, 120)
+    const safeId = String(user.id || `u-${Date.now()}`).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 120)
 
     const query = `
       INSERT INTO users (id, name, email, role, plan, avatar, last_active, conversation_count, is_developer, api_unlimited_tokens, expires_at, api_key, callback_url)
@@ -107,31 +146,30 @@ export async function POST(req: NextRequest) {
       RETURNING *;
     `
 
-    // Granted developers / admins always get unlimited app-side tokens
     const unlimitedTokens =
-      targetIsDeveloper || targetRole === 'admin' || user.apiUnlimitedTokens === true
+      targetIsDeveloper || targetRole === 'admin' || (isAdminRequest && user.apiUnlimitedTokens === true)
 
     const values = [
-      user.id,
-      user.name,
+      safeId,
+      safeName,
       emailLower,
       targetRole,
       targetPlan,
       user.avatar ||
-        `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.name || 'User')}`,
-      user.lastActive || 'Just now',
-      user.conversationCount || 0,
+        `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(safeName || 'User')}`,
+      'Active Now',
+      Number.isFinite(Number(user.conversationCount)) ? Number(user.conversationCount) : 0,
       targetIsDeveloper,
       unlimitedTokens,
       expiresAt,
-      user.apiKey || null,
-      user.callbackUrl || null,
+      null,
+      null,
     ]
 
     const result = await pool.query(query, values)
-    return NextResponse.json({ success: true, user: mapUser(result.rows[0]) })
+    return NextResponse.json({ success: true, user: mapUser(result.rows[0], isAdminRequest) })
   } catch (e: any) {
-    console.error('DB POST Error', e)
-    return NextResponse.json({ success: false, error: e.message }, { status: 500 })
+    console.error('[api/users POST] Database write failed')
+    return NextResponse.json({ success: false, error: 'Operation failed' }, { status: 500 })
   }
 }

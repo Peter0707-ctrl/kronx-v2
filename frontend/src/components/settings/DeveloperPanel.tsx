@@ -73,7 +73,7 @@ export default function DeveloperPanel() {
   useEffect(() => {
     // Refresh developer flag from server (admin grant source of truth)
     if (!user?.email) return
-    fetch('/api/users')
+    fetch(`/api/users?email=${encodeURIComponent(user.email)}`)
       .then((r) => r.json())
       .then((list: any[]) => {
         const me = Array.isArray(list)

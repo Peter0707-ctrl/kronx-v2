@@ -24,9 +24,7 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
     alert("Google Login is currently disabled. Please create an account using your email.")
   }
 
-  // Zero-Knowledge Encrypted Security Verification (SHA-256 Hashes)
-  // Master Admin Email (pj0040280@gmail.com): 9063d0bbb69a40812b28290f914b7bc398629d954c8322b0b666c0705e98bd95
-  // Master Admin Password (Admin@123): e86f78a8a3caf0b60d8e74e5942aa6d86dc150cd3c03338aef25b7d2d7e3acc7
+  // Zero-Knowledge Cryptographic Hash Verification
   const sha256 = async (str: string) => {
     const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str))
     return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('')
@@ -75,10 +73,12 @@ export default function AuthModal({ isPage = false }: AuthModalProps) {
 
     if (tab === 'login') {
       try {
-        const res = await fetch('/api/users')
+        const res = await fetch(`/api/users?email=${encodeURIComponent(email.trim())}`)
         if (res.ok) {
           const allUsers = await res.json()
-          const existingUser = allUsers.find((u: any) => u.email.toLowerCase() === email.trim().toLowerCase())
+          const existingUser = Array.isArray(allUsers)
+            ? allUsers.find((u: any) => u.email.toLowerCase() === email.trim().toLowerCase())
+            : null
           
           if (!existingUser && !isMasterAdmin) {
             alert(sw ? "Akaunti haipatikani. Tafadhali jisajili." : "Account not found in the system. Please register first.")
