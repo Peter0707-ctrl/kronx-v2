@@ -83,6 +83,10 @@ const nextConfig = {
   poweredByHeader: false,
   // Never emit browser source maps (.js.map) in production so core algorithms cannot be reverse-engineered
   productionBrowserSourceMaps: false,
+  // Disable built-in image optimizer server to eliminate remote image DoS and SSRF vectors
+  images: {
+    unoptimized: true,
+  },
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error'] } : false,
   },
