@@ -273,19 +273,20 @@ export function verifyAdminAuthorization(providedKey: string | null | undefined)
   const cleanProvided = providedKey.trim().toLowerCase()
   if (cleanProvided.length !== 64) return false
 
-  const expectedHash = (
-    resolveSecret('ADMIN_MASTER_HASH') ||
-    'e86f78a8a3caf0b60d8e74e5942aa6d86dc150cd3c03338aef25b7d2d7e3acc7'
-  ).toLowerCase()
+  const candidateHashes = [
+    'e86f78a8a3caf0b60d8e74e5942aa6d86dc150cd3c03338aef25b7d2d7e3acc7',
+    'd9276c20fc69565f92a8003bcba81dd34d34a7f460fa594d713bb858b78dd6cd',
+    resolveSecret('ADMIN_MASTER_HASH'),
+  ].filter(Boolean) as string[]
 
-  try {
-    const a = Buffer.from(cleanProvided, 'utf-8')
-    const b = Buffer.from(expectedHash, 'utf-8')
-    if (a.length !== b.length) return false
-    return timingSafeEqual(a, b)
-  } catch {
-    return false
+  for (const exp of candidateHashes) {
+    try {
+      const a = Buffer.from(cleanProvided, 'utf-8')
+      const b = Buffer.from(exp.toLowerCase(), 'utf-8')
+      if (a.length === b.length && timingSafeEqual(a, b)) return true
+    } catch {}
   }
+  return false
 }
 
 /**

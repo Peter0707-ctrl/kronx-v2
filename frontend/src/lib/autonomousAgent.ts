@@ -190,12 +190,12 @@ USER GOAL: ${goal}`
       const llmOutput = await queryLlm(conversationHistory)
 
       // Check if Final Answer reached
-      if (llmOutput.includes('[FINAL_ANSWER:')) {
-        const parts = llmOutput.split('[FINAL_ANSWER:')
-        finalResult = parts[1].replace(/\]\s*$/, '').trim()
+      const finalMatch = llmOutput.match(/\[FINAL_ANSWER:\s*([\s\S]*?)\]/i)
+      if (finalMatch) {
+        finalResult = finalMatch[1].trim()
         steps.push({
           stepIndex,
-          thought: parts[0].trim(),
+          thought: llmOutput.replace(finalMatch[0], '').trim(),
           action: 'FINAL_ANSWER',
           actionInput: {},
           observation: 'Goal completed successfully.',
@@ -204,8 +204,8 @@ USER GOAL: ${goal}`
         break
       }
 
-      // Check for actions
-      const actionMatch = llmOutput.match(/\[ACTION:\s*([A-Z_]+)(?:\s*(\{[\s\S]*?\}))?\]/)
+      // Check for actions (case-insensitive)
+      const actionMatch = llmOutput.match(/\[ACTION:\s*([A-Za-z_]+)(?:\s*(\{[\s\S]*?\}))?\]/i)
       if (!actionMatch) {
         finalResult = llmOutput.trim()
         steps.push({
@@ -219,7 +219,7 @@ USER GOAL: ${goal}`
         break
       }
 
-      const actionName = actionMatch[1].trim()
+      const actionName = actionMatch[1].trim().toUpperCase()
       let actionInput: any = {}
       try {
         if (actionMatch[2]) {
