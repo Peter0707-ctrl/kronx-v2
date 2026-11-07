@@ -119,6 +119,7 @@ export async function ensureDb() {
         WHERE u.api_key IS NOT NULL
           AND u.api_key <> ''
           AND NOT EXISTS (SELECT 1 FROM api_keys k WHERE k.api_key = u.api_key)
+        ON CONFLICT DO NOTHING
       `)
 
       const checkAdmin = await client.query(`SELECT id FROM users WHERE id = 'u-admin-master'`)
