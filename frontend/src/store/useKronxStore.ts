@@ -178,6 +178,7 @@ export const useKronxStore = create<KronxStore>()(
                 user: s.user
                   ? {
                       ...s.user,
+                      id: data.user.id || s.user.id,
                       role: data.user.role || s.user.role,
                       plan: data.user.plan || s.user.plan,
                       isDeveloper: Boolean(data.user.isDeveloper),

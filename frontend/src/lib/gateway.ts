@@ -125,8 +125,35 @@ export async function createCompletion(opts: {
     return {
       ok: false,
       status: 503,
-      message: 'AI provider is not configured on this server.',
+      message: 'Copetra AI engine is temporarily unavailable.',
       code: 'provider_not_configured',
+    }
+  }
+
+  // Gateway Prompt-Injection & Secret-Exfiltration Firewall
+  const allUserText = opts.messages
+    .filter((m) => m.role !== 'system')
+    .map((m) => String(m.content || ''))
+    .join('\n')
+
+  if (allUserText.length > 16000 || opts.messages.length > 25) {
+    return {
+      ok: false,
+      status: 400,
+      message: 'Request payload exceeds maximum allowed length (max 25 messages / 16,000 chars).',
+      code: 'payload_too_large',
+    }
+  }
+
+  const exfiltrationPattern =
+    /\b(GROQ_API_KEY|GEMINI_API_KEY|GOOGLE_API_KEY|DATABASE_URL|secretVault|SEALED_VAULT_ENVELOPES|ENC:v1:|PYENC:v1:|process\.env|ADMIN_MASTER_HASH)\b|(ignore (all |previous |prior )?instructions.*(system prompt|api key|secret|password))|(reveal (your |the )?(system prompt|internal instructions|api key|secret key))/i
+
+  if (exfiltrationPattern.test(allUserText)) {
+    return {
+      ok: false,
+      status: 403,
+      message: 'Request blocked by Copetra AI Security Firewall (prohibited system/secret probe).',
+      code: 'security_policy_violation',
     }
   }
 
@@ -292,7 +319,7 @@ export async function createCompletion(opts: {
     return {
       ok: false,
       status: 502,
-      message: 'Upstream AI provider authentication failed. Check GROQ_API_KEY on the server.',
+      message: 'Copetra AI engine service temporarily unavailable.',
       code: 'provider_auth_failed',
     }
   }

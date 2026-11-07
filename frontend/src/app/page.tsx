@@ -15,7 +15,7 @@ import ErrorBoundary from '@/components/ErrorBoundary'
 import { useChat } from '@/hooks/useChat'
 import { useKronxStore } from '@/store/useKronxStore'
 
-const CURRENT_APP_VERSION = 'v2026.09.24.2155'
+const CURRENT_APP_VERSION = 'v2026.11.07.2135'
 
 export default function Home() {
   const { send, regenerate, editAndResend } = useChat()
@@ -147,9 +147,10 @@ export default function Home() {
           if (Array.isArray(users)) {
             const dbUser = users.find((u: any) => u.email?.toLowerCase() === user.email.toLowerCase())
             if (dbUser) {
-              if (dbUser.plan !== user.plan || dbUser.role !== user.role || dbUser.isDeveloper !== user.isDeveloper) {
+              if (dbUser.id !== user.id || dbUser.plan !== user.plan || dbUser.role !== user.role || dbUser.isDeveloper !== user.isDeveloper) {
                 setUser({
                   ...user,
+                  id: dbUser.id || user.id,
                   plan: dbUser.plan || user.plan,
                   role: dbUser.role || user.role,
                   isDeveloper: dbUser.isDeveloper !== undefined ? dbUser.isDeveloper : user.isDeveloper

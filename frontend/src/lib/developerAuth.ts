@@ -201,7 +201,27 @@ export async function authenticateApiKey(req: NextRequest): Promise<
     }
   }
 
-  // 2. Check User-Bound API Keys
+  // 2. Validate API key format & enforce per-key sliding-window rate limit (30 req/min)
+  const validFormat = /^cpk_[a-f0-9]{40,64}$/i.test(apiKey) || /^kx-live-[a-z0-9-]+$/i.test(apiKey)
+  if (!validFormat) {
+    return {
+      ok: false,
+      response: apiError('Malformed API key format.', 403, 'invalid_api_key'),
+    }
+  }
+
+  if (!checkPerKeyRateLimit(apiKey)) {
+    return {
+      ok: false,
+      response: apiError(
+        'API key rate limit exceeded (max 30 requests per minute). Please slow down.',
+        429,
+        'rate_limit_exceeded'
+      ),
+    }
+  }
+
+  // 3. Check User-Bound API Keys
   const result = await pool.query(
     `SELECT
        k.id, k.user_id, k.project_name, k.key_prefix, k.api_key, k.callback_url,
@@ -247,7 +267,7 @@ export async function authenticateApiKey(req: NextRequest): Promise<
     }
   }
 
-  if (!row) {
+  if (!row || !constantTimeKeyEquals(apiKey, String(row.api_key || ''))) {
     return {
       ok: false,
       response: apiError('Invalid API key.', 403, 'invalid_api_key'),
@@ -270,9 +290,32 @@ export async function authenticateApiKey(req: NextRequest): Promise<
     key: {
       ...mapKeyRow(row),
       isDeveloper: true,
-      apiUnlimitedTokens: true,
+      apiUnlimitedTokens: String(row.role || '').toLowerCase() === 'admin',
     },
   }
+}
+
+const KEY_RATE_BUCKETS = new Map<string, { count: number; resetAt: number }>()
+
+function checkPerKeyRateLimit(apiKey: string, maxPerMinute = 30): boolean {
+  const now = Date.now()
+  const digest = createHash('sha256').update(apiKey).digest('hex').slice(0, 24)
+  const bucket = KEY_RATE_BUCKETS.get(digest)
+  if (!bucket || now >= bucket.resetAt) {
+    KEY_RATE_BUCKETS.set(digest, { count: 1, resetAt: now + 60_000 })
+    return true
+  }
+  if (bucket.count >= maxPerMinute) {
+    return false
+  }
+  bucket.count += 1
+  return true
+}
+
+function constantTimeKeyEquals(a: string, b: string): boolean {
+  const hashA = createHash('sha256').update(a).digest()
+  const hashB = createHash('sha256').update(b).digest()
+  return timingSafeEqual(hashA, hashB)
 }
 
 /** Authenticate a logged-in account holder managing their own API keys. */
@@ -284,38 +327,22 @@ export async function authenticateDeveloperSession(req: NextRequest): Promise<
   const userId = req.headers.get('x-user-id')?.trim()
   const email = req.headers.get('x-user-email')?.toLowerCase().trim()
 
-  if (!email && !userId) {
+  if (!userId || !email || !email.includes('@')) {
     return {
       ok: false,
-      response: apiError('Missing session headers (x-user-id, x-user-email).', 401, 'missing_session'),
+      response: apiError('Missing or invalid session credentials (x-user-id, x-user-email).', 401, 'missing_session'),
     }
   }
 
-  let result = await pool.query(
-    `SELECT id, email, is_developer, role FROM users WHERE LOWER(email) = $1 OR id = $2 LIMIT 1`,
-    [email || '', userId || '']
+  const result = await pool.query(
+    `SELECT id, email, is_developer, role FROM users WHERE id = $1 AND LOWER(email) = $2 LIMIT 1`,
+    [userId, email]
   )
-
-  if (result.rows.length === 0 && email && email.includes('@')) {
-    const newId = userId || `u-${Date.now()}`
-    const defaultName = email.split('@')[0]
-    const isAdmin = email === 'pj0040280@gmail.com'
-    await pool.query(
-      `INSERT INTO users (id, name, email, role, plan, is_developer, api_unlimited_tokens, last_active, conversation_count)
-       VALUES ($1, $2, $3, $4, $5, TRUE, TRUE, 'Active Now', 0)
-       ON CONFLICT (email) DO UPDATE SET is_developer = TRUE`,
-      [newId, defaultName, email, isAdmin ? 'admin' : 'user', isAdmin ? 'premium' : 'free']
-    )
-    result = await pool.query(
-      `SELECT id, email, is_developer, role FROM users WHERE LOWER(email) = $1 LIMIT 1`,
-      [email]
-    )
-  }
 
   if (result.rows.length === 0) {
     return {
       ok: false,
-      response: apiError('User account not found.', 404, 'user_not_found'),
+      response: apiError('Unauthorized session: account ID and email do not match.', 403, 'unauthorized_session'),
     }
   }
 
