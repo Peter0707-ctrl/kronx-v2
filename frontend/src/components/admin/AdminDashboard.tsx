@@ -87,7 +87,7 @@ export default function AdminDashboard() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: user?.email || 'pj0040280@gmail.com',
+          email: user?.email || '',
           password: adminPasswordInput.trim(),
         }),
       })

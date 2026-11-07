@@ -243,7 +243,7 @@ export default function Sidebar() {
 
       {/* Bottom Profile Account, Settings & Admin Console */}
       <div style={{ padding: '16px', borderTop: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        {(user?.role === 'admin' || user?.email === 'pj0040280@gmail.com') && (
+        {user?.role === 'admin' && (
           <button
             onClick={() => setActiveView('admin')}
             title="AI Admin Dashboard"
