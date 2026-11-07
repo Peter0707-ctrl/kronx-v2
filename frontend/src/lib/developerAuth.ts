@@ -234,38 +234,7 @@ export async function authenticateApiKey(req: NextRequest): Promise<
     [apiKey]
   )
 
-  let row = result.rows[0]
-
-  // Legacy fallback: keys stored on users.api_key before multi-key table
-  if (!row) {
-    const legacy = await pool.query(
-      `SELECT
-         u.id AS user_id, u.email AS user_email, u.name AS user_name,
-         u.is_developer, u.role, u.api_key, u.callback_url
-       FROM users u
-       WHERE u.api_key = $1
-       LIMIT 1`,
-      [apiKey]
-    )
-    if (legacy.rows.length > 0) {
-      const u = legacy.rows[0]
-      row = {
-        id: `legacy-${u.user_id}`,
-        user_id: u.user_id,
-        project_name: 'Default Project',
-        key_prefix: String(u.api_key).slice(0, 12),
-        api_key: u.api_key,
-        callback_url: u.callback_url,
-        is_active: true,
-        last_used_at: null,
-        created_at: null,
-        user_email: u.user_email,
-        user_name: u.user_name,
-        is_developer: u.is_developer,
-        role: u.role,
-      }
-    }
-  }
+  const row = result.rows[0]
 
   if (!row || !constantTimeKeyEquals(apiKey, String(row.api_key || ''))) {
     return {

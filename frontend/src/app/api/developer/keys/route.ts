@@ -132,12 +132,14 @@ export async function DELETE(req: NextRequest) {
     }
 
     const owned = await pool.query(
-      `SELECT id FROM api_keys WHERE id = $1 AND user_id = $2 LIMIT 1`,
+      `SELECT id, api_key FROM api_keys WHERE id = $1 AND user_id = $2 LIMIT 1`,
       [id, auth.userId]
     )
     if (owned.rows.length === 0) {
       return apiError('API key not found.', 404, 'key_not_found')
     }
+
+    const revokedKeyVal = owned.rows[0].api_key
 
     if (hardDelete) {
       await pool.query(`DELETE FROM api_keys WHERE id = $1 AND user_id = $2`, [id, auth.userId])
@@ -147,6 +149,13 @@ export async function DELETE(req: NextRequest) {
         [id, auth.userId]
       )
     }
+
+    await pool
+      .query(`UPDATE users SET api_key = NULL WHERE id = $1 AND api_key = $2`, [
+        auth.userId,
+        revokedKeyVal,
+      ])
+      .catch(() => {})
 
     return NextResponse.json({ success: true, revoked: id })
   } catch (e: any) {
