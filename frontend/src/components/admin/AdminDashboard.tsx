@@ -22,7 +22,7 @@ const REAL_USERS: (AdminUserRecord & { plan: UserPlan })[] = [
 ]
 
 export default function AdminDashboard() {
-  const { language, setActiveView, user, setAdminKey, updateUserRole, upgradeSubscription, systemDisabled, toggleSystemKillSwitch } = useKronxStore()
+  const { language, setActiveView, user, setUser, setAdminKey, updateUserRole, upgradeSubscription, systemDisabled, toggleSystemKillSwitch } = useKronxStore()
   const [telemetry, setTelemetry] = useState<SystemTelemetry | null>(null)
   const [usersList, setUsersList] = useState<(AdminUserRecord & { plan: UserPlan })[]>([])
   const [userSearchQuery, setUserSearchQuery] = useState('')
@@ -45,8 +45,13 @@ export default function AdminDashboard() {
   const loadUsers = async (keyOverride?: string) => {
     setIsLoadingUsers(true)
     const effectiveKey = keyOverride || user?.adminKey || ''
+    if (!effectiveKey) {
+      setAuthRequired(true)
+      setIsLoadingUsers(false)
+      return
+    }
     try {
-      const res = await fetch('/api/users', {
+      const res = await fetch('/api/users?scope=admin_directory', {
         headers: {
           'x-admin-key': effectiveKey,
           'x-user-email': user?.email || '',
@@ -89,6 +94,9 @@ export default function AdminDashboard() {
       const data = await res.json()
       if (res.ok && data.success && data.user?.adminKey) {
         setAdminKey(data.user.adminKey)
+        if (setUser && data.user) {
+          setUser({ ...user, ...data.user, adminKey: data.user.adminKey })
+        }
         setAdminPasswordInput('')
         setAuthRequired(false)
         showToast(sw ? 'Uthibitisho umekamilika! Orodha ya watumiaji imefunguliwa.' : 'Verification successful! User list unlocked.')
@@ -665,6 +673,57 @@ export default function AdminDashboard() {
                 >
                   Inspect Live Pipeline
                 </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Autonomous Engine & Self-Defense Sentinel Card */}
+          <div className="admin-card" style={{ background: '#0f172a', color: '#ffffff', borderRadius: '18px', border: '1px solid #0284c7', padding: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+              <div>
+                <div style={{ fontSize: '11.5px', fontWeight: '800', color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+                  AUTONOMOUS AGENTIC INTELLIGENCE & SENTINEL
+                </div>
+                <h3 style={{ fontSize: '18px', fontWeight: '800', margin: '4px 0 0 0', color: '#ffffff' }}>
+                  Copetra Autonomous Brain & Active Self-Defense
+                </h3>
+              </div>
+              <span style={{ background: '#10b981', color: '#ffffff', padding: '4px 12px', borderRadius: '8px', fontSize: '11.5px', fontWeight: '800' }}>
+                Operational & Defending
+              </span>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
+              <div style={{ background: '#1e293b', padding: '14px', borderRadius: '12px', border: '1px solid #334155' }}>
+                <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: '600' }}>Tasks Executed</div>
+                <div style={{ fontSize: '22px', fontWeight: '900', color: '#38bdf8', marginTop: '4px' }}>
+                  {(telemetry as any)?.autonomous_metrics?.tasks_executed ?? 0}
+                </div>
+                <div style={{ fontSize: '11.5px', color: '#64748b' }}>Multi-step agent runs</div>
+              </div>
+
+              <div style={{ background: '#1e293b', padding: '14px', borderRadius: '12px', border: '1px solid #334155' }}>
+                <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: '600' }}>Synthesized Skills</div>
+                <div style={{ fontSize: '22px', fontWeight: '900', color: '#10b981', marginTop: '4px' }}>
+                  {(telemetry as any)?.autonomous_metrics?.learned_skills ?? 0}
+                </div>
+                <div style={{ fontSize: '11.5px', color: '#64748b' }}>Self-learned procedures</div>
+              </div>
+
+              <div style={{ background: '#1e293b', padding: '14px', borderRadius: '12px', border: '1px solid #334155' }}>
+                <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: '600' }}>Neutralized Threats</div>
+                <div style={{ fontSize: '22px', fontWeight: '900', color: '#f43f5e', marginTop: '4px' }}>
+                  {(telemetry as any)?.autonomous_metrics?.threats_quarantined ?? 0}
+                </div>
+                <div style={{ fontSize: '11.5px', color: '#64748b' }}>Auto-quarantined threats</div>
+              </div>
+
+              <div style={{ background: '#1e293b', padding: '14px', borderRadius: '12px', border: '1px solid #334155' }}>
+                <div style={{ fontSize: '12px', color: '#94a3b8', fontWeight: '600' }}>DB Introspector</div>
+                <div style={{ fontSize: '16px', fontWeight: '800', color: '#e2e8f0', marginTop: '6px' }}>
+                  Read-Only Sandbox
+                </div>
+                <div style={{ fontSize: '11.5px', color: '#64748b' }}>Secrets blacklisted</div>
               </div>
             </div>
           </div>

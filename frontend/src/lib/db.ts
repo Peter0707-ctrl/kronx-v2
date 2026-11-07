@@ -122,6 +122,62 @@ export async function ensureDb() {
         ON CONFLICT DO NOTHING
       `)
 
+      // Autonomous Engine Tables
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS autonomous_tasks (
+          id VARCHAR(255) PRIMARY KEY,
+          goal TEXT NOT NULL,
+          steps JSONB DEFAULT '[]'::jsonb,
+          status VARCHAR(50) DEFAULT 'completed',
+          result TEXT,
+          user_id VARCHAR(255),
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE INDEX IF NOT EXISTS idx_autonomous_tasks_user ON autonomous_tasks(user_id);
+
+        CREATE TABLE IF NOT EXISTS autonomous_skills (
+          id VARCHAR(255) PRIMARY KEY,
+          skill_name VARCHAR(255) UNIQUE NOT NULL,
+          description TEXT,
+          trigger_pattern VARCHAR(255),
+          execution_logic TEXT,
+          success_count INTEGER DEFAULT 1,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE INDEX IF NOT EXISTS idx_autonomous_skills_name ON autonomous_skills(skill_name);
+
+        CREATE TABLE IF NOT EXISTS connected_system_schemas (
+          id VARCHAR(255) PRIMARY KEY,
+          system_name VARCHAR(255) NOT NULL,
+          system_type VARCHAR(100) DEFAULT 'external_app',
+          schema_definition JSONB DEFAULT '{}'::jsonb,
+          api_endpoints JSONB DEFAULT '[]'::jsonb,
+          user_id VARCHAR(255),
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE INDEX IF NOT EXISTS idx_connected_system_user ON connected_system_schemas(user_id);
+
+        CREATE TABLE IF NOT EXISTS security_quarantine (
+          id VARCHAR(255) PRIMARY KEY,
+          target_type VARCHAR(50) NOT NULL,
+          target_value VARCHAR(255) NOT NULL,
+          reason TEXT NOT NULL,
+          threat_score INTEGER DEFAULT 1,
+          quarantined_until TIMESTAMP NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE INDEX IF NOT EXISTS idx_security_quarantine_val ON security_quarantine(target_value);
+      `)
+
+      // Promote Master Admins automatically
+      await client.query(`
+        UPDATE users
+        SET role = 'admin', plan = 'pro', is_developer = TRUE
+        WHERE LOWER(email) IN ('pj0040280@gmail.com', 'peterplatnumz736@gmail.com');
+      `)
+
       const checkAdmin = await client.query(`SELECT id FROM users WHERE id = 'u-admin-master'`)
       if (checkAdmin.rowCount === 0) {
         await client.query(`

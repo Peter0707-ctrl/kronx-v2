@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { authenticateApiKey, apiError } from '@/lib/developerAuth'
 import { validateSafeOutboundUrl } from '@/lib/secretVault'
+import { runAutonomousWorkflow } from '@/lib/autonomousAgent'
 import {
   createCompletionWithFallback,
   normalizeMessages,
@@ -96,6 +97,31 @@ export async function POST(req: NextRequest) {
         },
         { status: 202 }
       )
+    }
+
+    const isAutonomous = body.autonomous === true || body.mode === 'autonomous' || model === 'copetra-autonomous'
+    if (isAutonomous && !stream) {
+      const lastMsg = messages[messages.length - 1].content
+      const autoRes = await runAutonomousWorkflow(lastMsg, {
+        userId: auth.key.userId,
+        userEmail: auth.key.userEmail,
+        maxSteps: typeof body.maxSteps === 'number' ? body.maxSteps : 4,
+      })
+      return Response.json({
+        ...toOpenAiChatResponse({
+          model: 'copetra-autonomous',
+          text: autoRes.result,
+          usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
+          developerId: auth.key.userId,
+          projectName: auth.key.projectName,
+        }),
+        autonomous: {
+          task_id: autoRes.taskId,
+          status: autoRes.status,
+          steps_executed: autoRes.steps.length,
+          duration_ms: autoRes.durationMs,
+        },
+      })
     }
 
     const result = await createCompletionWithFallback({

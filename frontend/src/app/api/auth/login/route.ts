@@ -4,7 +4,7 @@ import { ensureDb, pool } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
-const MASTER_ADMIN_EMAIL = 'pj0040280@gmail.com'
+const MASTER_ADMIN_EMAILS = new Set(['pj0040280@gmail.com', 'peterplatnumz736@gmail.com'])
 const MASTER_ADMIN_PASS_HASH = 'e86f78a8a3caf0b60d8e74e5942aa6d86dc150cd3c03338aef25b7d2d7e3acc7'
 
 function maskApiKey(rawKey: unknown): string | null {
@@ -53,17 +53,17 @@ export async function POST(req: NextRequest) {
     const inputHash = createHash('sha256').update(password).digest('hex')
 
     // 1. Check Master Admin
-    if (rawEmail === MASTER_ADMIN_EMAIL && inputHash === MASTER_ADMIN_PASS_HASH) {
+    if (MASTER_ADMIN_EMAILS.has(rawEmail) && inputHash === MASTER_ADMIN_PASS_HASH) {
       const adminRes = await pool.query(
         `SELECT * FROM users WHERE LOWER(email) = $1 LIMIT 1`,
-        [MASTER_ADMIN_EMAIL]
+        [rawEmail]
       )
       const adminRow = adminRes.rows[0] || {
-        id: 'u-admin-master',
-        name: 'Admin at pjcopetranovax',
-        email: MASTER_ADMIN_EMAIL,
+        id: rawEmail === 'pj0040280@gmail.com' ? 'u-admin-master' : 'u-admin-peter',
+        name: rawEmail === 'pj0040280@gmail.com' ? 'Admin at pjcopetranovax' : 'Peter Admin',
+        email: rawEmail,
         role: 'admin',
-        plan: 'premium',
+        plan: 'pro',
         is_developer: true,
       }
       return NextResponse.json({
@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
         user: {
           ...mapUser(adminRow),
           role: 'admin',
-          plan: 'premium',
+          plan: 'pro',
           isDeveloper: true,
           adminKey: inputHash,
         },

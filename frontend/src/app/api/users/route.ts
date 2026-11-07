@@ -42,6 +42,7 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    const scope = req.nextUrl.searchParams.get('scope')
     const emailParam = (
       req.nextUrl.searchParams.get('email') ||
       req.headers.get('x-user-email') ||
@@ -50,7 +51,14 @@ export async function GET(req: NextRequest) {
       .toLowerCase()
       .trim()
 
-    if (!isAdminRequest && (!emailParam || !emailParam.includes('@'))) {
+    if (scope === 'admin_directory') {
+      if (!isAdminRequest) {
+        return NextResponse.json(
+          { error: 'Forbidden: Master Admin authorization required to view user directory.' },
+          { status: 403 }
+        )
+      }
+    } else if (!isAdminRequest && (!emailParam || !emailParam.includes('@'))) {
       return NextResponse.json(
         { error: 'Forbidden: Valid administrator authorization or user session required.' },
         { status: 403 }

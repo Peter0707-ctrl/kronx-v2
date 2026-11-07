@@ -264,9 +264,9 @@ export async function authenticateApiKey(req: NextRequest): Promise<
   }
 }
 
-const KEY_RATE_BUCKETS = new Map<string, { count: number; resetAt: number }>()
+export const KEY_RATE_BUCKETS = new Map<string, { count: number; resetAt: number }>()
 
-function checkPerKeyRateLimit(apiKey: string, maxPerMinute = 30): boolean {
+export function checkPerKeyRateLimit(apiKey: string, maxPerMinute = 30): boolean {
   const now = Date.now()
   const digest = createHash('sha256').update(apiKey).digest('hex').slice(0, 24)
   const bucket = KEY_RATE_BUCKETS.get(digest)
