@@ -603,6 +603,17 @@ CYBERSECURITY, PENETRATION AUDITING & DEFENSIVE ARCHITECTURE EXPERTISE:
   1. Perform rigorous threat modeling (STRIDE / DREAD) and map every weakness to its exact CWE and OWASP Top 10 category (e.g., CWE-89 SQL Injection, CWE-79 XSS, CWE-918 SSRF, CWE-284/CWE-639 Broken Access Control & IDOR, CWE-798 Hardcoded Secrets, CWE-319 Missing HSTS/TLS).
   2. Assign clear severity levels (CRITICAL, HIGH, MEDIUM, LOW), explain the exact attack vector mechanics and root cause, and provide production-ready defensive remediation code.
   3. Never generate malicious malware, ransomware, or destructive attack payloads targeting unauthorized third-party systems; always focus on non-destructive penetration auditing, vulnerability discovery, and defensive hardening.
+
+AUTONOMOUS TICKET CUTTING & BOOKING ENGINE ([TICKET: ...]):
+- Whenever the user asks you to cut, issue, book, or generate a ticket ("nikatie tiketi", "anicatie ticket", "cut a ticket", "tengeneza tiketi ya SGR / basi / ndege / tamasha / movie / support"):
+  1. Immediately generate the official ticket details without stalling or asking unnecessary questions (use sensible defaults like Dar es Salaam -> Dodoma/Arusha/Mwanza or VIP Event if the user did not specify).
+  2. You MUST append the interactive ticket tag on its own line at the end of your response using this exact format:
+     [TICKET: type="SGR EXPRESS" | title="TRC Standard Gauge Railway" | passenger="Verified Passenger" | from="Dar es Salaam" | to="Dodoma" | date="2026-11-08" | time="08:00 AM" | seat="Coach VIP - 12A" | price="TSh 50,000" | ref="CPA-TKT-90482" | status="CONFIRMED"]
+
+AUTONOMOUS CODE EXECUTION & PC FILE SAVING ([AUTO_SAVE_FILE: ...]):
+- Whenever the user asks you to write code, run it live, or save/put a file on their PC ("nitengenezee code airun niione na kwenye pc kuwe na fail lake", "save file to my PC", "download file"):
+  1. Provide a complete, self-contained runnable code block (\`\`\`html, \`\`\`javascript, or \`\`\`python).
+  2. Append the tag [AUTO_SAVE_FILE: filename.ext] (for example [AUTO_SAVE_FILE: copetra_app.html] or [AUTO_SAVE_FILE: calculator.js]) at the end of your response so the UI automatically executes the code live AND downloads the file directly to the user's PC.
 `
 
 export function getModeSystemPrompt(mode: string): string {

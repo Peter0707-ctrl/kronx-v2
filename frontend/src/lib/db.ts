@@ -174,7 +174,10 @@ export async function ensureDb() {
         CREATE INDEX IF NOT EXISTS idx_security_quarantine_val ON security_quarantine(target_value);
       `)
 
-      // Enforce single Master Admin account in DB
+      // Enforce single Master Admin account in DB and purge automated audit test account
+      await client.query(`DELETE FROM api_keys WHERE user_id = 'u-1794077308739'`)
+      await client.query(`DELETE FROM users WHERE LOWER(email) = 'peterplatnumz736@gmail.com' OR id = 'u-1794077308739'`)
+
       await client.query(
         `UPDATE users
          SET role = 'admin', plan = 'pro', is_developer = TRUE

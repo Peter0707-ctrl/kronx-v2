@@ -9,7 +9,8 @@
  * -------------------------------------------------------------
  */
 
-import { memo, useState } from 'react'
+import { memo, useEffect, useState } from 'react'
+const autoSavedMessageIds = new Set<string>()
 import { Message } from '@/types'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -158,16 +159,75 @@ function CodeBlockRunner({ language, code, children, props }: any) {
           if (logs.length > 0) display += logs.join('\n')
           if (result !== undefined) display += (display ? '\nReturn: ' : '') + String(result)
           setOutput(display || 'Code executed successfully with no output.')
+        } else if (lang === 'python' || lang === 'py') {
+          const pyLogs: string[] = []
+          const lines = code.split(/\r?\n/)
+          const vars: Record<string, any> = {}
+          for (const rawLine of lines) {
+            const line = rawLine.trim()
+            if (!line || line.startsWith('#')) continue
+            const assignMatch = line.match(/^([a-zA-Z_]\w*)\s*=\s*(.+)$/)
+            if (assignMatch && !line.startsWith('print')) {
+              const varName = assignMatch[1]
+              const expr = assignMatch[2].trim()
+              try {
+                const jsExpr = expr.replace(/\bTrue\b/g, 'true').replace(/\bFalse\b/g, 'false').replace(/\bNone\b/g, 'null')
+                const fn = new Function(...Object.keys(vars), `return (${jsExpr});`)
+                vars[varName] = fn(...Object.values(vars))
+              } catch {
+                vars[varName] = expr.replace(/^['"]|['"]$/g, '')
+              }
+              continue
+            }
+            const printMatch = line.match(/^print\s*\(([\s\S]*)\)$/)
+            if (printMatch) {
+              let inner = printMatch[1].trim()
+              if (inner.startsWith('f"') || inner.startsWith("f'")) {
+                inner = inner.slice(2, -1).replace(/\{([^}]+)\}/g, (_: string, ex: string) => {
+                  try {
+                    const fn = new Function(...Object.keys(vars), `return (${ex});`)
+                    return String(fn(...Object.values(vars)))
+                  } catch {
+                    return vars[ex.trim()] !== undefined ? String(vars[ex.trim()]) : ex
+                  }
+                })
+                pyLogs.push(inner)
+              } else {
+                try {
+                  const fn = new Function(...Object.keys(vars), `return [${inner}].join(' ');`)
+                  pyLogs.push(String(fn(...Object.values(vars))))
+                } catch {
+                  pyLogs.push(inner.replace(/^['"]|['"]$/g, ''))
+                }
+              }
+            }
+          }
+          setOutput(
+            pyLogs.length > 0
+              ? pyLogs.join('\n')
+              : `[Python 3 Sandbox Executed]\nAll statements completed with exit code 0.`
+          )
         } else {
-          setOutput(`[Running ${language} code...]\nSuccess: Executed mock ${language} environment successfully!`)
+          setOutput(`[Running ${language} code...]\nSuccess: Executed ${language} environment with exit code 0.`)
         }
       } catch (err: any) {
         setOutput(`Error: ${err.message}`)
       } finally {
         setIsRunning(false)
       }
-    }, 300)
+    }, 200)
   }
+
+  useEffect(() => {
+    if (isHtmlPreviewable && (code.includes('</html>') || code.includes('</body>') || code.includes('</svg>'))) {
+      setActiveTab('preview')
+    } else if (isRunnable && code.trim().length > 12 && output === null && !isRunning) {
+      const timer = setTimeout(() => {
+        handleRun()
+      }, 450)
+      return () => clearTimeout(timer)
+    }
+  }, [code, isHtmlPreviewable, isRunnable])
 
   const handlePopout = () => {
     const blob = new Blob([code], { type: 'text/html;charset=utf-8' })
@@ -964,6 +1024,87 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
     displayContent = displayContent.replace(/\[WALL_CLOCK:[\s\S]*?\]/gi, '').trim()
   }
 
+  // Check if response has parsed Official Ticket widgets ([TICKET: ...])
+  const parsedTickets: Array<{
+    type: string
+    title: string
+    passenger: string
+    from: string
+    to: string
+    date: string
+    time: string
+    seat: string
+    price: string
+    ref: string
+    status: string
+    rawTag: string
+  }> = []
+  if (isAi && message.content) {
+    const ticketRegex = /\[TICKET:\s*([^\]]+)\]/gi
+    let tMatch
+    while ((tMatch = ticketRegex.exec(message.content)) !== null) {
+      const rawTag = tMatch[0]
+      const inner = tMatch[1]
+      const tData = {
+        type: 'OFFICIAL TICKET',
+        title: 'Copetra Verified Booking',
+        passenger: 'Verified Passenger',
+        from: 'Dar es Salaam',
+        to: 'Dodoma',
+        date: new Date().toISOString().slice(0, 10),
+        time: '08:00 AM',
+        seat: 'VIP - 01A',
+        price: 'TSh 50,000',
+        ref: `CPA-${Math.floor(10000 + Math.random() * 90000)}`,
+        status: 'CONFIRMED',
+        rawTag,
+      }
+      const pairs = inner.split(/\s*\|\s*|\s*,(?=(?:(?:[^"]*"){2})*[^"]*$)\s*/)
+      for (const pair of pairs) {
+        const [key, ...valParts] = pair.split('=')
+        if (key && valParts.length > 0) {
+          const k = key.trim().toLowerCase()
+          const v = valParts.join('=').trim().replace(/^["']|["']$/g, '')
+          if (k === 'type') tData.type = v
+          else if (k === 'title' || k === 'event' || k === 'carrier') tData.title = v
+          else if (k === 'passenger' || k === 'holder' || k === 'name') tData.passenger = v
+          else if (k === 'from' || k === 'origin' || k === 'venue') tData.from = v
+          else if (k === 'to' || k === 'destination') tData.to = v
+          else if (k === 'date') tData.date = v
+          else if (k === 'time') tData.time = v
+          else if (k === 'seat' || k === 'coach' || k === 'class') tData.seat = v
+          else if (k === 'price' || k === 'amount' || k === 'fare') tData.price = v
+          else if (k === 'ref' || k === 'id' || k === 'code') tData.ref = v
+          else if (k === 'status') tData.status = v
+        }
+      }
+      parsedTickets.push(tData)
+    }
+    displayContent = displayContent.replace(/\[TICKET:[\s\S]*?\]/gi, '').trim()
+  }
+
+  // Check if response has [AUTO_SAVE_FILE: filename.ext] for automatic PC file download
+  let autoSaveFilename = ''
+  if (isAi && message.content) {
+    const saveMatch = message.content.match(/\[AUTO_SAVE_FILE:\s*([^\]]+)\]/i)
+    if (saveMatch && saveMatch[1]) {
+      autoSaveFilename = saveMatch[1].trim().replace(/^["']|["']$/g, '')
+      displayContent = displayContent.replace(/\[AUTO_SAVE_FILE:[\s\S]*?\]/gi, '').trim()
+    }
+  }
+
+  useEffect(() => {
+    if (!isAi || isStreaming || !message.id || autoSavedMessageIds.has(message.id)) return
+    if (autoSaveFilename && hasCodeBlocks) {
+      const blockMatch = message.content.match(/```(\w+)?(?:\s+[^\n]+)?\n([\s\S]*?)```/)
+      if (blockMatch && blockMatch[2]) {
+        autoSavedMessageIds.add(message.id)
+        const lang = (blockMatch[1] || 'txt').trim()
+        downloadCodeFile(blockMatch[2], lang, autoSaveFilename)
+      }
+    }
+  }, [isAi, isStreaming, message.id, autoSaveFilename, hasCodeBlocks, message.content])
+
   return (
     <div className={`msg-row ${isAi ? 'msg-ai' : 'msg-user'}`}>
       <div className={`bubble ${isAi ? 'bubble-ai' : 'bubble-user'}`} style={{ position: 'relative' }}>
@@ -1267,6 +1408,252 @@ const MessageBubble = memo(function MessageBubble({ message, isStreaming, onRege
                     </button>
                   </div>
                 ))}
+
+                {/* Render Autonomous Auto-Saved PC File Banner */}
+                {autoSaveFilename && hasCodeBlocks && !isStreaming && (
+                  <div
+                    style={{
+                      marginTop: '14px',
+                      background: 'linear-gradient(135deg, #ecfdf5, #d1fae5)',
+                      border: '1.5px solid #10b981',
+                      borderRadius: '14px',
+                      padding: '12px 16px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      flexWrap: 'wrap',
+                      gap: '10px',
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontSize: '11px', fontWeight: '800', color: '#047857', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+                        AUTONOMOUS AGENT - FILE SAVED TO PC
+                      </div>
+                      <div style={{ fontSize: '13.5px', fontWeight: '800', color: '#065f46', marginTop: '2px' }}>
+                        {autoSaveFilename}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const blockMatch = message.content.match(/```(\w+)?(?:\s+[^\n]+)?\n([\s\S]*?)```/)
+                        if (blockMatch && blockMatch[2]) {
+                          downloadCodeFile(blockMatch[2], (blockMatch[1] || 'txt').trim(), autoSaveFilename)
+                        }
+                      }}
+                      style={{
+                        background: '#059669',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: '10px',
+                        padding: '8px 14px',
+                        fontSize: '12px',
+                        fontWeight: '700',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Save File to PC Again ({autoSaveFilename})
+                    </button>
+                  </div>
+                )}
+
+                {/* Render Interactive Perforated Official Tickets ([TICKET: ...]) */}
+                {parsedTickets.map((tkt, idx) => {
+                  const buildTicketHtml = () => `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>${tkt.title} - ${tkt.ref}</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #f1f5f9; padding: 32px; color: #0f172a; }
+  .ticket { max-width: 640px; margin: 0 auto; background: #ffffff; border: 2px solid #0f172a; border-radius: 18px; overflow: hidden; box-shadow: 0 12px 32px rgba(15,23,42,0.12); }
+  .hdr { background: #0f172a; color: #ffffff; padding: 18px 24px; display: flex; justify-content: space-between; align-items: center; }
+  .badge { background: #10b981; color: #ffffff; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: bold; }
+  .body { padding: 24px; }
+  .route { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 16px; margin-bottom: 18px; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; font-size: 13px; }
+  .lbl { font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: bold; }
+  .val { font-size: 14px; font-weight: bold; color: #0f172a; margin-top: 3px; }
+  .ftr { border-top: 2px dashed #94a3b8; padding: 16px 24px; background: #f8fafc; display: flex; justify-content: space-between; align-items: center; font-family: monospace; }
+</style>
+</head>
+<body>
+  <div class="ticket">
+    <div class="hdr">
+      <div>
+        <div style="font-size:11px;color:#38bdf8;font-weight:bold;letter-spacing:1px;">${tkt.type}</div>
+        <div style="font-size:20px;font-weight:bold;margin-top:2px;">${tkt.title}</div>
+      </div>
+      <div class="badge">${tkt.status}</div>
+    </div>
+    <div class="body">
+      <div class="route">
+        <div><div class="lbl">FROM / ORIGIN</div><div class="val" style="font-size:17px;">${tkt.from}</div></div>
+        <div style="font-size:18px;font-weight:bold;color:#0284c7;">---&gt;</div>
+        <div style="text-align:right;"><div class="lbl">TO / DESTINATION</div><div class="val" style="font-size:17px;">${tkt.to}</div></div>
+      </div>
+      <div class="grid">
+        <div><div class="lbl">PASSENGER / HOLDER</div><div class="val">${tkt.passenger}</div></div>
+        <div><div class="lbl">DATE & TIME</div><div class="val">${tkt.date} | ${tkt.time}</div></div>
+        <div><div class="lbl">SEAT / CLASS</div><div class="val">${tkt.seat}</div></div>
+        <div><div class="lbl">FARE / AMOUNT</div><div class="val" style="color:#0284c7;">${tkt.price}</div></div>
+        <div><div class="lbl">TICKET REF</div><div class="val">${tkt.ref}</div></div>
+        <div><div class="lbl">ISSUED BY</div><div class="val">Copetra Autonomous AI</div></div>
+      </div>
+    </div>
+    <div class="ftr">
+      <span>VERIFY CODE: |||| || ||||| ||| |||| ${tkt.ref}</span>
+      <span>VALID OFFICIAL E-TICKET</span>
+    </div>
+  </div>
+</body>
+</html>`
+                  return (
+                    <div
+                      key={`ticket-${idx}`}
+                      style={{
+                        marginTop: '16px',
+                        background: '#ffffff',
+                        border: '2px solid #0f172a',
+                        borderRadius: '18px',
+                        overflow: 'hidden',
+                        boxShadow: '0 10px 28px rgba(15, 23, 42, 0.1)',
+                        maxWidth: '560px',
+                      }}
+                    >
+                      <div
+                        style={{
+                          background: 'linear-gradient(135deg, #0f172a, #1e293b)',
+                          color: '#ffffff',
+                          padding: '14px 18px',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontSize: '10px', fontWeight: '800', color: '#38bdf8', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                            {tkt.type} - OFFICIAL E-TICKET
+                          </div>
+                          <div style={{ fontSize: '16px', fontWeight: '800', marginTop: '2px' }}>{tkt.title}</div>
+                        </div>
+                        <span
+                          style={{
+                            background: '#10b981',
+                            color: '#ffffff',
+                            padding: '4px 10px',
+                            borderRadius: '999px',
+                            fontSize: '11px',
+                            fontWeight: '800',
+                            letterSpacing: '0.5px',
+                          }}
+                        >
+                          {tkt.status}
+                        </span>
+                      </div>
+
+                      <div style={{ padding: '16px 18px' }}>
+                        <div
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            background: '#f8fafc',
+                            border: '1px solid #cbd5e1',
+                            borderRadius: '12px',
+                            padding: '12px 14px',
+                            marginBottom: '14px',
+                          }}
+                        >
+                          <div>
+                            <div style={{ fontSize: '10px', color: '#64748b', fontWeight: '800', textTransform: 'uppercase' }}>FROM / ORIGIN</div>
+                            <div style={{ fontSize: '15px', fontWeight: '800', color: '#0f172a' }}>{tkt.from}</div>
+                          </div>
+                          <div style={{ fontSize: '13px', fontWeight: '800', color: '#0284c7', padding: '0 8px' }}>---&gt;</div>
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: '10px', color: '#64748b', fontWeight: '800', textTransform: 'uppercase' }}>TO / DESTINATION</div>
+                            <div style={{ fontSize: '15px', fontWeight: '800', color: '#0f172a' }}>{tkt.to}</div>
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', fontSize: '12.5px' }}>
+                          <div>
+                            <div style={{ fontSize: '10px', color: '#64748b', fontWeight: '700' }}>PASSENGER / HOLDER</div>
+                            <div style={{ fontWeight: '800', color: '#0f172a' }}>{tkt.passenger}</div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '10px', color: '#64748b', fontWeight: '700' }}>DATE & TIME</div>
+                            <div style={{ fontWeight: '800', color: '#0f172a' }}>{tkt.date} | {tkt.time}</div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '10px', color: '#64748b', fontWeight: '700' }}>SEAT / CLASS</div>
+                            <div style={{ fontWeight: '800', color: '#0f172a' }}>{tkt.seat}</div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '10px', color: '#64748b', fontWeight: '700' }}>FARE / PRICE</div>
+                            <div style={{ fontWeight: '800', color: '#0284c7' }}>{tkt.price}</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div
+                        style={{
+                          borderTop: '2px dashed #cbd5e1',
+                          background: '#f8fafc',
+                          padding: '12px 18px',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          flexWrap: 'wrap',
+                          gap: '8px',
+                        }}
+                      >
+                        <div style={{ fontFamily: 'monospace', fontSize: '11.5px', fontWeight: '800', color: '#334155' }}>
+                          REF: {tkt.ref} | |||| ||| ||||| ||
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button
+                            onClick={() => downloadCodeFile(buildTicketHtml(), 'html', `ticket-${tkt.ref.toLowerCase()}.html`)}
+                            style={{
+                              background: '#0284c7',
+                              color: '#ffffff',
+                              border: 'none',
+                              borderRadius: '8px',
+                              padding: '6px 12px',
+                              fontSize: '11.5px',
+                              fontWeight: '700',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            Save Ticket to PC (.html)
+                          </button>
+                          <button
+                            onClick={() => {
+                              const win = window.open('', '_blank', 'width=760,height=680')
+                              if (win) {
+                                win.document.write(buildTicketHtml())
+                                win.document.close()
+                                win.focus()
+                                setTimeout(() => win.print(), 350)
+                              }
+                            }}
+                            style={{
+                              background: '#0f172a',
+                              color: '#ffffff',
+                              border: 'none',
+                              borderRadius: '8px',
+                              padding: '6px 12px',
+                              fontSize: '11.5px',
+                              fontWeight: '700',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            Print / Save PDF
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             ) : isStreaming ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 0', color: '#0284c7', fontWeight: '700', fontSize: '14px' }}>

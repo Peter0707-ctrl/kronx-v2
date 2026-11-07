@@ -536,6 +536,122 @@ export default function InputBar({ onSend }: Props) {
         </div>
       )}
 
+      {/* Autonomous Agent Quick Action Bar */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          overflowX: 'auto',
+          paddingBottom: '8px',
+          scrollbarWidth: 'none',
+        }}
+      >
+        <span
+          style={{
+            background: '#0f172a',
+            color: '#38bdf8',
+            fontSize: '10px',
+            fontWeight: '800',
+            padding: '4px 9px',
+            borderRadius: '999px',
+            letterSpacing: '0.6px',
+            whiteSpace: 'nowrap',
+            border: '1px solid #1e293b',
+          }}
+        >
+          AUTONOMOUS AGENT
+        </span>
+        <button
+          type="button"
+          disabled={isStreaming}
+          onClick={() =>
+            onSend(
+              'Nitengenezee code ya Interactive Smart Calculator & Expense Tracker kwa HTML/CSS/JS, i-run live hapa niione ikifanya kazi, na kwenye PC yangu kuwe na faili lake [AUTO_SAVE_FILE: copetra_smart_calculator.html]'
+            )
+          }
+          style={{
+            background: '#f8fafc',
+            border: '1px solid #cbd5e1',
+            color: '#0f172a',
+            fontSize: '11px',
+            fontWeight: '700',
+            padding: '4px 10px',
+            borderRadius: '999px',
+            cursor: isStreaming ? 'not-allowed' : 'pointer',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          Code + Run + Save to PC
+        </button>
+        <button
+          type="button"
+          disabled={isStreaming}
+          onClick={() =>
+            onSend(
+              'Nikatie tiketi rasmi ya TRC SGR Royal Express kutoka Dar es Salaam kwenda Dodoma kesho saa 08:00 AM daraja la VIP na unipatie tiketi ya kupakua kwenye PC'
+            )
+          }
+          style={{
+            background: '#f8fafc',
+            border: '1px solid #cbd5e1',
+            color: '#0f172a',
+            fontSize: '11px',
+            fontWeight: '700',
+            padding: '4px 10px',
+            borderRadius: '999px',
+            cursor: isStreaming ? 'not-allowed' : 'pointer',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          Cut Official Ticket
+        </button>
+        <button
+          type="button"
+          disabled={isStreaming}
+          onClick={() =>
+            onSend(
+              '[AUTONOMOUS_ENGINE] Fanya Security Penetration Audit ya https://miraculous-forgiveness-production-10d4.up.railway.app na ukague hali ya ulinzi wa mfumo wetu.'
+            )
+          }
+          style={{
+            background: '#f8fafc',
+            border: '1px solid #cbd5e1',
+            color: '#0f172a',
+            fontSize: '11px',
+            fontWeight: '700',
+            padding: '4px 10px',
+            borderRadius: '999px',
+            cursor: isStreaming ? 'not-allowed' : 'pointer',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          Security Penetration Audit
+        </button>
+        <button
+          type="button"
+          disabled={isStreaming}
+          onClick={() =>
+            onSend(
+              '[AUTONOMOUS_ENGINE] Kagua database ya mfumo wetu kupitia INTROSPECT_SCHEMA na SAFE_SQL uniambie kuna watumiaji wangapi na majedwali yote yaliyopo.'
+            )
+          }
+          style={{
+            background: '#f8fafc',
+            border: '1px solid #cbd5e1',
+            color: '#0f172a',
+            fontSize: '11px',
+            fontWeight: '700',
+            padding: '4px 10px',
+            borderRadius: '999px',
+            cursor: isStreaming ? 'not-allowed' : 'pointer',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          Database & System Audit
+        </button>
+      </div>
+
       <div
         style={{
           display: 'flex',
