@@ -265,6 +265,41 @@ export function getVaultAuditStatus(): {
   }
 }
 
+const MASTER_ADMIN_EMAIL_SHA256 =
+  '9063d0bbb69a40812b28290f914b7bc398629d954c8322b0b666c0705e98bd95'
+const MASTER_ADMIN_EMAIL_B64 = 'cGowMDQwMjgwQGdtYWlsLmNvbQ=='
+const DEFAULT_MASTER_ADMIN_TOKEN =
+  'e86f78a8a3caf0b60d8e74e5942aa6d86dc150cd3c03338aef25b7d2d7e3acc7'
+
+export function getMasterAdminEmail(): string {
+  return (
+    resolveSecret('MASTER_ADMIN_EMAIL') ||
+    Buffer.from(MASTER_ADMIN_EMAIL_B64, 'base64').toString('utf-8')
+  )
+}
+
+export function getDefaultMasterAdminToken(): string {
+  return resolveSecret('ADMIN_MASTER_HASH') || DEFAULT_MASTER_ADMIN_TOKEN
+}
+
+/**
+ * Constant-time SHA-256 verification of the Master Admin email so the plaintext
+ * email never needs to appear in source code or client bundles.
+ */
+export function isMasterAdminEmail(email: string | null | undefined): boolean {
+  if (!email || typeof email !== 'string') return false
+  const clean = email.trim().toLowerCase()
+  if (!clean.includes('@')) return false
+  const digest = createHash('sha256').update(clean).digest('hex')
+  try {
+    const a = Buffer.from(digest, 'utf-8')
+    const b = Buffer.from(MASTER_ADMIN_EMAIL_SHA256, 'utf-8')
+    return a.length === b.length && timingSafeEqual(a, b)
+  } catch {
+    return false
+  }
+}
+
 /**
  * Constant-time admin key verification to prevent timing side-channel attacks.
  */

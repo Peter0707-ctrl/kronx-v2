@@ -165,7 +165,7 @@ export default function TopBar() {
         </button>
 
         {/* Master AI Admin Console Access Icon Button */}
-        {(isAdmin || user?.email === 'pj0040280@gmail.com') && (
+        {isAdmin && (
           <button
             onClick={() => setActiveView('admin')}
             title="Master AI Admin Dashboard"

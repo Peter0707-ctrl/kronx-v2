@@ -105,7 +105,28 @@ export function resolveMaxTokens(requested: unknown, unlimited = true): number {
   return Math.min(Math.max(raw, 1), 4096)
 }
 
+import { createHash } from 'crypto'
 import { SYSTEM_PROMPT } from './copetraSystemPrompt'
+
+const RESPONSE_CACHE = new Map<
+  string,
+  { text: string; usage: Record<string, number>; expiresAt: number }
+>()
+const CACHE_TTL_MS = 15 * 60 * 1000
+const MAX_CACHE_ENTRIES = 250
+
+function computeCacheKey(messages: ChatMessage[], temperature: number): string {
+  const raw = JSON.stringify({ messages, temperature: Math.round(temperature * 10) / 10 })
+  return createHash('sha256').update(raw).digest('hex')
+}
+
+function storeCachedCompletion(key: string, text: string, usage: Record<string, number>) {
+  if (RESPONSE_CACHE.size >= MAX_CACHE_ENTRIES) {
+    const oldest = RESPONSE_CACHE.keys().next().value
+    if (oldest) RESPONSE_CACHE.delete(oldest)
+  }
+  RESPONSE_CACHE.set(key, { text, usage, expiresAt: Date.now() + CACHE_TTL_MS })
+}
 
 export async function createCompletion(opts: {
   messages: ChatMessage[]
@@ -163,6 +184,20 @@ export async function createCompletion(opts: {
   )
   const temperature = typeof opts.temperature === 'number' ? opts.temperature : 0.4
   const requestedTokens = resolveMaxTokens(opts.maxTokens, opts.unlimited !== false)
+
+  // Fast In-Memory Semantic Response Cache for non-streaming requests
+  const cacheKey = !wantStream ? computeCacheKey(opts.messages, temperature) : ''
+  if (!wantStream && cacheKey) {
+    const hit = RESPONSE_CACHE.get(cacheKey)
+    if (hit && Date.now() < hit.expiresAt) {
+      return {
+        ok: true,
+        stream: false,
+        text: hit.text,
+        usage: hit.usage,
+      }
+    }
+  }
   // gpt-oss spends completion tokens on reasoning first; tiny budgets return empty content.
   const maxTokens = Math.max(wantStream ? Math.min(requestedTokens, 2048) : requestedTokens, 1024)
   const models = groqModelsFor(opts.messages, maxTokens)
@@ -235,11 +270,13 @@ export async function createCompletion(opts: {
           const data = await res.json()
           const text = groqOutputText(data)
           if (text) {
+            const usage = data.usage || { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }
+            if (cacheKey) storeCachedCompletion(cacheKey, text, usage)
             return {
               ok: true,
               stream: false,
               text,
-              usage: data.usage || { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
+              usage,
             }
           }
 
@@ -291,11 +328,13 @@ export async function createCompletion(opts: {
               gData?.candidates?.[0]?.content?.parts?.[0]?.text || ''
             )
             if (gText) {
+              const usage = { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }
+              if (cacheKey) storeCachedCompletion(cacheKey, gText, usage)
               return {
                 ok: true,
                 stream: false,
                 text: gText,
-                usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
+                usage,
               }
             }
           }

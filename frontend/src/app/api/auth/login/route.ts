@@ -1,14 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createHash } from 'crypto'
 import { ensureDb, pool } from '@/lib/db'
+import { getDefaultMasterAdminToken, isMasterAdminEmail, verifyAdminAuthorization } from '@/lib/secretVault'
 
 export const dynamic = 'force-dynamic'
-
-const MASTER_ADMIN_EMAILS = new Set(['pj0040280@gmail.com', 'peterplatnumz736@gmail.com'])
-const MASTER_ADMIN_PASS_HASHES = new Set([
-  'e86f78a8a3caf0b60d8e74e5942aa6d86dc150cd3c03338aef25b7d2d7e3acc7',
-  'd9276c20fc69565f92a8003bcba81dd34d34a7f460fa594d713bb858b78dd6cd',
-])
 
 function maskApiKey(rawKey: unknown): string | null {
   if (typeof rawKey !== 'string' || !rawKey.trim()) return null
@@ -56,14 +51,14 @@ export async function POST(req: NextRequest) {
     const inputHash = createHash('sha256').update(password).digest('hex')
 
     // 1. Check Master Admin
-    if (MASTER_ADMIN_EMAILS.has(rawEmail) && MASTER_ADMIN_PASS_HASHES.has(inputHash)) {
+    if (isMasterAdminEmail(rawEmail) && verifyAdminAuthorization(inputHash)) {
       const adminRes = await pool.query(
         `SELECT * FROM users WHERE LOWER(email) = $1 LIMIT 1`,
         [rawEmail]
       )
       const adminRow = adminRes.rows[0] || {
-        id: rawEmail === 'pj0040280@gmail.com' ? 'u-admin-master' : 'u-admin-peter',
-        name: rawEmail === 'pj0040280@gmail.com' ? 'Admin at pjcopetranovax' : 'Peter Admin',
+        id: 'u-admin-master',
+        name: 'Admin at pjcopetranovax',
         email: rawEmail,
         role: 'admin',
         plan: 'pro',
@@ -76,7 +71,7 @@ export async function POST(req: NextRequest) {
           role: 'admin',
           plan: 'pro',
           isDeveloper: true,
-          adminKey: inputHash,
+          adminKey: getDefaultMasterAdminToken(),
         },
       })
     }

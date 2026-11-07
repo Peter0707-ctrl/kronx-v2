@@ -1,5 +1,5 @@
 import { Pool } from 'pg'
-import { resolveSecret } from './secretVault'
+import { getMasterAdminEmail, resolveSecret } from './secretVault'
 
 const connectionString = resolveSecret('DATABASE_URL') || process.env.DATABASE_URL || ''
 
@@ -7,8 +7,8 @@ export const pool = new Pool(
   connectionString
     ? {
         connectionString,
-        max: 10,
-        idleTimeoutMillis: 30000,
+        max: 20,
+        idleTimeoutMillis: 10000,
         connectionTimeoutMillis: 5000,
       }
     : undefined
@@ -58,8 +58,11 @@ export async function ensureDb() {
       await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_code VARCHAR(32)`)
       await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_code_expires TIMESTAMP NULL`)
 
+      const masterAdminEmail = getMasterAdminEmail()
+
       await client.query(
-        `UPDATE users SET password_hash = 'e86f78a8a3caf0b60d8e74e5942aa6d86dc150cd3c03338aef25b7d2d7e3acc7' WHERE email = 'pj0040280@gmail.com' AND (password_hash IS NULL OR password_hash = '')`
+        `UPDATE users SET password_hash = 'e86f78a8a3caf0b60d8e74e5942aa6d86dc150cd3c03338aef25b7d2d7e3acc7' WHERE LOWER(email) = LOWER($1) AND (password_hash IS NULL OR password_hash = '')`,
+        [masterAdminEmail]
       )
 
       await client.query(
@@ -171,29 +174,38 @@ export async function ensureDb() {
         CREATE INDEX IF NOT EXISTS idx_security_quarantine_val ON security_quarantine(target_value);
       `)
 
-      // Promote Master Admins automatically
-      await client.query(`
-        UPDATE users
-        SET role = 'admin', plan = 'pro', is_developer = TRUE
-        WHERE LOWER(email) IN ('pj0040280@gmail.com', 'peterplatnumz736@gmail.com');
-      `)
+      // Enforce single Master Admin account in DB
+      await client.query(
+        `UPDATE users
+         SET role = 'admin', plan = 'pro', is_developer = TRUE
+         WHERE LOWER(email) = LOWER($1)`,
+        [masterAdminEmail]
+      )
+      await client.query(
+        `UPDATE users
+         SET role = 'user'
+         WHERE LOWER(email) <> LOWER($1) AND role = 'admin'`,
+        [masterAdminEmail]
+      )
 
       const checkAdmin = await client.query(`SELECT id FROM users WHERE id = 'u-admin-master'`)
       if (checkAdmin.rowCount === 0) {
-        await client.query(`
-          INSERT INTO users (id, name, email, role, plan, avatar, last_active, conversation_count, is_developer)
-          VALUES (
-            'u-admin-master',
-            'Admin at pjcopetranovax',
-            'pj0040280@gmail.com',
-            'admin',
-            'premium',
-            'https://api.dicebear.com/7.x/avataaars/svg?seed=Admin',
-            'Active Now',
-            1,
-            true
-          )
-        `)
+        await client.query(
+          `INSERT INTO users (id, name, email, role, plan, avatar, last_active, conversation_count, is_developer)
+           VALUES (
+             'u-admin-master',
+             'Admin at pjcopetranovax',
+             $1,
+             'admin',
+             'premium',
+             'https://api.dicebear.com/7.x/avataaars/svg?seed=Admin',
+             'Active Now',
+             1,
+             true
+           )
+           ON CONFLICT (email) DO UPDATE SET role = 'admin', plan = 'pro', is_developer = TRUE`,
+          [masterAdminEmail]
+        )
       }
       ready = true
     } finally {

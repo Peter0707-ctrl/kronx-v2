@@ -9,6 +9,11 @@ import {
   callConnectedSystemApi,
   securitySelfDefense,
 } from './autonomousTools'
+import {
+  auditEndpointSecurity,
+  auditInternalPlatformPosture,
+  auditSourceCodeSecurity,
+} from './securityAuditor'
 
 export interface AutonomousStep {
   stepIndex: number
@@ -174,10 +179,11 @@ AVAILABLE ACTIONS:
 4. [ACTION: CALL_SYSTEM {"endpointUrl": "https://...", "method": "POST", "payload": {}}]
 5. [ACTION: SAVE_SKILL {"skillName": "xyz", "description": "...", "triggerPattern": "...", "executionLogic": "..."}]
 6. [ACTION: SELF_DEFEND {"targetType": "api_key", "targetValue": "...", "reason": "..."}]
-7. [FINAL_ANSWER: your conclusive report and response here]
+7. [ACTION: SECURITY_AUDIT {"targetUrl": "https://...", "code": "..."}]
+8. [FINAL_ANSWER: your conclusive report and response here]
 
 FORMAT RULE:
-Always output your reasoning, followed by exactly one [ACTION: ...] or [FINAL_ANSWER: ...].
+Always output your reasoning, followed by [ACTION: ...] or [FINAL_ANSWER: ...].
 Do not use emojis under any circumstances.
 
 USER GOAL: ${goal}`
@@ -204,8 +210,10 @@ USER GOAL: ${goal}`
         break
       }
 
-      // Check for actions (case-insensitive)
-      const actionMatch = llmOutput.match(/\[ACTION:\s*([A-Za-z_]+)(?:\s*(\{[\s\S]*?\}))?\]/i)
+      // Check for actions (supports both [ACTION: TOOL {...}] and [TOOL {...}])
+      const actionMatch = llmOutput.match(
+        /\[(?:ACTION:\s*)?(INTROSPECT_SCHEMA|SAFE_SQL|WEB_SEARCH|CALL_SYSTEM|SAVE_SKILL|SELF_DEFEND|SECURITY_AUDIT)(?:\s*(\{[\s\S]*?\}))?\]/i
+      )
       if (!actionMatch) {
         finalResult = llmOutput.trim()
         steps.push({
@@ -258,6 +266,14 @@ USER GOAL: ${goal}`
           targetValue: actionInput.targetValue || '',
           reason: actionInput.reason || 'Autonomous detected threat',
         })
+      } else if (actionName === 'SECURITY_AUDIT') {
+        if (actionInput.targetUrl || actionInput.url) {
+          observation = await auditEndpointSecurity(actionInput.targetUrl || actionInput.url)
+        } else if (actionInput.code || actionInput.sql) {
+          observation = auditSourceCodeSecurity(actionInput.code || actionInput.sql)
+        } else {
+          observation = await auditInternalPlatformPosture()
+        }
       } else {
         observation = { error: `Unknown action: ${actionName}` }
       }

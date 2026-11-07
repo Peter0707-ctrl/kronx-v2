@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createHash, timingSafeEqual } from 'crypto'
 import { ensureDb, pool } from '@/lib/db'
-import { verifyAdminAuthorization } from '@/lib/secretVault'
+import { isMasterAdminEmail, verifyAdminAuthorization } from '@/lib/secretVault'
 
 export const dynamic = 'force-dynamic'
 
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    if (rawEmail === 'pj0040280@gmail.com' && !verifyAdminAuthorization(req.headers.get('x-admin-key'))) {
+    if (isMasterAdminEmail(rawEmail) && !verifyAdminAuthorization(req.headers.get('x-admin-key'))) {
       return NextResponse.json(
         { success: false, message: 'Master administrator account cannot be reset via public endpoint.' },
         { status: 403 }

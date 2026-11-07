@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { randomInt } from 'crypto'
 import { ensureDb, pool } from '@/lib/db'
-import { verifyAdminAuthorization } from '@/lib/secretVault'
+import { isMasterAdminEmail, verifyAdminAuthorization } from '@/lib/secretVault'
 
 export const dynamic = 'force-dynamic'
-
-const MASTER_ADMIN_EMAIL = 'pj0040280@gmail.com'
 
 export async function POST(req: NextRequest) {
   try {
@@ -23,7 +21,7 @@ export async function POST(req: NextRequest) {
     const isAdminRequest = verifyAdminAuthorization(req.headers.get('x-admin-key'))
 
     // Prevent unauthenticated password reset requests against the Master Admin account
-    if (rawEmail === MASTER_ADMIN_EMAIL && !isAdminRequest) {
+    if (isMasterAdminEmail(rawEmail) && !isAdminRequest) {
       return NextResponse.json(
         {
           success: false,

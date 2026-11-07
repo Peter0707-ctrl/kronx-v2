@@ -8,19 +8,6 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || ''
 
 type UserPlan = 'free' | 'plus' | 'premium' | 'pro'
 
-const REAL_USERS: (AdminUserRecord & { plan: UserPlan })[] = [
-  {
-    id: 'u-admin-master',
-    name: 'Admin at pjcopetranovax',
-    email: 'pj0040280@gmail.com',
-    role: 'admin',
-    plan: 'plus',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Admin',
-    lastActive: 'Active Now',
-    conversationCount: 1
-  }
-]
-
 export default function AdminDashboard() {
   const { language, setActiveView, user, setUser, setAdminKey, updateUserRole, upgradeSubscription, systemDisabled, toggleSystemKillSwitch } = useKronxStore()
   const [telemetry, setTelemetry] = useState<SystemTelemetry | null>(null)
@@ -45,11 +32,6 @@ export default function AdminDashboard() {
   const loadUsers = async (keyOverride?: string) => {
     setIsLoadingUsers(true)
     const effectiveKey = keyOverride || user?.adminKey || ''
-    if (!effectiveKey) {
-      setAuthRequired(true)
-      setIsLoadingUsers(false)
-      return
-    }
     try {
       const res = await fetch('/api/users?scope=admin_directory', {
         headers: {
@@ -121,7 +103,8 @@ export default function AdminDashboard() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-admin-key': user?.adminKey || ''
+            'x-admin-key': user?.adminKey || '',
+            'x-user-email': user?.email || ''
           },
           body: JSON.stringify(userToUpdate)
         })
@@ -152,7 +135,8 @@ export default function AdminDashboard() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-admin-key': user?.adminKey || ''
+            'x-admin-key': user?.adminKey || '',
+            'x-user-email': user?.email || ''
           },
           body: JSON.stringify(userToUpdate)
         })
@@ -177,7 +161,7 @@ export default function AdminDashboard() {
       .catch(err => console.warn('[Admin telemetry fetch fail]', err))
 
     loadUsers()
-  }, [user?.adminKey])
+  }, [user?.adminKey, user?.email])
 
   const handleToggleRole = (userId: string) => {
     setUsersList(prev =>
