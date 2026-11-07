@@ -9,7 +9,7 @@ export default function AdminRoute() {
   const { user, setActiveView } = useKronxStore()
 
   useEffect(() => {
-    const isAdmin = user?.role === 'admin' || user?.email === 'pj0040280@gmail.com'
+    const isAdmin = user?.role === 'admin'
     if (isAdmin) {
       setActiveView('admin')
     } else {
