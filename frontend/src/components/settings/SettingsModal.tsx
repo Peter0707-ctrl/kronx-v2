@@ -93,6 +93,42 @@ export default function SettingsModal() {
   const [contactSent, setContactSent] = useState(false)
   const [feedbackType, setFeedbackType] = useState<'bug' | 'feature' | 'other'>('feature')
   const [feedbackText, setFeedbackText] = useState('')
+  const [accountApiKey, setAccountApiKey] = useState<string | null>(null)
+  const [isGeneratingKey, setIsGeneratingKey] = useState(false)
+  const [keyCopied, setKeyCopied] = useState(false)
+  const [keyError, setKeyError] = useState<string | null>(null)
+
+  const handleGenerateAccountApiKey = async () => {
+    if (!user?.email && !user?.id) return
+    setIsGeneratingKey(true)
+    setKeyError(null)
+    try {
+      const res = await fetch('/api/developer/keys', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': user?.id || '',
+          'x-user-email': user?.email || '',
+        },
+        body: JSON.stringify({
+          projectName: `${user?.name || 'Copetra'} Account API`,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data?.key?.apiKey) {
+        setKeyError(data?.error?.message || (sw ? 'Imeshindwa kutengeneza API Key. Jaribu tena.' : 'Failed to generate API Key. Please try again.'))
+        return
+      }
+      setAccountApiKey(data.key.apiKey)
+      useKronxStore.setState((s) => ({
+        user: s.user ? { ...s.user, apiKey: data.key.apiKey, isDeveloper: true } : null,
+      }))
+    } catch (err: any) {
+      setKeyError(err?.message || (sw ? 'Hitilafu ya mtandao.' : 'Network error.'))
+    } finally {
+      setIsGeneratingKey(false)
+    }
+  }
 
   if (!settingsModalOpen) return null
 
@@ -177,7 +213,7 @@ export default function SettingsModal() {
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '12px' }}>
             {activeTab !== 'menu' && (
               <button
-                onClick={() => setActiveTab('menu')}
+                onClick={() => setActiveTab(activeTab === 'developer' ? 'account' : 'menu')}
                 style={{
                   background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff',
                   width: '36px', height: '36px', borderRadius: '10px',
@@ -256,7 +292,7 @@ export default function SettingsModal() {
                     {sw ? 'Akaunti Yangu' : 'My Account'}
                   </div>
                   <div style={{ fontSize: '13px', color: '#64748b' }}>
-                    {sw ? 'Badili picha ya wasifu, toka kwenye akaunti' : 'Change profile picture, sign out'}
+                    {sw ? 'Wasifu, usalama, ufunguo wa API (API Key), na kutoka' : 'Profile, security, valid API keys, and sign out'}
                   </div>
                 </div>
                 <div style={{ color: '#0ea5e9' }}></div>
@@ -279,29 +315,6 @@ export default function SettingsModal() {
                   </div>
                   <div style={{ fontSize: '13px', color: '#64748b' }}>
                     {sw ? 'Tuambie nini kiboreshwe na mapendekezo yako' : 'Tell us what should be updated or improved'}
-                  </div>
-                </div>
-                <div style={{ color: '#0ea5e9' }}></div>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('developer')}
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  background: '#f8fafc', padding: '16px 20px', borderRadius: '16px',
-                  border: '1px solid #e2e8f0', cursor: 'pointer', textAlign: 'left',
-                  transition: 'background 0.2s', width: '100%'
-                }}
-                onMouseEnter={e => (e.currentTarget.style.background = '#f1f5f9')}
-                onMouseLeave={e => (e.currentTarget.style.background = '#f8fafc')}
-              >
-                <div>
-                  <div style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span>Developer API & Integrations</span>
-                    <span style={{ fontSize: '11px', background: 'linear-gradient(135deg, #0ea5e9, #0284c7)', color: '#fff', padding: '2px 8px', borderRadius: '12px', fontWeight: '700' }}>API v2</span>
-                  </div>
-                  <div style={{ fontSize: '13px', color: '#64748b' }}>
-                    {sw ? 'Dhibiti API key, Webhooks na majaribio ya Moja kwa Moja' : 'Manage API keys, Webhooks, and Live In-App Gateway Testing'}
                   </div>
                 </div>
                 <div style={{ color: '#0ea5e9' }}></div>
@@ -734,6 +747,120 @@ export default function SettingsModal() {
                     <span style={{ fontWeight: '800', color: row.valueColor }}>{row.value}</span>
                   </div>
                 ))}
+              </div>
+
+              {/* API Key Section & Button Inside Account */}
+              <div style={{
+                background: '#f8fafc',
+                border: '1px solid #bae6fd',
+                borderRadius: '18px',
+                padding: '20px',
+                boxShadow: '0 4px 16px rgba(2, 132, 199, 0.06)',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <div style={{ fontSize: '13px', fontWeight: '800', color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+                    {sw ? 'Ufunguo wa API (Copetra Developer API)' : 'Copetra Developer API Key'}
+                  </div>
+                  <span style={{
+                    fontSize: '10.5px',
+                    fontWeight: '800',
+                    background: '#10b981',
+                    color: '#ffffff',
+                    padding: '3px 10px',
+                    borderRadius: '10px',
+                  }}>
+                    {sw ? 'HALALI (VALID)' : 'ACTIVE & VALID'}
+                  </span>
+                </div>
+                <p style={{ fontSize: '12.5px', color: '#475569', margin: '0 0 14px 0', lineHeight: '1.5' }}>
+                  {sw
+                    ? 'Tengeneza API Key halali hapa ndani ya akaunti yako ili kuunganisha Copetra AI kwenye mifumo yako, tovuti, au programu.'
+                    : 'Generate a valid API key directly inside your account to integrate Copetra AI into your external websites and applications.'}
+                </p>
+
+                {accountApiKey && (
+                  <div style={{
+                    background: '#052e16',
+                    border: '1px solid #16a34a',
+                    borderRadius: '12px',
+                    padding: '12px',
+                    marginBottom: '12px',
+                  }}>
+                    <div style={{ fontSize: '11px', fontWeight: '700', color: '#86efac', marginBottom: '6px' }}>
+                      {sw ? 'API Key yako halali imetengenezwa (Nakili sasa):' : 'Your valid API Key is ready (Copy now):'}
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                      <code style={{ flex: 1, color: '#4ade80', fontSize: '12px', wordBreak: 'break-all', fontWeight: '700' }}>
+                        {accountApiKey}
+                      </code>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(accountApiKey)
+                          setKeyCopied(true)
+                          setTimeout(() => setKeyCopied(false), 2500)
+                        }}
+                        style={{
+                          background: keyCopied ? '#16a34a' : '#14532d',
+                          color: '#ffffff',
+                          border: 'none',
+                          borderRadius: '8px',
+                          padding: '6px 14px',
+                          fontWeight: '800',
+                          fontSize: '12px',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {keyCopied ? (sw ? 'Imenakiliwa' : 'Copied') : (sw ? 'Nakili Key' : 'Copy Key')}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {keyError && (
+                  <div style={{ color: '#dc2626', fontSize: '12px', fontWeight: '700', marginBottom: '10px' }}>
+                    {keyError}
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <button
+                    onClick={handleGenerateAccountApiKey}
+                    disabled={isGeneratingKey}
+                    style={{
+                      width: '100%',
+                      padding: '13px',
+                      borderRadius: '14px',
+                      background: 'linear-gradient(135deg, #0284c7, #0369a1)',
+                      color: '#ffffff',
+                      border: 'none',
+                      fontWeight: '800',
+                      fontSize: '13.5px',
+                      cursor: isGeneratingKey ? 'wait' : 'pointer',
+                      boxShadow: '0 4px 14px rgba(2, 132, 199, 0.25)',
+                    }}
+                  >
+                    {isGeneratingKey
+                      ? (sw ? 'Inatengeneza API Key Halali...' : 'Generating Valid API Key...')
+                      : (sw ? '+ Tengeneza API Key Halali Sasa' : '+ Generate Valid API Key Now')}
+                  </button>
+
+                  <button
+                    onClick={() => setActiveTab('developer')}
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      borderRadius: '14px',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      border: '1px solid #cbd5e1',
+                      fontWeight: '800',
+                      fontSize: '13px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {sw ? 'Fungua Dashibodi ya API, Majaribio & Nyaraka' : 'Open API Console, Live Tester & Docs'}
+                  </button>
+                </div>
               </div>
 
               {/* Upgrade CTA if free */}

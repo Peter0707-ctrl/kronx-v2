@@ -194,18 +194,14 @@ export default function TopBar() {
       </div>
 
       {/* Center Copetra AI Brand Header */}
-      <div ref={brandMenuRef} style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
+      <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
         <div
-          onClick={() => setBrandMenuOpen(!brandMenuOpen)}
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: '10px',
-            cursor: 'pointer',
             padding: '4px 12px',
             borderRadius: '12px',
-            background: brandMenuOpen ? 'rgba(0,0,0,0.06)' : 'transparent',
-            transition: 'background-color 0.2s ease',
             userSelect: 'none'
           }}
         >
@@ -225,93 +221,14 @@ export default function TopBar() {
           >
             Copetra AI
           </span>
-          <svg
-            width={14}
-            height={14}
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#0f172a"
-            strokeWidth={2.5}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            style={{
-              transform: brandMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-              transition: 'transform 0.2s ease'
-            }}
-          >
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
         </div>
 
         {/* Invisible Click-Outside Backdrop to auto-close dropdowns */}
-        {(brandMenuOpen || menuOpen) && (
+        {menuOpen && (
           <div
             onClick={closeDropdowns}
             style={{ position: 'fixed', inset: 0, zIndex: 9990, background: 'transparent' }}
           />
-        )}
-
-        {/* Brand Down Arrow Dropdown Menu for API Key & Developer Suite */}
-        {brandMenuOpen && (
-          <div
-            style={{
-              position: 'absolute',
-              top: '46px',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              width: '360px',
-              background: '#ffffff',
-              borderRadius: '24px',
-              border: '1px solid #cbd5e1',
-              boxShadow: '0 20px 50px rgba(0,0,0,0.2)',
-              padding: '20px',
-              zIndex: 9999,
-              animation: 'fadeIn 0.2s ease-out',
-              fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
-              <div style={{ width: '32px', height: '32px', borderRadius: '8px', overflow: 'hidden', background: '#000000', flexShrink: 0 }}>
-                <img src={COPETRA_LOGO_BASE64} alt="Copetra AI" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              </div>
-              <div>
-                <div style={{ fontSize: '15px', fontWeight: '800', color: '#0f172a' }}>Copetra Developer API</div>
-                <div style={{ fontSize: '11.5px', color: '#64748b' }}>Project keys · Gateway · Docs</div>
-              </div>
-            </div>
-
-            <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '12px', marginBottom: '14px' }}>
-              <div style={{ fontSize: '11px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
-                Base URL
-              </div>
-              <code style={{ fontSize: '11px', color: '#0f172a', wordBreak: 'break-all' }}>
-                {process.env.NEXT_PUBLIC_SITE_URL || 'https://miraculous-forgiveness-production-10d4.up.railway.app'}
-              </code>
-            </div>
-
-            <div style={{ fontSize: '12px', color: '#475569', display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '16px', background: '#f0f9ff', padding: '10px 12px', borderRadius: '12px', border: '1px solid #bae6fd' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>Endpoint:</span>
-                <span style={{ fontWeight: '700', fontFamily: 'monospace' }}>POST /api/gateway</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>Access:</span>
-                <span style={{ fontWeight: '700', color: user?.isDeveloper || user?.role === 'admin' ? '#10b981' : '#f59e0b' }}>
-                  {user?.isDeveloper || user?.role === 'admin' ? 'Granted' : 'Ask admin to grant'}
-                </span>
-              </div>
-            </div>
-
-            <button
-              onClick={() => {
-                setBrandMenuOpen(false)
-                setSettingsModalOpen(true)
-              }}
-              style={{ width: '100%', padding: '10px', borderRadius: '10px', background: '#0284c7', color: '#fff', border: 'none', fontWeight: 700, fontSize: 13, cursor: 'pointer', marginBottom: 8 }}
-            >
-              Open Developer Settings & Docs
-            </button>
-          </div>
         )}
       </div>
 

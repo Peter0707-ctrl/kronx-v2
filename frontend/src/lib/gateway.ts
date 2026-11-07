@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid'
 import {
   groqApiKeys,
+  geminiApiKeys,
   lastUserText,
   preferFastGroqModels,
   cleanAiResponse,
@@ -119,11 +120,12 @@ export async function createCompletion(opts: {
 > {
   const wantStream = opts.stream === true
   const keys = groqKeys()
-  if (keys.length === 0) {
+  const gKeys = geminiApiKeys()
+  if (keys.length === 0 && gKeys.length === 0) {
     return {
       ok: false,
       status: 503,
-      message: 'AI provider is not configured on this server (missing GROQ_API_KEY).',
+      message: 'AI provider is not configured on this server.',
       code: 'provider_not_configured',
     }
   }
@@ -229,6 +231,51 @@ export async function createCompletion(opts: {
       }
 
       if (sawAuthFailure) break
+    }
+  }
+
+  // Fallback to Google Gemini 3.5 Flash if Groq models did not return a response
+  if (!wantStream && gKeys.length > 0) {
+    const geminiModels = ['gemini-3.5-flash', 'gemini-3-flash-preview', 'gemini-3.8-flash']
+    const combinedPrompt = formatted
+      .map((m) => `${m.role.toUpperCase()}: ${m.content}`)
+      .join('\n\n')
+    for (const gKey of gKeys) {
+      for (const gModel of geminiModels) {
+        try {
+          const gRes = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/${gModel}:generateContent`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-goog-api-key': gKey,
+              },
+              body: JSON.stringify({
+                contents: [{ role: 'user', parts: [{ text: combinedPrompt }] }],
+                generationConfig: { temperature, maxOutputTokens: maxTokens },
+              }),
+              signal: AbortSignal.timeout(25_000),
+            }
+          )
+          if (gRes.ok) {
+            const gData = await gRes.json()
+            const gText = cleanAiResponse(
+              gData?.candidates?.[0]?.content?.parts?.[0]?.text || ''
+            )
+            if (gText) {
+              return {
+                ok: true,
+                stream: false,
+                text: gText,
+                usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
+              }
+            }
+          }
+        } catch {
+          // Try next Gemini model
+        }
+      }
     }
   }
 

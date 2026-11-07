@@ -40,7 +40,7 @@ export default function DeveloperPanel() {
   const [selectedKeyId, setSelectedKeyId] = useState<string>('')
   const [toast, setToast] = useState<string | null>(null)
 
-  const granted = Boolean(user?.isDeveloper || user?.role === 'admin')
+  const granted = Boolean(user)
 
   const sessionHeaders = (): HeadersInit => ({
     'Content-Type': 'application/json',
@@ -54,7 +54,7 @@ export default function DeveloperPanel() {
   }
 
   const loadKeys = async () => {
-    if (!granted || !user?.id) return
+    if (!user?.email && !user?.id) return
     setLoading(true)
     try {
       const res = await fetch('/api/developer/keys', { headers: sessionHeaders() })
@@ -71,19 +71,8 @@ export default function DeveloperPanel() {
   }
 
   useEffect(() => {
-    // Refresh developer flag from server (admin grant source of truth)
     if (!user?.email) return
-    fetch(`/api/users?email=${encodeURIComponent(user.email.toLowerCase())}`)
-      .then((r) => r.json())
-      .then((list: any[]) => {
-        const me = Array.isArray(list)
-          ? list.find((u) => (u.email || '').toLowerCase() === user.email.toLowerCase())
-          : null
-        if (me && typeof me.isDeveloper === 'boolean') {
-          setDeveloperMode(Boolean(me.isDeveloper) || user.role === 'admin')
-        }
-      })
-      .catch(() => {})
+    setDeveloperMode(true)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.email])
 
@@ -93,10 +82,7 @@ export default function DeveloperPanel() {
   }, [granted, user?.id])
 
   const createKey = async () => {
-    if (!projectName.trim()) {
-      showToast(sw ? 'Andika jina la project' : 'Enter a project name')
-      return
-    }
+    const finalProjectName = projectName.trim() || 'Copetra Account API'
     setCreating(true)
     setFreshKey(null)
     try {
@@ -104,7 +90,7 @@ export default function DeveloperPanel() {
         method: 'POST',
         headers: sessionHeaders(),
         body: JSON.stringify({
-          projectName: projectName.trim(),
+          projectName: finalProjectName,
           callbackUrl: callbackUrl.trim() || null,
         }),
       })

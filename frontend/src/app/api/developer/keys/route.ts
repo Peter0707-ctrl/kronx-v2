@@ -55,7 +55,8 @@ export async function POST(req: NextRequest) {
     if (!auth.ok) return auth.response
 
     const body = await req.json().catch(() => ({}))
-    const projectName = String(body.projectName || body.project_name || '').trim()
+    const rawProjectName = String(body.projectName || body.project_name || '').trim()
+    const projectName = rawProjectName.length >= 2 ? rawProjectName : 'Copetra Account API'
     const rawCallbackUrl = body.callbackUrl || body.callback_url || null
     let callbackUrl: string | null = null
     if (rawCallbackUrl) {
@@ -66,9 +67,6 @@ export async function POST(req: NextRequest) {
       callbackUrl = safe.url
     }
 
-    if (!projectName || projectName.length < 2) {
-      return apiError('projectName is required (min 2 characters).', 400, 'missing_project_name')
-    }
     if (projectName.length > 80) {
       return apiError('projectName must be 80 characters or fewer.', 400, 'project_name_too_long')
     }
