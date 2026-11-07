@@ -22,7 +22,7 @@ const REAL_USERS: (AdminUserRecord & { plan: UserPlan })[] = [
 ]
 
 export default function AdminDashboard() {
-  const { language, setActiveView, user, updateUserRole, upgradeSubscription, systemDisabled, toggleSystemKillSwitch } = useKronxStore()
+  const { language, setActiveView, user, setAdminKey, updateUserRole, upgradeSubscription, systemDisabled, toggleSystemKillSwitch } = useKronxStore()
   const [telemetry, setTelemetry] = useState<SystemTelemetry | null>(null)
   const [usersList, setUsersList] = useState<(AdminUserRecord & { plan: UserPlan })[]>([])
   const [userSearchQuery, setUserSearchQuery] = useState('')
@@ -30,12 +30,78 @@ export default function AdminDashboard() {
   const [tempSetting, setTempSetting] = useState(0.4)
   const [maxTokensSetting, setMaxTokensSetting] = useState(1024)
   const [toastMsg, setToastMsg] = useState<string | null>(null)
+  const [adminPasswordInput, setAdminPasswordInput] = useState('')
+  const [isVerifying, setIsVerifying] = useState(false)
+  const [authRequired, setAuthRequired] = useState(false)
+  const [authError, setAuthError] = useState<string | null>(null)
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false)
 
   const showToast = (msg: string) => {
     setToastMsg(msg)
     setTimeout(() => setToastMsg(null), 3500)
   }
   const sw = language === 'sw'
+
+  const loadUsers = async (keyOverride?: string) => {
+    setIsLoadingUsers(true)
+    const effectiveKey = keyOverride || user?.adminKey || ''
+    try {
+      const res = await fetch('/api/users', {
+        headers: {
+          'x-admin-key': effectiveKey,
+          'x-user-email': user?.email || '',
+        },
+      })
+      if (res.status === 403 || res.status === 401) {
+        setAuthRequired(true)
+        setUsersList([])
+        return
+      }
+      const data = await res.json()
+      if (Array.isArray(data)) {
+        setUsersList(data)
+        setAuthRequired(false)
+        setAuthError(null)
+      } else if (data?.error) {
+        setAuthRequired(true)
+      }
+    } catch (err) {
+      console.warn('[Users fetch fail]', err)
+    } finally {
+      setIsLoadingUsers(false)
+    }
+  }
+
+  const handleUnlockAdmin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!adminPasswordInput.trim()) return
+    setIsVerifying(true)
+    setAuthError(null)
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: user?.email || 'pj0040280@gmail.com',
+          password: adminPasswordInput.trim(),
+        }),
+      })
+      const data = await res.json()
+      if (res.ok && data.success && data.user?.adminKey) {
+        setAdminKey(data.user.adminKey)
+        setAdminPasswordInput('')
+        setAuthRequired(false)
+        showToast(sw ? 'Uthibitisho umekamilika! Orodha ya watumiaji imefunguliwa.' : 'Verification successful! User list unlocked.')
+        await loadUsers(data.user.adminKey)
+      } else {
+        setAuthError(sw ? 'Nenosiri la Admin si sahihi. Jaribu tena.' : 'Invalid Admin password. Please try again.')
+      }
+    } catch {
+      setAuthError(sw ? 'Hitilafu ya mtandao. Jaribu tena.' : 'Network error. Please try again.')
+    } finally {
+      setIsVerifying(false)
+    }
+  }
 
   const handleUpgradePlan = async (userId: string, newPlan: 'free' | 'plus' | 'premium' | 'pro') => {
     const updatedUsers = usersList.map(u => u.id === userId ? { ...u, plan: newPlan } : u)
@@ -102,19 +168,7 @@ export default function AdminDashboard() {
       .then(data => setTelemetry(data))
       .catch(err => console.warn('[Admin telemetry fetch fail]', err))
 
-    // Fetch live users list from backend using authenticated admin key
-    fetch('/api/users', {
-      headers: {
-        'x-admin-key': user?.adminKey || ''
-      }
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          setUsersList(data)
-        }
-      })
-      .catch(err => console.warn('[Users fetch fail]', err))
+    loadUsers()
   }, [user?.adminKey])
 
   const handleToggleRole = (userId: string) => {
@@ -256,37 +310,112 @@ export default function AdminDashboard() {
               />
             </div>
 
-            <button
-              onClick={async () => {
-                const nameInput = prompt('Enter User Full Name:')
-                const emailInput = prompt('Enter User Email:')
-                if (nameInput && emailInput) {
-                  const newUser: AdminUserRecord & { plan: UserPlan } = {
-                    id: 'u-' + Date.now(),
-                    name: nameInput,
-                    email: emailInput,
-                    role: 'user',
-                    plan: 'free',
-                    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(nameInput)}`,
-                    lastActive: 'Just now',
-                    conversationCount: 0
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                onClick={() => loadUsers()}
+                disabled={isLoadingUsers}
+                style={{ background: '#334155', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: '10px', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}
+              >
+                {isLoadingUsers ? (sw ? 'Inapakia...' : 'Loading...') : (sw ? 'Pakia Upya' : 'Refresh List')}
+              </button>
+              <button
+                onClick={async () => {
+                  const nameInput = prompt('Enter User Full Name:')
+                  const emailInput = prompt('Enter User Email:')
+                  if (nameInput && emailInput) {
+                    const newUser: AdminUserRecord & { plan: UserPlan } = {
+                      id: 'u-' + Date.now(),
+                      name: nameInput,
+                      email: emailInput,
+                      role: 'user',
+                      plan: 'free',
+                      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(nameInput)}`,
+                      lastActive: 'Just now',
+                      conversationCount: 0
+                    }
+                    setUsersList(prev => [...prev, newUser])
+                     await fetch('/api/users', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'x-admin-key': user?.adminKey || ''
+                      },
+                      body: JSON.stringify(newUser)
+                    }).catch(e => console.error('Failed to save manually added user to DB:', e))
                   }
-                  setUsersList(prev => [...prev, newUser])
-                   await fetch('/api/users', {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                      'x-admin-key': user?.adminKey || ''
-                    },
-                    body: JSON.stringify(newUser)
-                  }).catch(e => console.error('Failed to save manually added user to DB:', e))
-                }
-              }}
-              style={{ background: '#0284c7', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '10px', fontWeight: '800', fontSize: '13px', cursor: 'pointer' }}
-            >
-              + Add New User
-            </button>
+                }}
+                style={{ background: '#0284c7', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '10px', fontWeight: '800', fontSize: '13px', cursor: 'pointer' }}
+              >
+                + Add New User
+              </button>
+            </div>
           </div>
+
+          {authRequired && (
+            <div style={{
+              background: '#0f172a',
+              border: '2px solid #0284c7',
+              borderRadius: '16px',
+              padding: '24px',
+              color: '#ffffff',
+              marginBottom: '24px',
+              textAlign: 'center',
+              boxShadow: '0 10px 25px rgba(2, 132, 199, 0.2)'
+            }}>
+              <div style={{ fontSize: '13px', fontWeight: '800', color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>
+                {sw ? 'UTHIBITISHO WA USALAMA WA MSIMAMIZI MKUU' : 'MASTER ADMINISTRATOR SECURITY VERIFICATION'}
+              </div>
+              <h4 style={{ margin: '0 0 10px 0', fontSize: '18px', fontWeight: '800', color: '#ffffff' }}>
+                {sw ? 'Thibitisha Nenosiri Lako Ili Kuona Watumiaji Waliojisajili' : 'Confirm Master Password to View Registered Users'}
+              </h4>
+              <p style={{ fontSize: '13.5px', color: '#94a3b8', margin: '0 0 18px 0', maxWidth: '580px', marginLeft: 'auto', marginRight: 'auto', lineHeight: '1.5' }}>
+                {sw
+                  ? 'Kufuatia uboreshaji wa usalama, rekodi za watumiaji 31+ zinalindwa kwa funguo za siri. Weka nenosiri la akaunti yako ya Admin ili kufungua na kusimamia watumiaji wote.'
+                  : 'Following strict security hardening, live user records are encrypted. Enter your Master Admin password to decrypt and manage all registered accounts.'}
+              </p>
+              <form onSubmit={handleUnlockAdmin} style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap', maxWidth: '480px', margin: '0 auto' }}>
+                <input
+                  type="password"
+                  placeholder={sw ? 'Weka nenosiri la admin...' : 'Enter admin password...'}
+                  value={adminPasswordInput}
+                  onChange={(e) => setAdminPasswordInput(e.target.value)}
+                  style={{
+                    flex: 1,
+                    minWidth: '240px',
+                    padding: '10px 16px',
+                    borderRadius: '10px',
+                    border: '1px solid #334155',
+                    background: '#1e293b',
+                    color: '#ffffff',
+                    fontSize: '14px',
+                    outline: 'none'
+                  }}
+                />
+                <button
+                  type="submit"
+                  disabled={isVerifying}
+                  style={{
+                    background: '#0284c7',
+                    color: '#ffffff',
+                    border: 'none',
+                    padding: '10px 22px',
+                    borderRadius: '10px',
+                    fontWeight: '800',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  {isVerifying ? (sw ? 'Inathibitisha...' : 'Verifying...') : (sw ? 'Fungua Watumiaji' : 'Unlock Users')}
+                </button>
+              </form>
+              {authError && (
+                <div style={{ marginTop: '12px', color: '#f87171', fontSize: '13px', fontWeight: '700' }}>
+                  {authError}
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="table-wrapper">
             <table className="admin-table">
@@ -301,6 +430,17 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody>
+                {usersList.length === 0 && (
+                  <tr>
+                    <td colSpan={6} style={{ textAlign: 'center', padding: '36px 16px', color: '#64748b', fontSize: '14px' }}>
+                      {isLoadingUsers
+                        ? (sw ? 'Inapakia watumiaji kutoka PostgreSQL...' : 'Loading registered users from PostgreSQL database...')
+                        : authRequired
+                          ? (sw ? 'Tafadhali thibitisha nenosiri la Admin hapo juu ili kuona watumiaji wote.' : 'Please verify admin password above to view all registered users.')
+                          : (sw ? 'Hakuna watumiaji waliopatikana.' : 'No users found.')}
+                    </td>
+                  </tr>
+                )}
                 {usersList
                   .filter(u =>
                     u.name.toLowerCase().includes(userSearchQuery.toLowerCase()) ||

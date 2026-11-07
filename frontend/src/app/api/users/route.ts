@@ -33,7 +33,14 @@ function mapUser(row: any, includeAdminFields = false) {
 export async function GET(req: NextRequest) {
   try {
     const adminKeyHeader = req.headers.get('x-admin-key')
-    const isAdminRequest = verifyAdminAuthorization(adminKeyHeader)
+    const adminPassHeader = req.headers.get('x-admin-password')
+    let isAdminRequest = verifyAdminAuthorization(adminKeyHeader)
+    if (!isAdminRequest && adminPassHeader) {
+      const passHash = createHash('sha256').update(adminPassHeader.trim()).digest('hex')
+      if (verifyAdminAuthorization(passHash)) {
+        isAdminRequest = true
+      }
+    }
 
     const emailParam = (
       req.nextUrl.searchParams.get('email') ||
@@ -89,7 +96,14 @@ export async function POST(req: NextRequest) {
     }
 
     const adminKeyHeader = req.headers.get('x-admin-key')
-    const isAdminRequest = verifyAdminAuthorization(adminKeyHeader)
+    const adminPassHeader = req.headers.get('x-admin-password')
+    let isAdminRequest = verifyAdminAuthorization(adminKeyHeader)
+    if (!isAdminRequest && adminPassHeader) {
+      const passHash = createHash('sha256').update(adminPassHeader.trim()).digest('hex')
+      if (verifyAdminAuthorization(passHash)) {
+        isAdminRequest = true
+      }
+    }
     const isMasterAdminEmail = emailLower === 'pj0040280@gmail.com'
 
     if (isMasterAdminEmail && !isAdminRequest) {

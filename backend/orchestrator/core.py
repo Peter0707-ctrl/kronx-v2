@@ -419,7 +419,7 @@ class KronxOrchestrator:
             if _active_model_cache["model"] is not None and (now - _active_model_cache["timestamp"] < 60.0):
                 return _active_model_cache["model"]
 
-        models_to_try = ["gemini-2.0-flash-lite", "gemini-2.5-flash", "gemini-2.0-flash", "gemini-3.5-flash"]
+        models_to_try = ["gemini-3.5-flash", "gemini-3-flash-preview", "gemini-flash-latest", "gemini-3.8-flash"]
         active = "copetra-v2-enterprise"
 
         if not self.api_key or self.api_key == "YOUR_GEMINI_API_KEY_HERE":
@@ -484,7 +484,7 @@ class KronxOrchestrator:
                 )
                 return web_answer
 
-        models_to_try = ["gemini-2.0-flash-lite", "gemini-2.5-flash", "gemini-2.0-flash", "gemini-3.5-flash"]
+        models_to_try = ["gemini-3.5-flash", "gemini-3-flash-preview", "gemini-flash-latest", "gemini-3.8-flash"]
         last_err = None
 
         client = get_client()
@@ -617,10 +617,10 @@ class KronxOrchestrator:
 
         # Provider 1: Google Gemini API Models
         models_to_try = [
-            "gemini-2.0-flash-lite",
-            "gemini-2.5-flash",
-            "gemini-2.0-flash",
-            "gemini-3.5-flash"
+            "gemini-3.5-flash",
+            "gemini-3-flash-preview",
+            "gemini-flash-latest",
+            "gemini-3.8-flash"
         ]
         for m in models_to_try:
             if success:

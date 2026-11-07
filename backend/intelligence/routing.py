@@ -38,7 +38,7 @@ class CapabilityRouter:
             if providers["gemini"]:
                 return {
                     "provider": "gemini",
-                    "model": "gemini-2.0-flash",
+                    "model": "gemini-3.5-flash",
                     "capabilities": [CapabilityType.VISION, CapabilityType.OCR],
                     "fallback_provider": "internal_grounded",
                 }
@@ -70,7 +70,7 @@ class CapabilityRouter:
             if providers["gemini"]:
                 return {
                     "provider": "gemini",
-                    "model": "gemini-2.0-flash",
+                    "model": "gemini-3.5-flash",
                     "capabilities": [CapabilityType.DOCUMENT_ANALYSIS, CapabilityType.LONG_CONTEXT],
                     "fallback_provider": "internal_grounded",
                 }
@@ -100,7 +100,7 @@ class CapabilityRouter:
             if providers["gemini"]:
                 return {
                     "provider": "gemini",
-                    "model": "gemini-2.0-flash",
+                    "model": "gemini-3.5-flash",
                     "capabilities": [CapabilityType.TEXT_REASONING, CapabilityType.LONG_CONTEXT],
                     "fallback_provider": "internal_grounded",
                 }
@@ -123,7 +123,7 @@ class CapabilityRouter:
             if providers["gemini"]:
                 return {
                     "provider": "gemini",
-                    "model": "gemini-2.0-flash",
+                    "model": "gemini-3.5-flash",
                     "capabilities": [CapabilityType.CODE_REASONING, CapabilityType.TEXT_REASONING],
                     "fallback_provider": "internal_grounded",
                 }
@@ -139,7 +139,7 @@ class CapabilityRouter:
             if providers["gemini"]:
                 return {
                     "provider": "gemini",
-                    "model": "gemini-2.0-flash",
+                    "model": "gemini-3.5-flash",
                     "capabilities": [CapabilityType.MATHEMATICAL_REASONING, CapabilityType.TEXT_REASONING],
                     "fallback_provider": "internal_grounded",
                 }
@@ -162,7 +162,7 @@ class CapabilityRouter:
         if providers["gemini"]:
             return {
                 "provider": "gemini",
-                "model": "gemini-2.0-flash-lite",
+                "model": "gemini-3.5-flash",
                 "capabilities": [CapabilityType.TEXT_REASONING],
                 "fallback_provider": "internal_grounded",
             }

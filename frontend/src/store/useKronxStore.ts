@@ -29,6 +29,7 @@ interface KronxStore {
   clearActiveConversationMessages: () => void
 
   setUser: (user: UserProfile | null) => void
+  setAdminKey: (adminKey: string) => void
   setAuthModalOpen: (open: boolean) => void
   setSettingsModalOpen: (open: boolean) => void
   loginUser: (user: UserProfile) => void
@@ -143,7 +144,19 @@ export const useKronxStore = create<KronxStore>()(
           ),
         })),
 
-      setUser: (user) => set({ user }),
+      setUser: (user) =>
+        set((s) => ({
+          user: user
+            ? {
+                ...user,
+                adminKey: user.adminKey || s.user?.adminKey,
+              }
+            : null,
+        })),
+      setAdminKey: (adminKey: string) =>
+        set((s) => ({
+          user: s.user ? { ...s.user, adminKey } : null,
+        })),
       setAuthModalOpen: (authModalOpen) => set({ authModalOpen }),
       
       loginUser: (user) => {
