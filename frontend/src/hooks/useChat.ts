@@ -124,9 +124,9 @@ export function useChat() {
           updatedAiText += ticketTag
         }
 
-        // 5. Guarantee Auto-Save File to PC ([AUTO_SAVE_FILE: ...]) when user asks for a file on their PC
+        // 5. Guarantee Auto-Save File to PC ([AUTO_SAVE_FILE: ...]) when user asks for code/file on their PC
         if (
-          /\b(kwenye pc|save file|download file|faili lake|fail lake|nipatie faili|auto_save_file)\b/i.test(uText) &&
+          /\b(kwenye pc|save file|download file|faili|fail lake|nipatie faili|auto_save_file|nitengenezee code|tengeneza code|tengeneza programu|airun|i-run)\b/i.test(uText) &&
           /```\w+/i.test(updatedAiText) &&
           !/\[AUTO_SAVE_FILE:/i.test(updatedAiText)
         ) {
@@ -209,10 +209,10 @@ export function useChat() {
       // Dynamic & Real-time Action Queries: Never cache real-time, local, food, order, ticket, code-save, or autonomous queries
       const isDynamicOrActionQuery = /\b(saa ngapi|time is it|current time|what time|muda huu|leo tarehe|tarehe ngapi|today'?s date|current date|what day is|time now|saiv|sasa hivi|kfc|pizza|burger|order|delivery|pickup|near me|karibu|chakula|restaurant|mgahawa|menu|bei|price|gharama|hisa|rate|dola|news|habari|weather|flights|hotel|lodge|ticket|tiketi|nikatie|anicatie|kwenye pc|save file|download file|autonomous|security audit|kagua database)\b/i.test(text)
 
-      // Direct Autonomous Engine Execution in Chat (for DB Introspection, Safe SQL, Security Penetration Audits, Web Search)
+      // Direct Autonomous Engine Execution in Chat (for DB Introspection, Safe SQL, Security Penetration Audits)
       if (
         text.startsWith('[AUTONOMOUS_ENGINE]') ||
-        /\b(autonomous security audit|autonomous database audit|fanya security audit ya mfumo|kagua database ya mfumo)\b/i.test(text)
+        /\b(autonomous security audit|autonomous database audit|fanya security audit|kagua usalama|penetration test|pentest|kagua database|angalia database|soma database|watumiaji wangapi kwenye database|majedwali ya mfumo|inspect database)\b/i.test(text)
       ) {
         const cleanGoal = text.replace(/^\[AUTONOMOUS_ENGINE\]\s*/i, '').trim()
         currentState.addMessage(cleanGoal, 'user')
